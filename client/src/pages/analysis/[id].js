@@ -1,7 +1,5 @@
-'use client';
-
 import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/router';
 import { Navbar } from '@/components/Navbar';
 import { QueryInput } from '@/components/QueryInput';
 import { SaveDashboardModal } from '@/components/SaveDashboardModal';
@@ -19,9 +17,8 @@ import Link from 'next/link';
 import { generateChartData, calculateStats, formatNumber } from '@/utils/helpers';
 
 export default function AnalysisPage() {
-  const params = useParams();
-  const fileId = params?.id;
   const router = useRouter();
+  const { id: fileId } = router.query;
   
   const [file, setFile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -163,32 +160,32 @@ export default function AnalysisPage() {
                 {analysisResults.type === 'bar' && (
                   <BarChartComponent
                     data={analysisResults.data}
-                    xKey={analysisResults.xAxis}
-                    yKey={analysisResults.yAxis}
+                    xKey="name"
+                    yKey="value"
                     title={`${analysisResults.yAxis} by ${analysisResults.xAxis}`}
                   />
                 )}
                 {analysisResults.type === 'line' && (
                   <LineChartComponent
                     data={analysisResults.data}
-                    xKey={analysisResults.xAxis}
-                    yKey={analysisResults.yAxis}
+                    xKey="name"
+                    yKey="value"
                     title={`${analysisResults.yAxis} Trend`}
                   />
                 )}
                 {analysisResults.type === 'pie' && (
                   <PieChartComponent
                     data={analysisResults.data}
-                    nameKey={analysisResults.xAxis}
-                    valueKey={analysisResults.yAxis}
+                    nameKey="name"
+                    valueKey="value"
                     title={`${analysisResults.yAxis} Distribution`}
                   />
                 )}
                 {analysisResults.type === 'area' && (
                   <AreaChartComponent
                     data={analysisResults.data}
-                    xKey={analysisResults.xAxis}
-                    yKey={analysisResults.yAxis}
+                    xKey="name"
+                    yKey="value"
                     title={`${analysisResults.yAxis} Over Time`}
                   />
                 )}

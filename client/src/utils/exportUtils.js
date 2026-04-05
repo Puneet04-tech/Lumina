@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
-import { autoTable } from 'jspdf-autotable';
-import * as XLSX from 'exceljs';
+import 'jspdf-autotable';
+import ExcelJS from 'exceljs';
 
 export const exportToPDF = async (fileName, data, columns, chartImage = null) => {
   const doc = new jsPDF();
@@ -31,7 +31,7 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null) =>
 
   // Table
   doc.setTextColor(0, 0, 0);
-  autoTable(doc, {
+  doc.autoTable({
     head: [columns],
     body: data.slice(0, 100).map((row) => columns.map((col) => row[col] || '')),
     startY: yPosition,
@@ -51,7 +51,7 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null) =>
 };
 
 export const exportToExcel = async (fileName, data, columns) => {
-  const workbook = new XLSX.Workbook();
+  const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Data');
 
   // Add headers
