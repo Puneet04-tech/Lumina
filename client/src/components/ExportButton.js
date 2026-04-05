@@ -5,13 +5,13 @@ import { Download, FileJson, File as FileIcon } from 'lucide-react';
 import { exportToPDF, exportToExcel } from '@/utils/exportUtils';
 import toast from 'react-hot-toast';
 
-export function ExportButton({ fileName, data, columns, chartImage = null }) {
+export function ExportButton({ fileName, data, columns, chartImage = null, analysisData = null }) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleExportPDF = async () => {
     setIsLoading(true);
     try {
-      await exportToPDF(fileName, data, columns, chartImage);
+      await exportToPDF(fileName, data, columns, chartImage, analysisData);
       toast.success('PDF exported successfully!');
     } catch (error) {
       toast.error('Failed to export PDF: ' + error.message);

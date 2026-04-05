@@ -218,6 +218,7 @@ export default function AnalysisPage() {
                     fileName={file?.originalName}
                     data={file?.data}
                     columns={file?.columns}
+                    analysisData={analysisResults}
                   />
                 </div>
                 {chartDisplayType === 'bar' && (
