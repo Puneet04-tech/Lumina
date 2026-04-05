@@ -1,9 +1,6 @@
 import jsPDF from 'jspdf';
-import AutoTable from 'jspdf-autotable';
+import 'jspdf-autotable';
 import ExcelJS from 'exceljs';
-
-// Register autoTable plugin with jsPDF
-AutoTable.jsPDF(jsPDF);
 
 export const exportToPDF = async (fileName, data, columns, chartImage = null) => {
   try {
@@ -35,21 +32,62 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null) =>
 
     // Table
     doc.setTextColor(0, 0, 0);
-    doc.autoTable({
-      head: [columns],
-      body: data.slice(0, 100).map((row) => columns.map((col) => row[col] || '')),
-      startY: yPosition,
-      margin: 10,
-      theme: 'grid',
-      headerStyles: {
-        fillColor: [99, 102, 241],
-        textColor: [255, 255, 255],
-        fontStyle: 'bold',
-      },
-      alternateRowStyles: {
-        fillColor: [245, 245, 250],
-      },
-    });
+    
+    // Use autoTable method (injected by jspdf-autotable)
+    if (typeof doc.autoTable === 'function') {
+      doc.autoTable({
+        head: [columns],
+        body: data.slice(0, 100).map((row) => columns.map((col) => row[col] || '')),
+        startY: yPosition,
+        margin: 10,
+        theme: 'grid',
+        headerStyles: {
+          fillColor: [99, 102, 241],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 250],
+        },
+      });
+    } else {
+      // Fallback: Create a simple table without autoTable
+      const rowHeight = 7;
+      const pageHeight = doc.internal.pageSize.getHeight();
+      
+      // Headers
+      doc.setFillColor(99, 102, 241);
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'bold');
+      
+      columns.forEach((col, idx) => {
+        const x = 10 + (idx * 30);
+        doc.rect(x, yPosition, 30, rowHeight, 'F');
+        doc.text(col.substring(0, 8), x + 1, yPosition + 5);
+      });
+      
+      yPosition += rowHeight;
+      
+      // Data rows
+      doc.setTextColor(0, 0, 0);
+      doc.setFont(undefined, 'normal');
+      
+      data.slice(0, 100).forEach((row, rowIdx) => {
+        if (yPosition > pageHeight - 20) {
+          doc.addPage();
+          yPosition = 10;
+        }
+        
+        columns.forEach((col, colIdx) => {
+          const x = 10 + (colIdx * 30);
+          const value = String(row[col] || '').substring(0, 8);
+          doc.text(value, x + 1, yPosition + 5);
+        });
+        
+        yPosition += rowHeight;
+      });
+    }
 
     doc.save(`${fileName}_${Date.now()}.pdf`);
   } catch (error) {
