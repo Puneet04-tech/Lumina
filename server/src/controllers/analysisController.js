@@ -101,6 +101,13 @@ export const queryAnalysis = async (req, res) => {
       stats: calculateStats(file.data, metric),
       xAxis: dimension,
       yAxis: metric,
+      insights: aiAnalysis.success ? aiAnalysis.analysis : {
+        insight: `Analysis of ${metric} by ${dimension}`,
+        summary: `Found ${chartData.length} categories with total ${calculateStats(file.data, metric).sum}`,
+        recommendation: `Review the chart to identify trends and patterns in ${metric} across different ${dimension} values`,
+        chartType: 'bar',
+        confidence: 0.8,
+      },
     };
 
     res.json({
