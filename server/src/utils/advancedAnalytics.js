@@ -296,7 +296,7 @@ export const performAdvancedAnalysis = async (data, columns, metricColumn, dimen
         recommendation: aiInsights.recommendation,
         chartType: 'bar',
         confidence: 0.95,
-        source: 'gemini-pro',
+        source: `${aiInsights.source} (${process.env.GEMINI_MODEL || 'gemini-1.5-flash'})`,
         riskLevel: 'Advanced AI Analysis',
         performanceRatio: (topPerformers[0]?.value / (bottomPerformers[bottomPerformers.length - 1]?.value || 1)).toFixed(1),
         concentration: topPerformers[0]?.value / sum > 0.5 ? 'highly concentrated' : topPerformers[0]?.value / sum > 0.3 ? 'moderately concentrated' : 'balanced',

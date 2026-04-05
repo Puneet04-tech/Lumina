@@ -16,7 +16,8 @@ export const generateGeminiInsights = async (data, columns, metricColumn, dimens
       throw new Error('GEMINI_API_KEY not configured');
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+    const model = genAI.getGenerativeModel({ model: modelName });
 
     // Prepare data summary for Gemini
     const topPerformers = analysis.topPerformers.map(p => `${p.name}: ${p.value}`).join(', ');
@@ -57,20 +58,25 @@ Format your response as JSON with keys: insight, summary, recommendation`;
     const result = await model.generateContent(prompt);
     const responseText = result.response.text();
     
-    // Parse JSON from response
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    // Parse JSON from response - handle various JSON positions
+    let jsonMatch = responseText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error('Invalid response format from Gemini');
     }
 
-    const geminiResponse = JSON.parse(jsonMatch[0]);
+    try {
+      const geminiResponse = JSON.parse(jsonMatch[0]);
 
-    return {
-      insight: geminiResponse.insight || '',
-      summary: geminiResponse.summary || '',
-      recommendation: geminiResponse.recommendation || '',
-      source: 'gemini-pro',
-    };
+      return {
+        insight: geminiResponse.insight || '',
+        summary: geminiResponse.summary || '',
+        recommendation: geminiResponse.recommendation || '',
+        source: 'gemini-ai',
+      };
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      throw new Error('Failed to parse Gemini response');
+    }
   } catch (error) {
     console.error('Gemini API error:', error);
     return null; // Return null to use fallback
