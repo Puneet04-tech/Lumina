@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Navbar } from '@/components/Navbar';
 import { QueryInput } from '@/components/QueryInput';
+import { SaveDashboardModal } from '@/components/SaveDashboardModal';
+import { ExportButton } from '@/components/ExportButton';
 import {
   BarChartComponent,
   LineChartComponent,
@@ -12,7 +14,7 @@ import {
 } from '@/components/Charts';
 import api from '@/utils/api';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Download, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Download, BarChart3, Save } from 'lucide-react';
 import Link from 'next/link';
 import { generateChartData, calculateStats, formatNumber } from '@/utils/helpers';
 
@@ -25,6 +27,7 @@ export default function AnalysisPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [analysisResults, setAnalysisResults] = useState(null);
   const [tableView, setTableView] = useState(true);
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   useEffect(() => {
     if (fileId) {
@@ -89,14 +92,23 @@ export default function AnalysisPage() {
       <div className="min-h-screen bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
-          <div className="flex items-center gap-4 mb-8">
-            <Link href="/dashboard" className="btn btn-secondary p-2">
-              <ArrowLeft className="w-4 h-4" />
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900">{file?.originalName}</h1>
-              <p className="text-slate-600">Analyzing {file?.data?.length || 0} rows</p>
+          <div className="flex items-center justify-between gap-4 mb-8">
+            <div className="flex items-center gap-4">
+              <Link href="/dashboard" className="btn btn-secondary p-2">
+                <ArrowLeft className="w-4 h-4" />
+              </Link>
+              <div>
+                <h1 className="text-3xl font-bold text-slate-900">{file?.originalName}</h1>
+                <p className="text-slate-600">Analyzing {file?.data?.length || 0} rows</p>
+              </div>
             </div>
+            <button
+              onClick={() => setShowSaveModal(true)}
+              className="btn-primary flex items-center gap-2"
+            >
+              <Save className="w-4 h-4" />
+              Save Dashboard
+            </button>
           </div>
 
           {/* Quick Actions */}
@@ -140,7 +152,14 @@ export default function AnalysisPage() {
             <div className="space-y-8 mb-8">
               {/* Chart */}
               <div className="card">
-                <h2 className="text-2xl font-bold text-slate-900 mb-6">Visualization</h2>
+                <div className="flex justify-between items-start mb-6">
+                  <h2 className="text-2xl font-bold text-slate-900">Visualization</h2>
+                  <ExportButton
+                    fileName={file?.originalName}
+                    data={file?.data}
+                    columns={file?.columns}
+                  />
+                </div>
                 {analysisResults.type === 'bar' && (
                   <BarChartComponent
                     data={analysisResults.data}
@@ -259,6 +278,16 @@ export default function AnalysisPage() {
           </div>
         </div>
       </div>
+
+      <SaveDashboardModal
+        fileId={fileId}
+        charts={analysisResults?.data || []}
+        isOpen={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+        onSaveSuccess={() => {
+          toast.success('Dashboard saved! View it in Dashboards page');
+        }}
+      />
     </>
   );
 }
