@@ -97,8 +97,8 @@ export const queryAnalysis = async (req, res) => {
         .slice(0, 20);
     }
 
-    // Perform advanced local analysis (NO API REQUIRED)
-    const advancedAnalysis = performAdvancedAnalysis(
+    // Perform advanced analysis with AI integration
+    const advancedAnalysis = await performAdvancedAnalysis(
       file.data,
       file.columns,
       metric,
