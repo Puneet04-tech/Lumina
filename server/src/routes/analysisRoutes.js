@@ -4,6 +4,7 @@ import {
   queryAnalysis,
   saveDashboard,
   getDashboards,
+  deleteDashboard,
 } from '../controllers/analysisController.js';
 
 const router = Router();
@@ -11,5 +12,6 @@ const router = Router();
 router.post('/query', authenticate, queryAnalysis);
 router.post('/dashboards', authenticate, saveDashboard);
 router.get('/dashboards', authenticate, getDashboards);
+router.delete('/dashboards/:id', authenticate, deleteDashboard);
 
 export default router;

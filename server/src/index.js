@@ -9,6 +9,7 @@ import { errorHandler } from './middleware/errorHandler.js';
 import authRoutes from './routes/authRoutes.js';
 import fileRoutes from './routes/fileRoutes.js';
 import analysisRoutes from './routes/analysisRoutes.js';
+import exportRoutes from './routes/exportRoutes.js';
 
 dotenv.config();
 
@@ -34,6 +35,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/analysis', analysisRoutes);
+app.use('/api/export', exportRoutes);
 
 // Error Handler (should be last)
 app.use(errorHandler);
