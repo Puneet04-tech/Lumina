@@ -1,21 +1,21 @@
 /**
  * Google Gemini AI Integration for Advanced Insights
- * Generates professional, AI-powered analysis using Google's Gemini Pro
+ * Generates professional, AI-powered analysis using Google's Gemini Flash
  */
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
 /**
- * Generate AI-powered advanced insights using Gemini Pro
+ * Generate AI-powered advanced insights using Gemini Flash
  */
 export const generateGeminiInsights = async (data, columns, metricColumn, dimensionColumn, basicStats, analysis) => {
   try {
     if (!process.env.GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY not configured');
+      console.log('Gemini API key not configured, skipping AI insights');
+      return null;
     }
 
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
     const model = genAI.getGenerativeModel({ model: modelName });
 

@@ -105,20 +105,12 @@ export const queryAnalysis = async (req, res) => {
       dimension
     );
 
-    // Try to use AI if available, otherwise use advanced analysis
-    let aiAnalysis = null;
-    if (process.env.GOOGLE_GEMINI_API_KEY) {
-      const dataContext = {
-        rowCount: file.data.length,
-        columns: file.columns,
-        sampleData: file.data.slice(0, 5),
-      };
-      aiAnalysis = await analyzeWithGemini(query, dataContext);
+    if (!advancedAnalysis.success) {
+      return res.status(400).json({ success: false, message: advancedAnalysis.message });
     }
 
-    const insights = aiAnalysis?.success 
-      ? aiAnalysis.analysis 
-      : advancedAnalysis.insights;
+    const insights = advancedAnalysis.insights;
+    const analysis = advancedAnalysis.analysis || {};
 
     const results = {
       type: 'bar',
@@ -127,7 +119,7 @@ export const queryAnalysis = async (req, res) => {
       xAxis: dimension,
       yAxis: metric,
       insights,
-      analysis: advancedAnalysis.analysis, // Include full analysis data
+      analysis, // Always include analysis data
       totalRows: file.data.length,
       numericColumns: numericColumns.length,
     };

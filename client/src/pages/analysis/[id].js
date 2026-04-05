@@ -427,8 +427,8 @@ export default function AnalysisPage() {
                 </div>
               )}
 
-              {/* Advanced Analysis */}
-              {analysisResults.analysis && (
+              {/* Advanced Analysis - 8 Comprehensive Sections */}
+              {analysisResults && analysisResults.analysis && Object.keys(analysisResults.analysis).length > 0 && (
                 <div className="animate-slideInUp" style={{animationDelay: '0.5s'}}>
                   <AdvancedInsights analysis={analysisResults.analysis} />
                 </div>
