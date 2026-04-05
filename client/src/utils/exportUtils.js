@@ -25,17 +25,15 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
     doc.setFontSize(10);
     doc.setTextColor(128, 128, 128);
     doc.text(`Generated: ${new Date().toLocaleString()}`, 10, yPosition);
-    yPosition += 10;
+    yPosition += 12;
 
-    // Chart Image if provided
+    // Chart Image if provided - POSITIONED AT TOP
     if (chartImage) {
       try {
-        if (yPosition > pageHeight - 100) {
-          doc.addPage();
-          yPosition = 15;
-        }
-        doc.addImage(chartImage, 'PNG', 10, yPosition, pageWidth - 20, 80);
-        yPosition += 90;
+        const chartHeight = 100;
+        const chartWidth = pageWidth - 20;
+        doc.addImage(chartImage, 'PNG', 10, yPosition, chartWidth, chartHeight);
+        yPosition += chartHeight + 12;
       } catch (error) {
         console.error('Error adding chart to PDF:', error);
       }

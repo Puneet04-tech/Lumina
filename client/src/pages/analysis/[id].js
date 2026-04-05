@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { Navbar } from '@/components/Navbar';
 import { QueryInput } from '@/components/QueryInput';
@@ -19,6 +19,7 @@ import { generateChartData, calculateStats, formatNumber } from '@/utils/helpers
 export default function AnalysisPage() {
   const router = useRouter();
   const { id: fileId } = router.query;
+  const chartRef = useRef(null);
   
   const [file, setFile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -26,6 +27,25 @@ export default function AnalysisPage() {
   const [tableView, setTableView] = useState(true);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [chartDisplayType, setChartDisplayType] = useState('bar');
+
+  const captureChartAsImage = async () => {
+    if (!chartRef.current) return null;
+    
+    try {
+      // Use html2canvas if available, otherwise use canvas API
+      const html2canvas = (await import('html2canvas')).default;
+      const canvas = await html2canvas(chartRef.current, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        logging: false,
+        useCORS: true,
+      });
+      return canvas.toDataURL('image/png');
+    } catch (error) {
+      console.error('Error capturing chart:', error);
+      return null;
+    }
+  };
 
   useEffect(() => {
     if (fileId) {
@@ -219,8 +239,10 @@ export default function AnalysisPage() {
                     data={file?.data}
                     columns={file?.columns}
                     analysisData={analysisResults}
+                    onCaptureChart={captureChartAsImage}
                   />
                 </div>
+                <div ref={chartRef}>
                 {chartDisplayType === 'bar' && (
                   <BarChartComponent
                     data={analysisResults.data}
@@ -253,6 +275,7 @@ export default function AnalysisPage() {
                     title={`${analysisResults.yAxis} Over Time`}
                   />
                 )}
+                </div>
               </div>
 
               {/* Insights */}
