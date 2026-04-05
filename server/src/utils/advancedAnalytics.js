@@ -228,20 +228,53 @@ export const performAdvancedAnalysis = async (data, columns, metricColumn, dimen
   }
 
   try {
-    // Calculate basic stats
+    // Calculate enhanced stats
     const values = data.map(r => parseFloat(r[metricColumn])).filter(v => !isNaN(v));
     const sum = values.reduce((a, b) => a + b, 0);
     const count = values.length;
     const average = count > 0 ? sum / count : 0;
     const min = count > 0 ? Math.min(...values) : 0;
     const max = count > 0 ? Math.max(...values) : 0;
+    const range = max - min;
+
+    // Calculate median
+    const sorted = [...values].sort((a, b) => a - b);
+    const median = sorted.length % 2 === 0
+      ? (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2
+      : sorted[Math.floor(sorted.length / 2)];
+
+    // Calculate standard deviation and variance
+    const variance = count > 1 ? values.reduce((sum, v) => sum + Math.pow(v - average, 2), 0) / count : 0;
+    const stdDev = Math.sqrt(variance);
+
+    // Calculate quartiles
+    const q1Index = Math.floor(sorted.length * 0.25);
+    const q3Index = Math.floor(sorted.length * 0.75);
+    const q1 = sorted[q1Index] || 0;
+    const q3 = sorted[q3Index] || 0;
+    const iqr = q3 - q1;
+
+    // Unique values count
+    const uniqueValues = new Set(values).size;
+
+    // Coefficient of Variation
+    const cv = average !== 0 ? (stdDev / average) * 100 : 0;
 
     const basicStats = {
       count,
       sum: Math.round(sum * 100) / 100,
       average: Math.round(average * 100) / 100,
+      median: Math.round(median * 100) / 100,
       max: Math.round(max * 100) / 100,
       min: Math.round(min * 100) / 100,
+      range: Math.round(range * 100) / 100,
+      stdDev: Math.round(stdDev * 100) / 100,
+      variance: Math.round(variance * 100) / 100,
+      q1: Math.round(q1 * 100) / 100,
+      q3: Math.round(q3 * 100) / 100,
+      iqr: Math.round(iqr * 100) / 100,
+      uniqueValues,
+      coefficientOfVariation: Math.round(cv * 100) / 100,
     };
 
     // Advanced Analysis
