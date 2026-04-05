@@ -30,6 +30,10 @@ const FileSchema = new mongoose.Schema(
       type: Array,
       default: [],
     },
+    rowCount: {
+      type: Number,
+      default: 0,
+    },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',

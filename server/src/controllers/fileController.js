@@ -62,6 +62,7 @@ export const uploadFile = async (req, res) => {
       path: req.file.path,
       columns,
       data,
+      rowCount: data.length,
       userId: req.user._id,
     });
 
@@ -110,11 +111,12 @@ export const getFiles = async (req, res) => {
         originalName: file.originalName,
         size: file.size,
         columns: file.columns,
-        rowCount: file.data.length,
+        rowCount: file.rowCount || 0,
         uploadedAt: file.uploadedAt,
       })),
     });
   } catch (error) {
+    console.error('Error fetching files:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
