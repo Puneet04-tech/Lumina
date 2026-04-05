@@ -490,37 +490,87 @@ export default function AnalysisPage() {
               {/* Statistics */}
               {analysisResults.stats && (
                 <div className="p-6 bg-gradient-to-r from-slate-800/50 to-slate-900/50 rounded-xl border border-slate-700/50 backdrop-blur-md animate-slideInUp" style={{animationDelay: '0.6s'}}>
-                  <h2 className="text-2xl font-bold text-transparent bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text mb-6">📈 Statistics</h2>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <div className="text-center p-4 bg-gradient-to-br from-indigo-900/30 to-indigo-800/30 rounded-lg border border-indigo-700/30">
-                      <p className="text-indigo-300 text-sm font-medium">Count</p>
-                      <p className="text-2xl font-bold text-indigo-200 mt-2">
-                        {analysisResults.stats.count}
-                      </p>
+                  <h2 className="text-2xl font-bold text-transparent bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text mb-6">📈 Comprehensive Statistics</h2>
+                  
+                  {/* Primary Metrics - 3 columns */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div className="p-5 bg-gradient-to-br from-blue-900/40 to-blue-800/40 rounded-lg border border-blue-700/30 hover:border-blue-600/50 transition-all">
+                      <p className="text-blue-300 text-sm font-medium">Count</p>
+                      <p className="text-3xl font-bold text-blue-200 mt-2">{analysisResults.stats.count}</p>
+                      <p className="text-blue-300/60 text-xs mt-2">Total data points</p>
                     </div>
-                    <div className="text-center p-4 bg-gradient-to-br from-purple-900/30 to-purple-800/30 rounded-lg border border-purple-700/30">
+                    <div className="p-5 bg-gradient-to-br from-purple-900/40 to-purple-800/40 rounded-lg border border-purple-700/30 hover:border-purple-600/50 transition-all">
                       <p className="text-purple-300 text-sm font-medium">Sum</p>
-                      <p className="text-2xl font-bold text-purple-200 mt-2">
-                        {formatNumber(analysisResults.stats.sum)}
-                      </p>
+                      <p className="text-3xl font-bold text-purple-200 mt-2">{formatNumber(analysisResults.stats.sum)}</p>
+                      <p className="text-purple-300/60 text-xs mt-2">Total value</p>
                     </div>
-                    <div className="text-center p-4 bg-gradient-to-br from-pink-900/30 to-pink-800/30 rounded-lg border border-pink-700/30">
+                    <div className="p-5 bg-gradient-to-br from-pink-900/40 to-pink-800/40 rounded-lg border border-pink-700/30 hover:border-pink-600/50 transition-all">
                       <p className="text-pink-300 text-sm font-medium">Average</p>
-                      <p className="text-2xl font-bold text-pink-200 mt-2">
-                        {formatNumber(analysisResults.stats.average)}
-                      </p>
+                      <p className="text-3xl font-bold text-pink-200 mt-2">{formatNumber(analysisResults.stats.average)}</p>
+                      <p className="text-pink-300/60 text-xs mt-2">Mean value</p>
                     </div>
-                    <div className="text-center p-4 bg-gradient-to-br from-green-900/30 to-green-800/30 rounded-lg border border-green-700/30">
-                      <p className="text-green-300 text-sm font-medium">Max</p>
-                      <p className="text-2xl font-bold text-green-200 mt-2">
-                        {formatNumber(analysisResults.stats.max)}
-                      </p>
+                  </div>
+
+                  {/* Central Tendency & Spread - 3 columns */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div className="p-5 bg-gradient-to-br from-emerald-900/40 to-emerald-800/40 rounded-lg border border-emerald-700/30 hover:border-emerald-600/50 transition-all">
+                      <p className="text-emerald-300 text-sm font-medium">Median</p>
+                      <p className="text-3xl font-bold text-emerald-200 mt-2">{formatNumber(analysisResults.stats.median)}</p>
+                      <p className="text-emerald-300/60 text-xs mt-2">Middle value (50%)</p>
                     </div>
-                    <div className="text-center p-4 bg-gradient-to-br from-orange-900/30 to-orange-800/30 rounded-lg border border-orange-700/30">
-                      <p className="text-orange-300 text-sm font-medium">Min</p>
-                      <p className="text-2xl font-bold text-orange-200 mt-2">
-                        {formatNumber(analysisResults.stats.min)}
-                      </p>
+                    <div className="p-5 bg-gradient-to-br from-amber-900/40 to-amber-800/40 rounded-lg border border-amber-700/30 hover:border-amber-600/50 transition-all">
+                      <p className="text-amber-300 text-sm font-medium">Range</p>
+                      <p className="text-3xl font-bold text-amber-200 mt-2">{formatNumber(analysisResults.stats.range)}</p>
+                      <p className="text-amber-300/60 text-xs mt-2">Max - Min span</p>
+                    </div>
+                    <div className="p-5 bg-gradient-to-br from-cyan-900/40 to-cyan-800/40 rounded-lg border border-cyan-700/30 hover:border-cyan-600/50 transition-all">
+                      <p className="text-cyan-300 text-sm font-medium">Std Deviation</p>
+                      <p className="text-3xl font-bold text-cyan-200 mt-2">{formatNumber(analysisResults.stats.stdDev)}</p>
+                      <p className="text-cyan-300/60 text-xs mt-2">Data spread</p>
+                    </div>
+                  </div>
+
+                  {/* Range Metrics - 4 columns */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div className="p-4 bg-gradient-to-br from-green-900/40 to-green-800/40 rounded-lg border border-green-700/30">
+                      <p className="text-green-300 text-xs font-medium uppercase">Max Value</p>
+                      <p className="text-2xl font-bold text-green-200 mt-2">{formatNumber(analysisResults.stats.max)}</p>
+                    </div>
+                    <div className="p-4 bg-gradient-to-br from-orange-900/40 to-orange-800/40 rounded-lg border border-orange-700/30">
+                      <p className="text-orange-300 text-xs font-medium uppercase">Min Value</p>
+                      <p className="text-2xl font-bold text-orange-200 mt-2">{formatNumber(analysisResults.stats.min)}</p>
+                    </div>
+                    <div className="p-4 bg-gradient-to-br from-rose-900/40 to-rose-800/40 rounded-lg border border-rose-700/30">
+                      <p className="text-rose-300 text-xs font-medium uppercase">Q1 (25th %ile)</p>
+                      <p className="text-2xl font-bold text-rose-200 mt-2">{formatNumber(analysisResults.stats.q1)}</p>
+                    </div>
+                    <div className="p-4 bg-gradient-to-br from-violet-900/40 to-violet-800/40 rounded-lg border border-violet-700/30">
+                      <p className="text-violet-300 text-xs font-medium uppercase">Q3 (75th %ile)</p>
+                      <p className="text-2xl font-bold text-violet-200 mt-2">{formatNumber(analysisResults.stats.q3)}</p>
+                    </div>
+                  </div>
+
+                  {/* Advanced Metrics - 4 columns */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="p-4 bg-gradient-to-br from-teal-900/40 to-teal-800/40 rounded-lg border border-teal-700/30">
+                      <p className="text-teal-300 text-xs font-medium uppercase">Unique Values</p>
+                      <p className="text-2xl font-bold text-teal-200 mt-2">{analysisResults.stats.uniqueValues}</p>
+                      <p className="text-teal-300/60 text-xs mt-1">Distinct count</p>
+                    </div>
+                    <div className="p-4 bg-gradient-to-br from-indigo-900/40 to-indigo-800/40 rounded-lg border border-indigo-700/30">
+                      <p className="text-indigo-300 text-xs font-medium uppercase">IQR</p>
+                      <p className="text-2xl font-bold text-indigo-200 mt-2">{formatNumber(analysisResults.stats.iqr)}</p>
+                      <p className="text-indigo-300/60 text-xs mt-1">Interquartile range</p>
+                    </div>
+                    <div className="p-4 bg-gradient-to-br from-fuchsia-900/40 to-fuchsia-800/40 rounded-lg border border-fuchsia-700/30">
+                      <p className="text-fuchsia-300 text-xs font-medium uppercase">Variance</p>
+                      <p className="text-2xl font-bold text-fuchsia-200 mt-2">{formatNumber(analysisResults.stats.variance)}</p>
+                      <p className="text-fuchsia-300/60 text-xs mt-1">Squared deviation</p>
+                    </div>
+                    <div className="p-4 bg-gradient-to-br from-sky-900/40 to-sky-800/40 rounded-lg border border-sky-700/30">
+                      <p className="text-sky-300 text-xs font-medium uppercase">Coeff. of Variation</p>
+                      <p className="text-2xl font-bold text-sky-200 mt-2">{formatNumber(analysisResults.stats.coefficientOfVariation)}%</p>
+                      <p className="text-sky-300/60 text-xs mt-1">Relative variability</p>
                     </div>
                   </div>
                 </div>
