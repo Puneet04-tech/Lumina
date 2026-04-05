@@ -72,20 +72,22 @@ export function PieChartComponent({ data, nameKey, valueKey, title }) {
     '#eab308',
     '#84cc16',
     '#22c55e',
+    '#06b6d4',
+    '#3b82f6',
   ];
 
   return (
     <div className="card">
       <h3 className="text-lg font-semibold text-slate-900 mb-4">{title}</h3>
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={450}>
         <PieChart>
           <Pie
             data={data}
-            cx="50%"
-            cy="50%"
+            cx="45%"
+            cy="40%"
             labelLine={false}
-            label={({ name, value }) => `${name}: ${value}`}
-            outerRadius={80}
+            label={false}
+            outerRadius={100}
             fill="#8884d8"
             dataKey={valueKey}
             animationDuration={800}
@@ -94,7 +96,12 @@ export function PieChartComponent({ data, nameKey, valueKey, title }) {
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>
-          <Tooltip />
+          <Tooltip formatter={(value) => value.toLocaleString()} />
+          <Legend 
+            verticalAlign="bottom" 
+            height={36}
+            formatter={(value, entry) => `${entry.payload.name}: ${entry.payload.value.toLocaleString()}`}
+          />
         </PieChart>
       </ResponsiveContainer>
     </div>
