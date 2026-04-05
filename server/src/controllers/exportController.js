@@ -1,6 +1,5 @@
-import { Document, Packer, Table, TableRow, TableCell, Paragraph, TextRun } from 'docx';
-import { writeFile } from 'fs/promises';
 import { File } from '../models/File.js';
+import { Dashboard } from '../models/Dashboard.js';
 
 /**
  * Export data as PDF
