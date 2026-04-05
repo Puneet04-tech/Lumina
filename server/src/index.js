@@ -1,4 +1,6 @@
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -11,7 +13,20 @@ import fileRoutes from './routes/fileRoutes.js';
 import analysisRoutes from './routes/analysisRoutes.js';
 import exportRoutes from './routes/exportRoutes.js';
 
-dotenv.config();
+// Get the directory of the current file
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const envPath = path.resolve(__dirname, '../.env');
+
+console.log('📁 Loading environment from:', envPath);
+dotenv.config({ path: envPath });
+
+// Verify environment variables are loaded
+console.log('🔑 Environment Variables Loaded:');
+console.log('   ✓ GEMINI_API_KEY:', process.env.GEMINI_API_KEY ? `${process.env.GEMINI_API_KEY.substring(0, 15)}...` : '❌ NOT SET');
+console.log('   ✓ GEMINI_MODEL:', process.env.GEMINI_MODEL || '❌ NOT SET');
+console.log('   ✓ PORT:', process.env.PORT || 5000);
+console.log('   ✓ NODE_ENV:', process.env.NODE_ENV || 'development');
 
 const app = express();
 const PORT = process.env.PORT || 5000;

@@ -5,8 +5,6 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-console.log('📦 Gemini module imported successfully');
-
 /**
  * Generate AI-powered advanced insights using Gemini Flash
  */

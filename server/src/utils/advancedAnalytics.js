@@ -5,10 +5,6 @@
 
 import { generateAIInsights } from './geminiInsights.js';
 
-// Debug logging
-console.log('ℹ️  Gemini API Key configured:', !!process.env.GEMINI_API_KEY);
-console.log('ℹ️  Gemini Model:', process.env.GEMINI_MODEL);
-
 /**
  * Calculate correlation between two numeric columns
  */
