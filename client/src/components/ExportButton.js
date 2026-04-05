@@ -29,7 +29,13 @@ export function ExportButton({ fileName, data, columns, chartImage = null, analy
   const handleExportExcel = async () => {
     setIsLoading(true);
     try {
-      await exportToExcel(fileName, data, columns);
+      // Capture chart if callback provided
+      let capturedChart = chartImage;
+      if (onCaptureChart && !capturedChart) {
+        capturedChart = await onCaptureChart();
+      }
+
+      await exportToExcel(fileName, data, columns, capturedChart, analysisData);
       toast.success('Excel exported successfully!');
     } catch (error) {
       toast.error('Failed to export Excel: ' + error.message);

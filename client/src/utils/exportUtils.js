@@ -195,22 +195,80 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
   }
 };
 
-export const exportToExcel = async (fileName, data, columns) => {
+export const exportToExcel = async (fileName, data, columns, chartImage = null, analysisData = null) => {
   try {
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Data');
 
+    // Summary/Insights Sheet
+    if (analysisData && analysisData.insights) {
+      const summarySheet = workbook.addWorksheet('Summary');
+      const insights = analysisData.insights;
+
+      summarySheet.columns = [{ header: 'Metric', key: 'metric', width: 20 }, { header: 'Value', key: 'value', width: 50 }];
+      
+      // Style header
+      const headerRow = summarySheet.getRow(1);
+      headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF6366F1' } };
+
+      summarySheet.addRow({ metric: 'Key Insight', value: insights.insight || 'N/A' });
+      summarySheet.addRow({ metric: 'Summary', value: insights.summary || 'N/A' });
+      summarySheet.addRow({ metric: 'Recommendation', value: insights.recommendation || 'N/A' });
+      summarySheet.addRow({ metric: 'Confidence', value: `${Math.round(insights.confidence * 100)}%` });
+
+      // Wrap text for better readability
+      summarySheet.getColumn('value').alignment = { wrapText: true };
+    }
+
+    // Statistics Sheet
+    if (analysisData && analysisData.stats) {
+      const statsSheet = workbook.addWorksheet('Statistics');
+      const stats = analysisData.stats;
+
+      statsSheet.columns = [{ header: 'Metric', key: 'metric', width: 20 }, { header: 'Value', key: 'value', width: 30 }];
+      
+      // Style header
+      const headerRow = statsSheet.getRow(1);
+      headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF6366F1' } };
+
+      statsSheet.addRow({ metric: 'Count', value: stats.count });
+      statsSheet.addRow({ metric: 'Sum', value: Math.round(stats.sum * 100) / 100 });
+      statsSheet.addRow({ metric: 'Average', value: Math.round(stats.average * 100) / 100 });
+      statsSheet.addRow({ metric: 'Maximum', value: Math.round(stats.max * 100) / 100 });
+      statsSheet.addRow({ metric: 'Minimum', value: Math.round(stats.min * 100) / 100 });
+    }
+
+    // Chart Image Sheet
+    if (chartImage) {
+      try {
+        const chartSheet = workbook.addWorksheet('Chart');
+        // Convert data URL to base64
+        const base64Data = chartImage.replace(/^data:image\/png;base64,/, '');
+        const imageId = workbook.addImage({
+          base64: base64Data,
+          extension: 'png',
+        });
+        chartSheet.addImage(imageId, 'A1:H20');
+      } catch (error) {
+        console.error('Error adding chart to Excel:', error);
+      }
+    }
+
+    // Data Sheet
+    const dataSheet = workbook.addWorksheet('Data');
+    
     // Add headers
-    worksheet.addRow(columns);
+    dataSheet.addRow(columns);
 
     // Style headers
-    const headerRow = worksheet.getRow(1);
+    const headerRow = dataSheet.getRow(1);
     headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
     headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF6366F1' } };
 
     // Add data
     data.forEach((row) => {
-      worksheet.addRow(columns.map((col) => row[col] || ''));
+      dataSheet.addRow(columns.map((col) => row[col] || ''));
     });
 
     // Auto-fit columns
@@ -219,7 +277,7 @@ export const exportToExcel = async (fileName, data, columns) => {
         col.length,
         ...data.map((row) => String(row[col] || '').length)
       );
-      worksheet.getColumn(idx + 1).width = Math.min(maxLength + 2, 50);
+      dataSheet.getColumn(idx + 1).width = Math.min(maxLength + 2, 50);
     });
 
     // Generate Excel file as buffer and download
