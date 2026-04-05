@@ -66,6 +66,7 @@ export default function RegisterPage() {
                 onChange={handleChange}
                 className="input-base"
                 placeholder="Enter your name"
+                autoComplete="name"
                 required
               />
             </div>
@@ -79,6 +80,7 @@ export default function RegisterPage() {
                 onChange={handleChange}
                 className="input-base"
                 placeholder="Enter your email"
+                autoComplete="email"
                 required
               />
             </div>
@@ -92,6 +94,7 @@ export default function RegisterPage() {
                 onChange={handleChange}
                 className="input-base"
                 placeholder="Enter a password"
+                autoComplete="new-password"
                 required
               />
             </div>
@@ -105,6 +108,7 @@ export default function RegisterPage() {
                 onChange={handleChange}
                 className="input-base"
                 placeholder="Confirm your password"
+                autoComplete="new-password"
                 required
               />
             </div>

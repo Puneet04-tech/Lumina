@@ -58,6 +58,7 @@ export default function LoginPage() {
                 onChange={handleChange}
                 className="input-base"
                 placeholder="Enter your email"
+                autoComplete="email"
                 required
               />
             </div>
@@ -71,6 +72,7 @@ export default function LoginPage() {
                 onChange={handleChange}
                 className="input-base"
                 placeholder="Enter your password"
+                autoComplete="current-password"
                 required
               />
             </div>
