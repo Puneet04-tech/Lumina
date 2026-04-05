@@ -73,7 +73,7 @@ export default function AnalysisPage() {
     }
   };
 
-  const handleGenerateChart = (chartType) => {
+  const handleGenerateChart = async (chartType) => {
     if (!file || !file.data || file.data.length === 0) {
       toast.error('No data to visualize');
       return;
@@ -89,24 +89,77 @@ export default function AnalysisPage() {
       return;
     }
 
-    const chartData = generateChartData(file.data, firstColumn, numericColumn);
-    const stats = calculateStats(file.data, numericColumn);
+    // Get advanced analysis via API
+    try {
+      toast.loading('Generating analysis...');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/analysis/query`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+        body: JSON.stringify({ 
+          query: `Analyze ${numericColumn} by ${firstColumn}`,
+          fileId 
+        }),
+      });
 
-    setAnalysisResults({
-      type: chartType,
-      data: chartData,
-      stats,
-      xAxis: firstColumn,
-      yAxis: numericColumn,
-      insights: {
-        insight: `Top performing values of ${numericColumn}`,
-        summary: `Showing ${chartData.length} categories with total value of ${stats.sum}`,
-        recommendation: `Average value is ${stats.average}. Look for opportunities above the average threshold.`,
-        chartType: chartType,
-        confidence: 0.85,
-      },
-    });
-    setChartDisplayType(chartType);
+      const data = await response.json();
+
+      if (data.success) {
+        // Update chart type in results
+        setAnalysisResults({
+          ...data.results,
+          type: chartType,
+        });
+        setChartDisplayType(chartType);
+        toast.dismiss();
+        toast.success('Analysis generated!');
+      } else {
+        // Fallback to local generation
+        const chartData = generateChartData(file.data, firstColumn, numericColumn);
+        const stats = calculateStats(file.data, numericColumn);
+
+        setAnalysisResults({
+          type: chartType,
+          data: chartData,
+          stats,
+          xAxis: firstColumn,
+          yAxis: numericColumn,
+          insights: {
+            insight: `Top performing values of ${numericColumn}`,
+            summary: `Showing ${chartData.length} categories with total value of ${stats.sum}`,
+            recommendation: `Average value is ${stats.average}. Look for opportunities above the average threshold.`,
+            chartType: chartType,
+            confidence: 0.85,
+          },
+        });
+        setChartDisplayType(chartType);
+        toast.dismiss();
+      }
+    } catch (error) {
+      console.error('Analysis error:', error);
+      // Fallback to local generation
+      const chartData = generateChartData(file.data, firstColumn, numericColumn);
+      const stats = calculateStats(file.data, numericColumn);
+
+      setAnalysisResults({
+        type: chartType,
+        data: chartData,
+        stats,
+        xAxis: firstColumn,
+        yAxis: numericColumn,
+        insights: {
+          insight: `Top performing values of ${numericColumn}`,
+          summary: `Showing ${chartData.length} categories with total value of ${stats.sum}`,
+          recommendation: `Average value is ${stats.average}. Look for opportunities above the average threshold.`,
+          chartType: chartType,
+          confidence: 0.85,
+        },
+      });
+      setChartDisplayType(chartType);
+      toast.dismiss();
+    }
   };
 
   if (isLoading) {
