@@ -5,25 +5,52 @@ import { Navbar } from '@/components/Navbar';
 import { FileUploadCard } from '@/components/FileUploadCard';
 import api from '@/utils/api';
 import toast from 'react-hot-toast';
-import { File, Trash2 } from 'lucide-react';
+import { File, Trash2, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DashboardPage() {
   const [files, setFiles] = useState([]);
+  const [dashboards, setDashboards] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadFiles();
+    loadData();
+    
+    // Reload data when returning from other pages
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadData();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
+
+  const loadData = async () => {
+    try {
+      const [filesRes, dashboardsRes] = await Promise.all([
+        api.get('/files'),
+        api.get('/analysis/dashboards'),
+      ]);
+      setFiles(filesRes.data.files || []);
+      setDashboards(dashboardsRes.data.dashboards || []);
+    } catch (error) {
+      toast.error('Failed to load data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const loadFiles = async () => {
     try {
       const response = await api.get('/files');
       setFiles(response.data.files || []);
+      // Also reload dashboards when files are updated
+      const dashboardsRes = await api.get('/analysis/dashboards');
+      setDashboards(dashboardsRes.data.dashboards || []);
     } catch (error) {
       toast.error('Failed to load files');
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -53,9 +80,19 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           {/* Header */}
-          <div className="mb-12">
-            <h1 className="text-4xl font-bold text-slate-900 mb-2">Dashboard</h1>
-            <p className="text-slate-600">Upload and analyze your data with AI</p>
+          <div className="mb-12 flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold text-slate-900 mb-2">Dashboard</h1>
+              <p className="text-slate-600">Upload and analyze your data with AI</p>
+            </div>
+            <button
+              onClick={loadData}
+              className="btn-primary flex items-center gap-2 p-2"
+              title="Refresh stats"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </button>
           </div>
 
           {/* Stats */}
@@ -66,13 +103,13 @@ export default function DashboardPage() {
             </div>
 
             <div className="card bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-              <div className="text-purple-600 text-3xl font-bold">0</div>
+              <div className="text-purple-600 text-3xl font-bold">{dashboards.length}</div>
               <p className="text-slate-600 text-sm mt-2">Dashboards Created</p>
             </div>
 
             <div className="card bg-gradient-to-br from-pink-50 to-pink-100 border-pink-200">
-              <div className="text-pink-600 text-3xl font-bold">0</div>
-              <p className="text-slate-600 text-sm mt-2">Analyses Run</p>
+              <div className="text-pink-600 text-3xl font-bold">{dashboards.length}</div>
+              <p className="text-slate-600 text-sm mt-2">Analyses Saved</p>
             </div>
           </div>
 
