@@ -1,5 +1,3 @@
-'use client';
-
 import { useState } from 'react';
 import { Send, Loader } from 'lucide-react';
 import toast from 'react-hot-toast';

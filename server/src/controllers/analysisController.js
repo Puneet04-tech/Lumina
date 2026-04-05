@@ -3,6 +3,28 @@ import { Dashboard } from '../models/Dashboard.js';
 import { analyzeWithGemini, processNaturalLanguageQuery } from '../utils/aiHelper.js';
 
 /**
+ * Calculate statistics from data
+ */
+const calculateStats = (data, key) => {
+  if (!data || data.length === 0) return {};
+
+  const values = data.map((item) => parseFloat(item[key]) || 0).filter((v) => !isNaN(v));
+
+  const sum = values.reduce((a, b) => a + b, 0);
+  const avg = sum / values.length;
+  const max = Math.max(...values);
+  const min = Math.min(...values);
+
+  return {
+    sum: parseFloat(sum.toFixed(2)),
+    average: parseFloat(avg.toFixed(2)),
+    max: parseFloat(max.toFixed(2)),
+    min: parseFloat(min.toFixed(2)),
+    count: values.length,
+  };
+};
+
+/**
  * Query analysis with AI
  */
 export const queryAnalysis = async (req, res) => {
@@ -42,44 +64,51 @@ export const queryAnalysis = async (req, res) => {
       (col) => typeof file.data[0][col] === 'number'
     );
 
-    let results = {
-      query,
-      processed: processedQuery,
-      ai: aiAnalysis,
-      charts: [],
-    };
+    // Default to first numeric column if found, otherwise use first column
+    let metric = numericColumns[0];
+    let dimension = file.columns.find((c) => !numericColumns.includes(c)) || file.columns[0];
 
-    // Generate chart data based on processed query
-    if (numericColumns.length > 0 && file.columns.length > 1) {
-      const metric = numericColumns[0];
-      const dimension = file.columns.find((c) => !numericColumns.includes(c));
-
-      if (dimension) {
-        const groupedData = {};
-        file.data.forEach((row) => {
-          const key = row[dimension];
-          if (!groupedData[key]) groupedData[key] = 0;
-          groupedData[key] += row[metric] || 0;
-        });
-
-        results.charts = [
-          {
-            type: aiAnalysis.success ? aiAnalysis.analysis.chartType : 'bar',
-            data: Object.entries(groupedData)
-              .map(([name, value]) => ({ name, value }))
-              .sort((a, b) => b.value - a.value)
-              .slice(0, processedQuery.limit),
-            title: `${metric} by ${dimension}`,
-          },
-        ];
-      }
+    // Try to find better dimension based on query
+    if (query.toLowerCase().includes('category')) {
+      const catCol = file.columns.find((c) => c.toLowerCase().includes('category'));
+      if (catCol) dimension = catCol;
+    } else if (query.toLowerCase().includes('region')) {
+      const regCol = file.columns.find((c) => c.toLowerCase().includes('region'));
+      if (regCol) dimension = regCol;
+    } else if (query.toLowerCase().includes('product')) {
+      const prodCol = file.columns.find((c) => c.toLowerCase().includes('product'));
+      if (prodCol) dimension = prodCol;
     }
+
+    let chartData = [];
+    if (metric && dimension) {
+      const groupedData = {};
+      file.data.forEach((row) => {
+        const key = row[dimension];
+        if (!groupedData[key]) groupedData[key] = 0;
+        groupedData[key] += parseFloat(row[metric]) || 0;
+      });
+
+      chartData = Object.entries(groupedData)
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 10);
+    }
+
+    const results = {
+      type: aiAnalysis.success ? aiAnalysis.analysis?.chartType : 'bar',
+      data: chartData,
+      stats: calculateStats(file.data, metric),
+      xAxis: dimension,
+      yAxis: metric,
+    };
 
     res.json({
       success: true,
       results,
     });
   } catch (error) {
+    console.error('queryAnalysis error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
