@@ -322,7 +322,7 @@ export function AdvancedInsights({ analysis }) {
               )}
               <li>• <span className="text-orange-200">Benchmark Best Practices:</span> Conduct deep-dive on {topPerformers[0]?.name} success factors and replicate across underperformers</li>
               <li>• <span className="text-orange-200">Resource Allocation:</span> Focus budget toward high-priority items ({analysis.opportunityItems.filter(item => item.priority === 'High').length} items) for maximum impact</li>
-              <li>• <span className="text-orange-200">Performance Monitoring:</span> Track progress monthly—expect {((average / topPerformers[0]?.value * 100).toFixed(0))}% uplift potential if targets met</li>
+              <li>• <span className="text-orange-200">Performance Monitoring:</span> Track progress monthly—expect {topPerformers[0]?.value && avgPerformance ? ((avgPerformance / topPerformers[0]?.value * 100).toFixed(0)) : '0'}% uplift potential if targets met</li>
             </ul>
           </div>
         </div>
