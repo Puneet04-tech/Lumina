@@ -29,11 +29,18 @@ const calculateStats = (data, key) => {
  */
 export const queryAnalysis = async (req, res) => {
   try {
+    console.log('\n' + '='.repeat(70));
+    console.log('📊 ANALYSIS QUERY RECEIVED');
+    console.log('='.repeat(70));
+    
     const { query, fileId } = req.body;
 
     if (!query || !fileId) {
       return res.status(400).json({ success: false, message: 'Missing query or fileId' });
     }
+
+    console.log('📝 Query:', query);
+    console.log('📁 File ID:', fileId);
 
     // Get file
     const file = await File.findOne({ _id: fileId, userId: req.user._id });
@@ -130,6 +137,9 @@ export const queryAnalysis = async (req, res) => {
       totalRows: file.data.length,
       numericColumns: numericColumns.length,
     };
+
+    console.log('✅ Sending response with insights');
+    console.log('='.repeat(70) + '\n');
 
     res.json({
       success: true,
