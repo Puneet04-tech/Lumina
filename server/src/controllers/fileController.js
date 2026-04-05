@@ -9,7 +9,13 @@ export const uploadFile = async (req, res) => {
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
 
-    const fileContent = fs.readFileSync(req.file.path, 'utf8');
+    let fileContent;
+    try {
+      fileContent = fs.readFileSync(req.file.path, 'utf8');
+    } catch (readError) {
+      return res.status(400).json({ success: false, message: 'Failed to read file: ' + readError.message });
+    }
+
     const parsed = Papa.parse(fileContent, { header: true, dynamicTyping: true });
 
     if (parsed.errors.length > 0) {
@@ -32,6 +38,13 @@ export const uploadFile = async (req, res) => {
 
     await file.save();
 
+    // Clean up uploaded file after saving to database
+    try {
+      fs.unlinkSync(req.file.path);
+    } catch (error) {
+      console.log('Warning: Could not delete temporary file:', error.message);
+    }
+
     res.status(201).json({
       success: true,
       message: 'File uploaded successfully',
@@ -45,6 +58,14 @@ export const uploadFile = async (req, res) => {
       },
     });
   } catch (error) {
+    // Clean up file on error
+    if (req.file && req.file.path) {
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (e) {
+        // Ignore cleanup errors
+      }
+    }
     res.status(500).json({ success: false, message: error.message });
   }
 };

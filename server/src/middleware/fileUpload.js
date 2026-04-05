@@ -1,11 +1,24 @@
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { promises as fs } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const uploadDir = path.join(__dirname, '../../uploads');
+
+// Ensure uploads directory exists
+const ensureUploadDir = async () => {
+  try {
+    await fs.mkdir(uploadDir, { recursive: true });
+  } catch (error) {
+    console.error('Error creating uploads directory:', error);
+  }
+};
+
+// Create directory on module load
+ensureUploadDir();
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
