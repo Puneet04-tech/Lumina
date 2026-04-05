@@ -20,7 +20,7 @@ export const useAnalysisStore = create((set) => ({
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/files/upload`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/files/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
@@ -41,7 +41,7 @@ export const useAnalysisStore = create((set) => ({
   queryAnalysis: async (query) => {
     set({ isLoading: true });
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/analysis/query`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/analysis/query`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
