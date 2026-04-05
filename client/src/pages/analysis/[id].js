@@ -313,16 +313,6 @@ export default function AnalysisPage() {
               {analysisResults.analysis && (
                 <AdvancedInsights analysis={analysisResults.analysis} />
               )}
-                    </div>
-                    <div className="p-4 bg-purple-50 rounded-lg border-l-4 border-purple-500 md:col-span-2">
-                      <p className="text-purple-600 text-sm font-semibold mb-2">RECOMMENDATION</p>
-                      <p className="text-slate-900 font-medium">
-                        {analysisResults.insights.recommendation || 'Review the data to identify trends'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               {/* Statistics */}
               {analysisResults.stats && (
