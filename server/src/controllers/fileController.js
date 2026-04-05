@@ -16,14 +16,43 @@ export const uploadFile = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Failed to read file: ' + readError.message });
     }
 
-    const parsed = Papa.parse(fileContent, { header: true, dynamicTyping: true });
+    // Parse CSV with lenient settings
+    const parsed = Papa.parse(fileContent, {
+      header: true,
+      dynamicTyping: false, // Keep as strings first
+      skipEmptyLines: true,
+      transformHeader: (h) => h.trim(),
+    });
 
-    if (parsed.errors.length > 0) {
-      return res.status(400).json({ success: false, message: 'Invalid CSV file' });
+    // Check for critical parse errors (not warnings)
+    const criticalErrors = (parsed.errors || []).filter(
+      (err) => err.type === 'Delimiter' || err.type === 'FieldMismatch'
+    );
+
+    if (criticalErrors.length > 0 && parsed.data.length === 0) {
+      console.error('CSV Parse Errors:', parsed.errors);
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid CSV format: ' + (criticalErrors[0]?.message || 'Unknown error'),
+      });
     }
 
     const columns = parsed.meta.fields || [];
-    const data = parsed.data.filter((row) => Object.values(row).some((val) => val !== null && val !== ''));
+    
+    // Convert numeric fields after parsing
+    const data = parsed.data.map((row) => {
+      const processedRow = {};
+      for (const key in row) {
+        const value = row[key];
+        // Try to convert to number if it looks like a number
+        if (value !== null && value !== '' && !isNaN(value) && !isNaN(parseFloat(value))) {
+          processedRow[key] = parseFloat(value);
+        } else {
+          processedRow[key] = value;
+        }
+      }
+      return processedRow;
+    }).filter((row) => Object.values(row).some((val) => val !== null && val !== ''));
 
     const file = new File({
       name: req.file.filename,
