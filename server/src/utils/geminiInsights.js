@@ -5,25 +5,45 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+console.log('📦 Gemini module imported successfully');
+
 /**
  * Generate AI-powered advanced insights using Gemini Flash
  */
 export const generateGeminiInsights = async (data, columns, metricColumn, dimensionColumn, basicStats, analysis) => {
   try {
-    if (!process.env.GEMINI_API_KEY) {
-      console.log('Gemini API key not configured, skipping AI insights');
+    console.log('\n' + '='.repeat(60));
+    console.log('🔍 === STARTING GEMINI INSIGHTS GENERATION ===');
+    console.log('='.repeat(60));
+    console.log('📋 Input data:');
+    console.log('   Metric:', metricColumn);
+    console.log('   Dimension:', dimensionColumn);
+    console.log('   Records:', basicStats.count);
+    console.log('\n🔑 Gemini Configuration:');
+    console.log('   API Key exists:', !!process.env.GEMINI_API_KEY);
+    console.log('   API Key length:', process.env.GEMINI_API_KEY?.length || 0);
+    console.log('   Model:', process.env.GEMINI_MODEL || 'gemini-1.5-flash');
+    
+    if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'your_google_gemini_api_key_here') {
+      console.log('⚠️  GEMINI API KEY NOT SET! Using local analysis instead.');
+      console.log('💡 To enable Gemini: Add GEMINI_API_KEY to server/.env');
+      console.log('='.repeat(60) + '\n');
       return null;
     }
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
-    const model = genAI.getGenerativeModel({ model: modelName });
-
-    // Prepare data summary for Gemini
-    const topPerformers = analysis.topPerformers.map(p => `${p.name}: ${p.value}`).join(', ');
-    const bottomPerformers = analysis.bottomPerformers.map(p => `${p.name}: ${p.value}`).join(', ');
+    console.log('🚀 Calling Gemini API...');
     
-    const prompt = `You are a professional business analyst and data scientist. Analyze the following dataset and provide expert insights:
+    try {
+      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+      const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+      console.log(`📱 Model: ${modelName}`);
+      const model = genAI.getGenerativeModel({ model: modelName });
+
+      // Prepare data summary for Gemini
+      const topPerformers = analysis.topPerformers.slice(0, 3).map(p => `${p.name}: ${p.value}`).join(', ');
+      const bottomPerformers = analysis.bottomPerformers.slice(0, 3).map(p => `${p.name}: ${p.value}`).join(', ');
+      
+      const prompt = `You are a professional business analyst and data scientist. Analyze the following dataset and provide expert insights:
 
 **Dataset Summary:**
 - Metric: ${metricColumn}
@@ -55,30 +75,49 @@ Based on this data, provide:
 
 Format your response as JSON with keys: insight, summary, recommendation`;
 
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
-    
-    // Parse JSON from response - handle various JSON positions
-    let jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('Invalid response format from Gemini');
-    }
+      const result = await model.generateContent(prompt);
+      const responseText = result.response.text();
+      
+      console.log('✅ Gemini API response received');
+      console.log('📄 Response length:', responseText.length, 'characters');
+      
+      // Parse JSON from response
+      let jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        console.log('⚠️  No JSON found in response, showing first 500 chars:');
+        console.log(responseText.substring(0, 500));
+        throw new Error('Invalid response format from Gemini');
+      }
 
-    try {
-      const geminiResponse = JSON.parse(jsonMatch[0]);
+      try {
+        const geminiResponse = JSON.parse(jsonMatch[0]);
+        console.log('✅ Gemini insights parsed successfully');
+        console.log('   - Insight length:', geminiResponse.insight?.length || 0);
+        console.log('   - Summary length:', geminiResponse.summary?.length || 0);
+        console.log('   - Recommendation length:', geminiResponse.recommendation?.length || 0);
+        console.log('='.repeat(60) + '\n');
 
-      return {
-        insight: geminiResponse.insight || '',
-        summary: geminiResponse.summary || '',
-        recommendation: geminiResponse.recommendation || '',
-        source: 'gemini-ai',
-      };
-    } catch (parseError) {
-      console.error('JSON parse error:', parseError);
-      throw new Error('Failed to parse Gemini response');
+        return {
+          insight: geminiResponse.insight || '',
+          summary: geminiResponse.summary || '',
+          recommendation: geminiResponse.recommendation || '',
+          source: 'gemini-ai',
+        };
+      } catch (parseError) {
+        console.error('❌ JSON parse error:', parseError.message);
+        console.error('❌ Tried to parse:', jsonMatch[0].substring(0, 200));
+        throw new Error('Failed to parse Gemini response');
+      }
+    } catch (apiError) {
+      console.error('❌ Gemini API call failed:', apiError.message);
+      console.error('❌ Error details:', apiError);
+      console.log('='.repeat(60) + '\n');
+      throw apiError;
     }
   } catch (error) {
-    console.error('Gemini API error:', error);
+    console.error('❌ Gemini insights generation FAILED');
+    console.error('   Error:', error.message);
+    console.log('='.repeat(60) + '\n');
     return null; // Return null to use fallback
   }
 };
@@ -87,13 +126,18 @@ Format your response as JSON with keys: insight, summary, recommendation`;
  * Generate Gemini insights with fallback to local analysis
  */
 export const generateAIInsights = async (data, columns, metricColumn, dimensionColumn, basicStats, analysis) => {
+  console.log('🤖 Starting AI insights generation...');
+  console.log('   Attempting Gemini API...');
+  
   // Try Gemini first
   const geminiInsights = await generateGeminiInsights(data, columns, metricColumn, dimensionColumn, basicStats, analysis);
   
   if (geminiInsights) {
+    console.log('🎯 SUCCESS: Using Gemini AI insights');
     return geminiInsights;
   }
 
+  console.log('📈 FALLBACK: Using local analysis (Gemini failed or not configured)');
   // Fallback: Return null and let caller use local analysis
   return null;
 };

@@ -1,6 +1,5 @@
 import { File } from '../models/File.js';
 import { Dashboard } from '../models/Dashboard.js';
-import { analyzeWithGemini, processNaturalLanguageQuery } from '../utils/aiHelper.js';
 import { performAdvancedAnalysis, generateComparisonInsights } from '../utils/advancedAnalytics.js';
 
 /**
@@ -108,6 +107,14 @@ export const queryAnalysis = async (req, res) => {
     if (!advancedAnalysis.success) {
       return res.status(400).json({ success: false, message: advancedAnalysis.message });
     }
+
+    console.log('✅ Advanced Analysis Generated:', {
+      hasStats: !!advancedAnalysis.stats,
+      hasInsights: !!advancedAnalysis.insights,
+      hasAnalysis: !!advancedAnalysis.analysis,
+      analysisKeys: advancedAnalysis.analysis ? Object.keys(advancedAnalysis.analysis) : [],
+      insightsKeys: advancedAnalysis.insights ? Object.keys(advancedAnalysis.insights) : [],
+    });
 
     const insights = advancedAnalysis.insights;
     const analysis = advancedAnalysis.analysis || {};
