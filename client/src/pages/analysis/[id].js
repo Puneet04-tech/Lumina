@@ -25,12 +25,20 @@ export default function AnalysisPage() {
   const [analysisResults, setAnalysisResults] = useState(null);
   const [tableView, setTableView] = useState(true);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [chartDisplayType, setChartDisplayType] = useState('bar');
 
   useEffect(() => {
     if (fileId) {
       loadFile();
     }
   }, [fileId]);
+
+  useEffect(() => {
+    if (analysisResults && !analysisResults.type) {
+      // For AI query results, default to bar chart
+      setChartDisplayType('bar');
+    }
+  }, [analysisResults]);
 
   const loadFile = async () => {
     try {
@@ -70,6 +78,7 @@ export default function AnalysisPage() {
       xAxis: firstColumn,
       yAxis: numericColumn,
     });
+    setChartDisplayType(chartType);
   };
 
   if (isLoading) {
@@ -147,6 +156,53 @@ export default function AnalysisPage() {
           {/* Results */}
           {analysisResults && (
             <div className="space-y-8 mb-8">
+              {/* Chart Type Selector */}
+              <div className="card">
+                <h3 className="font-semibold text-slate-900 mb-4">Chart Type</h3>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setChartDisplayType('bar')}
+                    className={`btn ${
+                      chartDisplayType === 'bar'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+                    }`}
+                  >
+                    📊 Bar Chart
+                  </button>
+                  <button
+                    onClick={() => setChartDisplayType('line')}
+                    className={`btn ${
+                      chartDisplayType === 'line'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-purple-50 text-purple-600 hover:bg-purple-100'
+                    }`}
+                  >
+                    📈 Line Chart
+                  </button>
+                  <button
+                    onClick={() => setChartDisplayType('pie')}
+                    className={`btn ${
+                      chartDisplayType === 'pie'
+                        ? 'bg-pink-600 text-white'
+                        : 'bg-pink-50 text-pink-600 hover:bg-pink-100'
+                    }`}
+                  >
+                    🥧 Pie Chart
+                  </button>
+                  <button
+                    onClick={() => setChartDisplayType('area')}
+                    className={`btn ${
+                      chartDisplayType === 'area'
+                        ? 'bg-green-600 text-white'
+                        : 'bg-green-50 text-green-600 hover:bg-green-100'
+                    }`}
+                  >
+                    📉 Area Chart
+                  </button>
+                </div>
+              </div>
+
               {/* Chart */}
               <div className="card">
                 <div className="flex justify-between items-start mb-6">
@@ -157,7 +213,7 @@ export default function AnalysisPage() {
                     columns={file?.columns}
                   />
                 </div>
-                {analysisResults.type === 'bar' && (
+                {chartDisplayType === 'bar' && (
                   <BarChartComponent
                     data={analysisResults.data}
                     xKey="name"
@@ -165,7 +221,7 @@ export default function AnalysisPage() {
                     title={`${analysisResults.yAxis} by ${analysisResults.xAxis}`}
                   />
                 )}
-                {analysisResults.type === 'line' && (
+                {chartDisplayType === 'line' && (
                   <LineChartComponent
                     data={analysisResults.data}
                     xKey="name"
@@ -173,7 +229,7 @@ export default function AnalysisPage() {
                     title={`${analysisResults.yAxis} Trend`}
                   />
                 )}
-                {analysisResults.type === 'pie' && (
+                {chartDisplayType === 'pie' && (
                   <PieChartComponent
                     data={analysisResults.data}
                     nameKey="name"
@@ -181,7 +237,7 @@ export default function AnalysisPage() {
                     title={`${analysisResults.yAxis} Distribution`}
                   />
                 )}
-                {analysisResults.type === 'area' && (
+                {chartDisplayType === 'area' && (
                   <AreaChartComponent
                     data={analysisResults.data}
                     xKey="name"
