@@ -196,32 +196,49 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
 };
 
 export const exportToExcel = async (fileName, data, columns) => {
-  const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet('Data');
+  try {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Data');
 
-  // Add headers
-  worksheet.addRow(columns);
+    // Add headers
+    worksheet.addRow(columns);
 
-  // Style headers
-  const headerRow = worksheet.getRow(1);
-  headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-  headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF6366F1' } };
+    // Style headers
+    const headerRow = worksheet.getRow(1);
+    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF6366F1' } };
 
-  // Add data
-  data.forEach((row) => {
-    worksheet.addRow(columns.map((col) => row[col] || ''));
-  });
+    // Add data
+    data.forEach((row) => {
+      worksheet.addRow(columns.map((col) => row[col] || ''));
+    });
 
-  // Auto-fit columns
-  columns.forEach((col, idx) => {
-    const maxLength = Math.max(
-      col.length,
-      ...data.map((row) => String(row[col] || '').length)
-    );
-    worksheet.getColumn(idx + 1).width = Math.min(maxLength + 2, 50);
-  });
+    // Auto-fit columns
+    columns.forEach((col, idx) => {
+      const maxLength = Math.max(
+        col.length,
+        ...data.map((row) => String(row[col] || '').length)
+      );
+      worksheet.getColumn(idx + 1).width = Math.min(maxLength + 2, 50);
+    });
 
-  await workbook.xlsx.writeFile(`${fileName}_${Date.now()}.xlsx`);
+    // Generate Excel file as buffer and download
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { 
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+    });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${fileName}_${Date.now()}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Excel Export Error:', error);
+    throw new Error(`Failed to export Excel: ${error.message}`);
+  }
 };
 
 export const exportToJSON = async (fileName, data, columns) => {
