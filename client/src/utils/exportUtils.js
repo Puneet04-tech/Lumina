@@ -78,3 +78,30 @@ export const exportToExcel = async (fileName, data, columns) => {
 
   await workbook.xlsx.writeFile(`${fileName}_${Date.now()}.xlsx`);
 };
+
+export const exportToJSON = async (fileName, data, columns) => {
+  const jsonData = {
+    exportDate: new Date().toISOString(),
+    fileName: fileName,
+    rowCount: data.length,
+    columns: columns,
+    data: data.map((row) => {
+      const obj = {};
+      columns.forEach((col) => {
+        obj[col] = row[col] || null;
+      });
+      return obj;
+    }),
+  };
+
+  const jsonString = JSON.stringify(jsonData, null, 2);
+  const blob = new Blob([jsonString], { type: 'application/json' });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${fileName}_${Date.now()}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+};
