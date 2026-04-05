@@ -1,6 +1,7 @@
 import { File } from '../models/File.js';
 import { Dashboard } from '../models/Dashboard.js';
 import { analyzeWithGemini, processNaturalLanguageQuery } from '../utils/aiHelper.js';
+import { performAdvancedAnalysis, generateComparisonInsights } from '../utils/advancedAnalytics.js';
 
 /**
  * Calculate statistics from data
@@ -25,7 +26,7 @@ const calculateStats = (data, key) => {
 };
 
 /**
- * Query analysis with AI
+ * Query analysis with AI (if configured) or Advanced Local Analysis
  */
 export const queryAnalysis = async (req, res) => {
   try {
@@ -46,20 +47,7 @@ export const queryAnalysis = async (req, res) => {
       return res.status(400).json({ success: false, message: 'File has no data' });
     }
 
-    // Prepare data context for AI
-    const dataContext = {
-      rowCount: file.data.length,
-      columns: file.columns,
-      sampleData: file.data.slice(0, 5),
-    };
-
-    // Call Gemini AI for analysis
-    const aiAnalysis = await analyzeWithGemini(query, dataContext);
-
-    // Also process using rule-based system
-    const processedQuery = processNaturalLanguageQuery(query, file.columns);
-
-    // Generate recommendations based on data
+    // Process query to find metric and dimension
     const numericColumns = file.columns.filter(
       (col) => typeof file.data[0][col] === 'number'
     );
@@ -68,23 +56,37 @@ export const queryAnalysis = async (req, res) => {
     let metric = numericColumns[0];
     let dimension = file.columns.find((c) => !numericColumns.includes(c)) || file.columns[0];
 
-    // Try to find better dimension based on query
-    if (query.toLowerCase().includes('category')) {
+    // Try to find better dimension/metric based on query
+    const lowerQuery = query.toLowerCase();
+    if (lowerQuery.includes('category')) {
       const catCol = file.columns.find((c) => c.toLowerCase().includes('category'));
       if (catCol) dimension = catCol;
-    } else if (query.toLowerCase().includes('region')) {
+    } else if (lowerQuery.includes('region')) {
       const regCol = file.columns.find((c) => c.toLowerCase().includes('region'));
       if (regCol) dimension = regCol;
-    } else if (query.toLowerCase().includes('product')) {
+    } else if (lowerQuery.includes('product')) {
       const prodCol = file.columns.find((c) => c.toLowerCase().includes('product'));
       if (prodCol) dimension = prodCol;
+    } else if (lowerQuery.includes('date')) {
+      const dateCol = file.columns.find((c) => c.toLowerCase().includes('date'));
+      if (dateCol) dimension = dateCol;
     }
 
+    // Find metric based on keywords
+    numericColumns.forEach(col => {
+      if (lowerQuery.includes('revenue') && col.toLowerCase().includes('revenue')) metric = col;
+      if (lowerQuery.includes('sales') && col.toLowerCase().includes('sales')) metric = col;
+      if (lowerQuery.includes('profit') && col.toLowerCase().includes('profit')) metric = col;
+      if (lowerQuery.includes('amount') && col.toLowerCase().includes('amount')) metric = col;
+      if (lowerQuery.includes('value') && col.toLowerCase().includes('value')) metric = col;
+    });
+
+    // Generate chart data
     let chartData = [];
     if (metric && dimension) {
       const groupedData = {};
       file.data.forEach((row) => {
-        const key = row[dimension];
+        const key = String(row[dimension]);
         if (!groupedData[key]) groupedData[key] = 0;
         groupedData[key] += parseFloat(row[metric]) || 0;
       });
@@ -92,22 +94,42 @@ export const queryAnalysis = async (req, res) => {
       chartData = Object.entries(groupedData)
         .map(([name, value]) => ({ name, value }))
         .sort((a, b) => b.value - a.value)
-        .slice(0, 10);
+        .slice(0, 20);
     }
 
+    // Perform advanced local analysis (NO API REQUIRED)
+    const advancedAnalysis = performAdvancedAnalysis(
+      file.data,
+      file.columns,
+      metric,
+      dimension
+    );
+
+    // Try to use AI if available, otherwise use advanced analysis
+    let aiAnalysis = null;
+    if (process.env.GOOGLE_GEMINI_API_KEY) {
+      const dataContext = {
+        rowCount: file.data.length,
+        columns: file.columns,
+        sampleData: file.data.slice(0, 5),
+      };
+      aiAnalysis = await analyzeWithGemini(query, dataContext);
+    }
+
+    const insights = aiAnalysis?.success 
+      ? aiAnalysis.analysis 
+      : advancedAnalysis.insights;
+
     const results = {
-      type: aiAnalysis.success ? aiAnalysis.analysis?.chartType : 'bar',
+      type: 'bar',
       data: chartData,
-      stats: calculateStats(file.data, metric),
+      stats: advancedAnalysis.stats,
       xAxis: dimension,
       yAxis: metric,
-      insights: aiAnalysis.success ? aiAnalysis.analysis : {
-        insight: `Analysis of ${metric} by ${dimension}`,
-        summary: `Found ${chartData.length} categories with total ${calculateStats(file.data, metric).sum}`,
-        recommendation: `Review the chart to identify trends and patterns in ${metric} across different ${dimension} values`,
-        chartType: 'bar',
-        confidence: 0.8,
-      },
+      insights,
+      analysis: advancedAnalysis.analysis, // Include full analysis data
+      totalRows: file.data.length,
+      numericColumns: numericColumns.length,
     };
 
     res.json({

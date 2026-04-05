@@ -140,6 +140,87 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
       doc.setFontSize(10);
       doc.setTextColor(128, 128, 128);
       doc.text(`Confidence: ${Math.round(insights.confidence * 100)}%`, 10, yPosition);
+      yPosition += 10;
+    }
+
+    // Advanced Analysis Section (if available)
+    if (analysisData && analysisData.analysis) {
+      const analysis = analysisData.analysis;
+      
+      if (yPosition > pageHeight - 80) {
+        doc.addPage();
+        yPosition = 15;
+      }
+
+      doc.setFontSize(14);
+      doc.setTextColor(99, 102, 241);
+      doc.text('🔍 Advanced Analysis', 10, yPosition);
+      yPosition += 10;
+
+      // Top Performers
+      if (analysis.topPerformers && analysis.topPerformers.length > 0) {
+        doc.setFontSize(11);
+        doc.setTextColor(79, 70, 229);
+        doc.text('Top Performers:', 10, yPosition);
+        yPosition += 6;
+
+        const topData = [
+          ['Rank', 'Name', 'Value'],
+          ...analysis.topPerformers.slice(0, 5).map((p, i) => [
+            String(i + 1),
+            String(p.name).substring(0, 30),
+            String(Math.round(p.value * 100) / 100),
+          ]),
+        ];
+
+        if (typeof doc.autoTable === 'function') {
+          doc.autoTable({
+            head: [topData[0]],
+            body: topData.slice(1),
+            startY: yPosition,
+            margin: 10,
+            theme: 'striped',
+            headerStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255] },
+          });
+          yPosition = doc.lastAutoTable.finalY + 6;
+        }
+      }
+
+      // Trend Analysis
+      if (analysis.trend && analysis.trend.direction) {
+        if (yPosition > pageHeight - 40) {
+          doc.addPage();
+          yPosition = 15;
+        }
+
+        doc.setFontSize(11);
+        doc.setTextColor(79, 70, 229);
+        doc.text('📈 Trend Analysis:', 10, yPosition);
+        yPosition += 5;
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Direction: ${analysis.trend.direction.toUpperCase()} | Change: ${analysis.trend.percentChange}% | Strength: ${(analysis.trend.strength * 100).toFixed(0)}%`, 10, yPosition);
+        yPosition += 8;
+      }
+
+      // Data Quality
+      if (analysis.dataQuality) {
+        const dq = analysis.dataQuality;
+        const qualityInfo = `Completeness: ${dq.completeness}% | Uniqueness: ${dq.uniquenessScore}% | Total Rows: ${dq.totalRows}`;
+        const qualityLines = doc.splitTextToSize(`Data Quality: ${qualityInfo}`, pageWidth - 20);
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        doc.text(qualityLines, 10, yPosition);
+        yPosition += qualityLines.length * 4 + 5;
+      }
+
+      // Outliers
+      if (analysis.outlierCount > 0) {
+        doc.setFontSize(10);
+        doc.setTextColor(200, 80, 80);
+        doc.text(`⚠️ Outliers Detected: ${analysis.outlierCount}`, 10, yPosition);
+        yPosition += 8;
+      }
     }
 
     // Data Preview Section
@@ -252,6 +333,84 @@ export const exportToExcel = async (fileName, data, columns, chartImage = null, 
         chartSheet.addImage(imageId, 'A1:H20');
       } catch (error) {
         console.error('Error adding chart to Excel:', error);
+      }
+    }
+
+    // Advanced Analysis Sheet
+    if (analysisData && analysisData.analysis) {
+      const analysis = analysisData.analysis;
+
+      // Top Performers Sheet
+      if (analysis.topPerformers && analysis.topPerformers.length > 0) {
+        const topSheet = workbook.addWorksheet('Top Performers');
+        topSheet.columns = [
+          { header: 'Rank', key: 'rank', width: 8 },
+          { header: 'Name', key: 'name', width: 30 },
+          { header: 'Value', key: 'value', width: 15 },
+        ];
+
+        const headerRow = topSheet.getRow(1);
+        headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF22C55E' } };
+
+        analysis.topPerformers.forEach((p, idx) => {
+          topSheet.addRow({
+            rank: idx + 1,
+            name: p.name,
+            value: Math.round(p.value * 100) / 100,
+          });
+        });
+      }
+
+      // Bottom Performers Sheet
+      if (analysis.bottomPerformers && analysis.bottomPerformers.length > 0) {
+        const bottomSheet = workbook.addWorksheet('Areas for Improvement');
+        bottomSheet.columns = [
+          { header: 'Rank', key: 'rank', width: 8 },
+          { header: 'Name', key: 'name', width: 30 },
+          { header: 'Value', key: 'value', width: 15 },
+        ];
+
+        const headerRow = bottomSheet.getRow(1);
+        headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEF4444' } };
+
+        analysis.bottomPerformers.forEach((p, idx) => {
+          bottomSheet.addRow({
+            rank: idx + 1,
+            name: p.name,
+            value: Math.round(p.value * 100) / 100,
+          });
+        });
+      }
+
+      // Trend & Quality Analysis Sheet
+      if (analysis.trend || analysis.dataQuality) {
+        const analysisSheet = workbook.addWorksheet('Analysis Metrics');
+        analysisSheet.columns = [
+          { header: 'Metric', key: 'metric', width: 25 },
+          { header: 'Value', key: 'value', width: 25 },
+        ];
+
+        const headerRow = analysisSheet.getRow(1);
+        headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF6366F1' } };
+
+        if (analysis.trend) {
+          analysisSheet.addRow({ metric: 'Trend Direction', value: analysis.trend.direction });
+          analysisSheet.addRow({ metric: 'Percent Change', value: `${analysis.trend.percentChange}%` });
+          analysisSheet.addRow({ metric: 'Trend Strength', value: `${(analysis.trend.strength * 100).toFixed(0)}%` });
+        }
+
+        if (analysis.dataQuality) {
+          analysisSheet.addRow({ metric: 'Data Completeness', value: `${analysis.dataQuality.completeness}%` });
+          analysisSheet.addRow({ metric: 'Uniqueness Score', value: `${analysis.dataQuality.uniquenessScore}%` });
+          analysisSheet.addRow({ metric: 'Total Rows', value: analysis.dataQuality.totalRows });
+        }
+
+        if (analysis.outlierCount > 0) {
+          analysisSheet.addRow({ metric: 'Outliers Detected', value: analysis.outlierCount });
+        }
       }
     }
 
