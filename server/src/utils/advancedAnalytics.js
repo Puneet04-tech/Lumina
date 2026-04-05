@@ -269,13 +269,69 @@ export const performAdvancedAnalysis = (data, columns, metricColumn, dimensionCo
       correlations[col] = calculateCorrelation(data, metricColumn, col);
     });
 
-    // Generate insights text
+    // Generate advanced insights with sophisticated analysis
+    const performanceSpread = topPerformers[0]?.value / (bottomPerformers[bottomPerformers.length - 1]?.value || 1);
+    const topConsumesPercentage = (topPerformers[0]?.value / sum * 100);
+    const qualityScore = (dataQuality.completeness + dataQuality.uniquenessScore) / 2;
+    const variabilityScore = Math.sqrt(values.reduce((sum, v) => sum + Math.pow(v - average, 2), 0) / count);
+    const coefficientOfVariation = (variabilityScore / average * 100);
+    
+    // Determine performance concentration
+    let concentrationLevel = 'distributed';
+    if (topConsumesPercentage > 50) concentrationLevel = 'highly concentrated';
+    else if (topConsumesPercentage > 30) concentrationLevel = 'moderately concentrated';
+    else if (topConsumesPercentage > 15) concentrationLevel = 'somewhat balanced';
+    
+    // Trend interpretation
+    let trendInterpretation = '';
+    if (trend.direction === 'upward') {
+      trendInterpretation = `showing ${trend.strength > 0.7 ? 'strong' : trend.strength > 0.4 ? 'moderate' : 'subtle'} upward momentum of ${trend.percentChange}%`;
+    } else if (trend.direction === 'downward') {
+      trendInterpretation = `declining with ${trend.strength > 0.7 ? 'high' : trend.strength > 0.4 ? 'moderate' : 'mild'} pressure, down ${Math.abs(trend.percentChange)}%`;
+    } else {
+      trendInterpretation = `remaining relatively stable with minimal fluctuation`;
+    }
+    
+    // Risk assessment
+    let riskLevel = 'Low Risk';
+    let riskFactors = [];
+    if (outlierAnalysis.count > count * 0.05) {
+      riskLevel = 'Medium Risk';
+      riskFactors.push(`${Math.round(outlierAnalysis.count / count * 100)}% anomalies detected`);
+    }
+    if (coefficientOfVariation > 50) {
+      riskLevel = 'Medium Risk';
+      riskFactors.push(`High variability (CV: ${coefficientOfVariation.toFixed(0)}%)`);
+    }
+    if (dataQuality.completeness < 80) {
+      riskLevel = 'High Risk';
+      riskFactors.push(`Low data completeness (${dataQuality.completeness}%)`);
+    }
+    
+    // Generate advanced multi-faceted insights
+    const advancedInsight = `${dimensionColumn} exhibits ${concentrationLevel} distribution. Primary driver "${topPerformers[0]?.name}" commands ${topConsumesPercentage.toFixed(1)}% of total ${metricColumn}. Performance ratio between top and bottom is ${performanceSpread.toFixed(1)}x. Data is ${trendInterpretation}. Risk Assessment: ${riskLevel}${riskFactors.length > 0 ? ' — ' + riskFactors.join('; ') : ''}.`;
+    
+    const advancedSummary = `Dataset comprises ${count} observations with ${columns.length} variables. ${metricColumn} averages ${average.toFixed(2)} (σ=${variabilityScore.toFixed(2)}, CV=${coefficientOfVariation.toFixed(1)}%). Value distribution spans ${min.toFixed(2)}-${max.toFixed(2)} with ${outlierAnalysis.count} significant outliers. Data integrity: ${dataQuality.completeness}% complete, ${dataQuality.uniquenessScore}% unique. ${topPerformers.length} top performers identified contributing ${topPerformers.reduce((sum, p) => sum + p.value, 0).toFixed(0)} total. Strategic focus needed on bottom-performing segments.`;
+    
+    const correlationInsights = Object.entries(correlations)
+      .filter(([_, corr]) => Math.abs(corr) > 0.5)
+      .map(([col, corr]) => `Strong ${corr > 0 ? 'positive' : 'negative'} correlation with ${col} (${Math.abs(corr * 100).toFixed(0)}%)`)
+      .join('. ');
+    
+    const advancedRecommendation = recommendations.length > 0 
+      ? recommendations.join(' ')
+      : `Focus on replicating success factors from top performers. Investigate ${outlierAnalysis.count} anomalies for root causes. ${correlationInsights ? 'Leverage identified correlations: ' + correlationInsights + '.' : ''} Implement targeted interventions for underperforming segments to achieve competitive parity.`;
+
     const insights = {
-      insight: `${dimensionColumn} drives ${metricColumn}. Top performer "${topPerformers[0]?.name}" has ${topPerformers[0]?.value.toFixed(0)} (${((topPerformers[0]?.value / sum) * 100).toFixed(1)}% of total).`,
-      summary: `Analysis of ${count} records shows average ${metricColumn} of ${average.toFixed(2)}. Range: ${min.toFixed(2)} to ${max.toFixed(2)}. Outliers detected: ${outlierAnalysis.count}. Data completeness: ${dataQuality.completeness}%.`,
-      recommendation: recommendations.join(' '),
+      insight: advancedInsight,
+      summary: advancedSummary,
+      recommendation: advancedRecommendation,
       chartType: 'bar',
-      confidence: Math.min(0.95, 0.7 + (dataQuality.completeness / 200)),
+      confidence: Math.min(0.98, 0.65 + (dataQuality.completeness / 250) + (1 - Math.min(outlierAnalysis.count / count, 0.3)) * 0.2),
+      riskLevel,
+      performanceRatio: performanceSpread.toFixed(1),
+      concentration: concentrationLevel,
+      trendStatus: trendInterpretation,
     };
 
     return {

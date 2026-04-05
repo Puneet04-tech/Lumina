@@ -311,31 +311,117 @@ export default function AnalysisPage() {
                 </div>
               </div>
 
-              {/* Insights */}
+              {/* AI Insights - Premium Custom Design */}
               {analysisResults.insights && (
-                <div className="p-6 bg-gradient-to-r from-slate-800/50 to-slate-900/50 rounded-xl border border-slate-700/50 backdrop-blur-md animate-slideInUp" style={{animationDelay: '0.4s'}}>
-                  <h2 className="text-2xl font-bold text-transparent bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text mb-6">💡 AI Insights</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="p-4 bg-gradient-to-br from-blue-900/30 to-blue-800/30 rounded-lg border border-blue-700/30 backdrop-blur-sm">
-                      <p className="text-blue-300 text-sm font-semibold mb-2">🔍 KEY INSIGHT</p>
-                      <p className="text-slate-100 font-medium">
+                <div className="animate-slideInUp" style={{animationDelay: '0.4s'}}>
+                  {/* Header */}
+                  <div className="mb-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-1 h-8 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full"></div>
+                      <h2 className="text-3xl font-bold text-transparent bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text">Advanced Intelligence Analysis</h2>
+                    </div>
+                    <p className="text-slate-400 text-sm ml-4">Multi-dimensional insights with risk assessment & strategic recommendations</p>
+                  </div>
+
+                  {/* Risk & Metrics Badges */}
+                  <div className="flex flex-wrap gap-3 mb-6">
+                    {analysisResults.insights.riskLevel && (
+                      <div className={`px-4 py-2 rounded-lg border backdrop-blur-sm flex items-center gap-2 ${
+                        analysisResults.insights.riskLevel === 'Low Risk' ? 'bg-green-950/40 border-green-700/30' :
+                        analysisResults.insights.riskLevel === 'Medium Risk' ? 'bg-amber-950/40 border-amber-700/30' :
+                        'bg-red-950/40 border-red-700/30'
+                      }`}>
+                        <span className={`${
+                          analysisResults.insights.riskLevel === 'Low Risk' ? 'text-green-300' :
+                          analysisResults.insights.riskLevel === 'Medium Risk' ? 'text-amber-300' :
+                          'text-red-300'
+                        }`}>⚠️</span>
+                        <span className={`${
+                          analysisResults.insights.riskLevel === 'Low Risk' ? 'text-green-200' :
+                          analysisResults.insights.riskLevel === 'Medium Risk' ? 'text-amber-200' :
+                          'text-red-200'
+                        } font-semibold text-sm`}>{analysisResults.insights.riskLevel}</span>
+                      </div>
+                    )}
+                    {analysisResults.insights.concentration && (
+                      <div className="px-4 py-2 bg-purple-950/40 border border-purple-700/30 rounded-lg backdrop-blur-sm">
+                        <span className="text-purple-200 font-semibold text-sm">Distribution: <span className="text-purple-300 capitalize">{analysisResults.insights.concentration}</span></span>
+                      </div>
+                    )}
+                    {analysisResults.insights.performanceRatio && (
+                      <div className="px-4 py-2 bg-blue-950/40 border border-blue-700/30 rounded-lg backdrop-blur-sm">
+                        <span className="text-blue-200 font-semibold text-sm">Performance Ratio: <span className="text-blue-300">{analysisResults.insights.performanceRatio}x</span></span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Main Insight Card - Featured */}
+                  <div className="mb-6 bg-gradient-to-br from-indigo-950/80 via-slate-900/60 to-purple-950/40 rounded-2xl p-8 border border-indigo-700/30 backdrop-blur-sm overflow-hidden relative">
+                    {/* Decorative elements */}
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-indigo-600/10 to-transparent rounded-full blur-3xl -mr-32 -mt-32"></div>
+                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-purple-600/10 to-transparent rounded-full blur-3xl -ml-24 -mb-24"></div>
+                    
+                    <div className="relative z-10">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center">
+                            <span className="text-lg">🎯</span>
+                          </div>
+                          <div>
+                            <p className="text-indigo-300/80 text-xs font-semibold uppercase tracking-widest">Advanced Insight</p>
+                            <p className="text-indigo-200 text-sm font-semibold">Key Finding</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600/30 to-purple-600/20 border border-indigo-500/30 rounded-xl backdrop-blur-sm">
+                          <span className="text-2xl font-bold text-indigo-200">{Math.round(analysisResults.insights.confidence * 100)}</span>
+                          <span className="text-indigo-300/70 text-xs font-semibold">Confidence</span>
+                        </div>
+                      </div>
+                      <p className="text-lg text-slate-100 leading-relaxed font-medium">
                         {analysisResults.insights.insight || 'Analysis completed'}
                       </p>
-                      <p className="text-blue-300 text-sm mt-2">
-                        ✓ Confidence: {Math.round(analysisResults.insights.confidence * 100)}%
-                      </p>
+                      {analysisResults.insights.trendStatus && (
+                        <div className="mt-4 pt-4 border-t border-indigo-700/20">
+                          <p className="text-indigo-300/70 text-sm"><span className="text-indigo-200 font-semibold">Trend Status:</span> {analysisResults.insights.trendStatus}</p>
+                        </div>
+                      )}
                     </div>
-                    <div className="p-4 bg-gradient-to-br from-green-900/30 to-green-800/30 rounded-lg border border-green-700/30 backdrop-blur-sm">
-                      <p className="text-green-300 text-sm font-semibold mb-2">📊 SUMMARY</p>
-                      <p className="text-slate-100 font-medium">
+                  </div>
+
+                  {/* Summary & Recommendation Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Summary Card */}
+                    <div className="bg-gradient-to-br from-emerald-950/60 to-slate-900/40 rounded-2xl p-7 border border-emerald-700/25 backdrop-blur-sm group hover:border-emerald-600/40 transition-all duration-300">
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <span>📊</span>
+                        </div>
+                        <p className="text-emerald-300/80 text-xs font-semibold uppercase tracking-widest">Statistical Summary</p>
+                      </div>
+                      <p className="text-slate-100 leading-relaxed font-medium mb-4 text-sm line-clamp-4">
                         {analysisResults.insights.summary || 'Data analysis summary'}
                       </p>
+                      <div className="flex items-center gap-2 text-emerald-300/70 text-xs">
+                        <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
+                        <span>Dataset coverage: {analysisResults.totalRows} records</span>
+                      </div>
                     </div>
-                    <div className="p-4 bg-gradient-to-br from-purple-900/30 to-purple-800/30 rounded-lg border border-purple-700/30 backdrop-blur-sm md:col-span-2">
-                      <p className="text-purple-300 text-sm font-semibold mb-2">💡 RECOMMENDATION</p>
-                      <p className="text-slate-100 font-medium">
+
+                    {/* Recommendation Card */}
+                    <div className="bg-gradient-to-br from-violet-950/60 to-slate-900/40 rounded-2xl p-7 border border-violet-700/25 backdrop-blur-sm group hover:border-violet-600/40 transition-all duration-300">
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <span>💡</span>
+                        </div>
+                        <p className="text-violet-300/80 text-xs font-semibold uppercase tracking-widest">Strategic Actions</p>
+                      </div>
+                      <p className="text-slate-100 leading-relaxed font-medium mb-4 text-sm line-clamp-4">
                         {analysisResults.insights.recommendation || 'Review the data to identify trends'}
                       </p>
+                      <div className="flex items-center gap-2 text-violet-300/70 text-xs">
+                        <div className="w-1.5 h-1.5 bg-violet-500 rounded-full"></div>
+                        <span>Prioritize top-performing segments and investigate anomalies</span>
+                      </div>
                     </div>
                   </div>
                 </div>
