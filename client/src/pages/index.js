@@ -1,21 +1,35 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Sparkles, TrendingUp, BarChart3, Zap } from 'lucide-react';
 
 function AnimatedStars() {
+  const [stars, setStars] = useState([]);
+
+  useEffect(() => {
+    // Generate stars only on client to avoid hydration mismatch
+    const generatedStars = [...Array(50)].map((_, i) => ({
+      id: i,
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      duration: Math.random() * 3 + 2,
+      delay: Math.random() * 2,
+    }));
+    setStars(generatedStars);
+  }, []);
+
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {[...Array(50)].map((_, i) => (
+      {stars.map((star) => (
         <div
-          key={i}
+          key={star.id}
           className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
           style={{
-            left: Math.random() * 100 + '%',
-            top: Math.random() * 100 + '%',
-            animation: `starTwinkle ${Math.random() * 3 + 2}s ease-in-out infinite`,
-            animationDelay: Math.random() * 2 + 's',
+            left: star.left + '%',
+            top: star.top + '%',
+            animation: `starTwinkle ${star.duration}s ease-in-out infinite`,
+            animationDelay: star.delay + 's',
             boxShadow: '0 0 10px rgba(255,255,255,0.8)',
           }}
         />
