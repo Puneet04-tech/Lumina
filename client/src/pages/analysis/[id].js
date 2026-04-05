@@ -578,25 +578,30 @@ export default function AnalysisPage() {
             </div>
           )}
 
-          {/* Data Table */}
+          {/* Data Preview - Toggle between Chart and Table */}
           <div className="mb-8 animate-slideInUp" style={{animationDelay: '0.5s'}}>
             <div className="bg-gradient-to-br from-indigo-900/40 to-slate-900/40 rounded-xl p-6 border border-indigo-700/30 backdrop-blur-sm">
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
                   Data Preview
                 </h2>
                 <button
                   onClick={() => setTableView(!tableView)}
-                  className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-lg font-semibold transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50 hover:scale-105"
+                  className={`px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:scale-105 ${
+                    tableView 
+                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white hover:shadow-lg hover:shadow-purple-500/50'
+                      : 'bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600 text-slate-200 hover:shadow-lg hover:shadow-slate-500/50'
+                  }`}
                 >
-                  {tableView ? '📊 Chart View' : '📋 Table View'}
+                  {tableView ? '📊 Switch to Visualization' : '📋 Switch to Table'}
                 </button>
               </div>
 
-              {file && file.data && file.data.length > 0 && (
+              {/* Table View */}
+              {tableView && file && file.data && file.data.length > 0 && (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="border-b border-indigo-700/30">
+                    <thead className="border-b border-indigo-700/30 sticky top-0 bg-slate-900/50 backdrop-blur">
                       <tr>
                         {file.columns.map((col) => (
                           <th key={col} className="px-4 py-3 text-left font-semibold text-indigo-200">
@@ -606,7 +611,7 @@ export default function AnalysisPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {file.data.slice(0, 10).map((row, idx) => (
+                      {file.data.slice(0, 25).map((row, idx) => (
                         <tr key={idx} className="border-b border-slate-800/50 hover:bg-indigo-900/20 transition-colors">
                           {file.columns.map((col) => (
                             <td key={`${idx}-${col}`} className="px-4 py-3 text-slate-300">
@@ -617,11 +622,59 @@ export default function AnalysisPage() {
                       ))}
                     </tbody>
                   </table>
-                  {file.data.length > 10 && (
-                    <p className="text-sm text-slate-400 p-4">
-                      Showing 10 of {file.data.length} rows
-                    </p>
+                  {file.data.length > 25 && (
+                    <div className="flex items-center justify-between p-4 bg-slate-800/20 border-t border-slate-800/50 rounded-b-lg">
+                      <p className="text-sm text-slate-400">
+                        Showing <span className="font-semibold text-indigo-300">25</span> of <span className="font-semibold text-indigo-300">{file.data.length}</span> rows
+                      </p>
+                      <p className="text-xs text-slate-500">💡 Tip: Export to Excel/CSV to view all data</p>
+                    </div>
                   )}
+                </div>
+              )}
+
+              {/* Chart Visualization View */}
+              {!tableView && analysisResults && (
+                <div>
+                  <div ref={chartRef} className="bg-slate-900/30 p-6 rounded-lg">
+                    {chartDisplayType === 'bar' && (
+                      <BarChartComponent
+                        data={analysisResults.data}
+                        xKey="name"
+                        yKey="value"
+                        title={`${analysisResults.yAxis} by ${analysisResults.xAxis}`}
+                      />
+                    )}
+                    {chartDisplayType === 'line' && (
+                      <LineChartComponent
+                        data={analysisResults.data}
+                        xKey="name"
+                        yKey="value"
+                        title={`${analysisResults.yAxis} Trend`}
+                      />
+                    )}
+                    {chartDisplayType === 'pie' && (
+                      <PieChartComponent
+                        data={analysisResults.data}
+                        nameKey="name"
+                        valueKey="value"
+                        title={`${analysisResults.yAxis} Distribution`}
+                      />
+                    )}
+                    {chartDisplayType === 'area' && (
+                      <AreaChartComponent
+                        data={analysisResults.data}
+                        xKey="name"
+                        yKey="value"
+                        title={`${analysisResults.yAxis} Over Time`}
+                      />
+                    )}
+                  </div>
+                  <div className="mt-4 p-4 bg-slate-800/20 rounded-lg border border-slate-700/30">
+                    <p className="text-sm text-slate-400">
+                      📊 Total data points in chart: <span className="font-semibold text-indigo-300">{analysisResults.data?.length || 0}</span>
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
