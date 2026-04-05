@@ -263,10 +263,38 @@ export const performAdvancedAnalysis = async (data, columns, metricColumn, dimen
       correlations[col] = calculateCorrelation(data, metricColumn, col);
     });
 
+    // Calculate performance gaps and opportunities
+    const topPerformerValue = topPerformers[0]?.value || 0;
+    const opportunityItems = bottomPerformers
+      .map(performer => {
+        const gapToTop = topPerformerValue - performer.value;
+        const gapToAverage = average - performer.value;
+        const improvementPercent = ((gapToTop / topPerformerValue) * 100);
+        const quickWinThreshold = topPerformerValue * 0.75; // Within 75% of top
+        const isQuickWin = performer.value > quickWinThreshold;
+        
+        return {
+          name: performer.name,
+          value: performer.value,
+          gapToTop: Math.round(gapToTop * 100) / 100,
+          gapToAverage: Math.round(gapToAverage * 100) / 100,
+          improvementNeeded: Math.round(improvementPercent * 100) / 100,
+          isQuickWin,
+          priority: isQuickWin ? 'High' : improvementPercent < 50 ? 'Low' : 'Medium',
+        };
+      })
+      .sort((a, b) => {
+        // Prioritize quick wins, then by improvement potential
+        if (a.isQuickWin && !b.isQuickWin) return -1;
+        if (!a.isQuickWin && b.isQuickWin) return 1;
+        return b.gapToTop - a.gapToTop;
+      });
+
     // Prepare analysis data for Gemini
     const analysis = {
       topPerformers,
       bottomPerformers,
+      opportunityItems,
       outliers: outlierAnalysis,
       trend,
       dataQuality,

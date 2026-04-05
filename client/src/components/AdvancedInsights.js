@@ -8,6 +8,7 @@ export function AdvancedInsights({ analysis }) {
   const {
     topPerformers = [],
     bottomPerformers = [],
+    opportunityItems = [],
     outliers = {},
     trend = {},
     dataQuality = {},
@@ -241,28 +242,88 @@ export function AdvancedInsights({ analysis }) {
         </div>
       )}
 
-      {/* Bottom Performers / Areas for Improvement */}
-      {bottomPerformers.length > 0 && (
-        <div className="bg-gradient-to-br from-red-900/40 to-slate-900/40 rounded-xl p-6 border border-red-700/30 backdrop-blur-sm animate-slideInUp" style={{animationDelay: '0.45s'}}>
+      {/* Strategic Actions & Growth Opportunities */}
+      {analysis.opportunityItems && analysis.opportunityItems.length > 0 && (
+        <div className="bg-gradient-to-br from-orange-900/40 to-slate-900/40 rounded-xl p-6 border border-orange-700/30 backdrop-blur-sm animate-slideInUp" style={{animationDelay: '0.45s'}}>
           <div className="flex items-center gap-2 mb-6">
-            <TrendingDown className="w-6 h-6 text-red-400" />
-            <h3 className="text-xl font-bold bg-gradient-to-r from-red-300 to-rose-300 bg-clip-text text-transparent">📉 Areas for Improvement</h3>
+            <Zap className="w-6 h-6 text-orange-400" />
+            <h3 className="text-xl font-bold bg-gradient-to-r from-orange-300 to-yellow-300 bg-clip-text text-transparent">⚡ Strategic Actions & Growth Opportunities</h3>
           </div>
-          <div className="space-y-3">
-            {bottomPerformers.map((performer, idx) => (
-              <div key={idx} className="p-4 bg-gradient-to-r from-red-900/50 to-rose-900/50 rounded-lg border border-red-700/30 hover:border-red-600/50 transition-all">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <p className="font-bold text-red-200 text-lg">• {performer.name}</p>
-                    <p className="text-red-300/70 text-sm">Value: <span className="text-red-200 font-semibold">{performer.value.toFixed(2)}</span></p>
-                  </div>
-                  <span className="px-3 py-1 bg-red-600/40 text-red-200 rounded-full text-sm font-semibold border border-red-500/30">
-                    Focus Area
-                  </span>
+          
+          <div className="space-y-4">
+            {/* Quick Wins Section */}
+            {analysis.opportunityItems.filter(item => item.isQuickWin).length > 0 && (
+              <div className="mb-6">
+                <p className="text-orange-300 text-sm font-bold mb-3">🎯 QUICK WINS (High-Impact, Low-Effort)</p>
+                <div className="space-y-3">
+                  {analysis.opportunityItems.filter(item => item.isQuickWin).map((item, idx) => (
+                    <div key={idx} className="p-4 bg-gradient-to-r from-orange-900/50 to-yellow-900/50 rounded-lg border border-orange-600/50 hover:border-orange-500/70 transition-all">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <p className="font-bold text-orange-200 text-lg">→ {item.name}</p>
+                          <p className="text-orange-300/70 text-sm">Current: <span className="text-orange-200 font-semibold">{item.value.toFixed(2)}</span></p>
+                        </div>
+                        <span className="px-3 py-1 bg-orange-600/60 text-orange-100 rounded-full text-xs font-bold border border-orange-400/50">
+                          {item.priority}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                          <p className="text-orange-300/60 text-xs">Gap to Top</p>
+                          <p className="text-lg font-bold text-yellow-300">{item.gapToTop.toFixed(2)}</p>
+                        </div>
+                        <div>
+                          <p className="text-orange-300/60 text-xs">Improvement Needed</p>
+                          <p className="text-lg font-bold text-green-300">{item.improvementNeeded.toFixed(1)}%</p>
+                        </div>
+                      </div>
+                      <div className="w-full bg-orange-900/30 rounded-full h-2 border border-orange-700/30 overflow-hidden">
+                        <div className="bg-gradient-to-r from-orange-400 to-yellow-300 h-full" style={{width: `${(item.value / topPerformers[0]?.value * 100)}`}}></div>
+                      </div>
+                      <p className="text-orange-300/70 text-xs mt-2">📌 Action: Focus on replicating {topPerformers[0]?.name}'s success factors</p>
+                    </div>
+                  ))}
                 </div>
-                <p className="text-red-300/70 text-xs">Potential: Increase performance and align with top performers</p>
               </div>
-            ))}
+            )}
+
+            {/* Strategic Improvement Targets */}
+            {analysis.opportunityItems.filter(item => !item.isQuickWin).length > 0 && (
+              <div>
+                <p className="text-orange-300 text-sm font-bold mb-3">📊 STRATEGIC TARGETS (Improvement Potential)</p>
+                <div className="space-y-3">
+                  {analysis.opportunityItems.filter(item => !item.isQuickWin).map((item, idx) => (
+                    <div key={idx} className="p-4 bg-orange-900/30 rounded-lg border border-orange-700/30 hover:border-orange-600/50 transition-all">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <p className="font-semibold text-orange-200">{item.name}</p>
+                          <p className="text-orange-300/70 text-sm">Value: {item.value.toFixed(2)} | Gap: {item.gapToTop.toFixed(2)} ({item.improvementNeeded.toFixed(1)}%)</p>
+                        </div>
+                        <span className={`px-2 py-1 text-xs font-bold rounded text-white border ${item.priority === 'High' ? 'bg-red-600/40 border-red-500/30' : item.priority === 'Medium' ? 'bg-yellow-600/40 border-yellow-500/30' : 'bg-blue-600/40 border-blue-500/30'}`}>
+                          {item.priority}
+                        </span>
+                      </div>
+                      <div className="w-full bg-orange-900/30 rounded-full h-2 border border-orange-700/30 overflow-hidden">
+                        <div className="bg-gradient-to-r from-amber-500 to-orange-400 h-full" style={{width: `${Math.max(5, item.value / topPerformers[0]?.value * 100)}`}}></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Strategic Recommendations */}
+          <div className="mt-6 p-4 bg-orange-900/20 rounded-lg border border-orange-700/30">
+            <p className="text-orange-300 text-sm font-semibold mb-2">💡 Strategic Recommendations:</p>
+            <ul className="text-orange-300/70 text-sm space-y-1">
+              {analysis.opportunityItems.filter(item => item.isQuickWin).length > 0 && (
+                <li>• <span className="text-orange-200">Prioritize Quick Wins:</span> {analysis.opportunityItems.filter(item => item.isQuickWin).length} items are 75%+ of top performer—close these gaps first for immediate ROI</li>
+              )}
+              <li>• <span className="text-orange-200">Benchmark Best Practices:</span> Conduct deep-dive on {topPerformers[0]?.name} success factors and replicate across underperformers</li>
+              <li>• <span className="text-orange-200">Resource Allocation:</span> Focus budget toward high-priority items ({analysis.opportunityItems.filter(item => item.priority === 'High').length} items) for maximum impact</li>
+              <li>• <span className="text-orange-200">Performance Monitoring:</span> Track progress monthly—expect {((average / topPerformers[0]?.value * 100).toFixed(0))}% uplift potential if targets met</li>
+            </ul>
           </div>
         </div>
       )}

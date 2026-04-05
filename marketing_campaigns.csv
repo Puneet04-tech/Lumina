@@ -1,0 +1,21 @@
+Campaign_ID,Campaign_Name,Channel,Start_Date,End_Date,Budget,Impressions,Clicks,Conversions,Conversion_Rate,ROI,Target_Audience,Platform,Status
+C001,Summer Sale 2024,Email,2024-06-01,2024-06-30,5000,150000,3500,420,12.0,8.4,Young Professionals,Internal,Completed
+C002,New Product Launch,Social Media,2024-05-15,2024-06-15,8000,450000,12500,1875,15.0,23.4,Tech Enthusiasts,Facebook,Completed
+C003,Holiday Promotion,Display Ads,2024-11-01,2024-12-25,12000,800000,28000,3360,12.0,28.0,General Audience,Google Ads,Completed
+C004,Back to School,Search,2024-08-01,2024-09-15,6500,120000,5600,672,12.0,10.3,Students/Parents,Google Search,Completed
+C005,Flash Sale Weekend,SMS,2024-07-20,2024-07-22,3000,85000,4250,510,12.0,17.0,Existing Customers,SMS,Completed
+C006,Brand Awareness,Influencer,2024-04-01,2024-05-31,15000,1200000,45000,2700,6.0,18.0,Millennials,Instagram,Completed
+C007,Q1 Webinar Series,Email,2024-01-05,2024-03-31,4000,35000,1750,262,15.0,6.55,B2B Clients,Internal,Completed
+C008,Product Upsell,Retargeting,2024-10-01,2024-10-31,7500,600000,18000,2160,12.0,28.8,Previous Buyers,Google Ads,Completed
+C009,Mobile App Download,App Stores,2024-09-01,2024-10-31,9000,250000,8750,1050,12.0,11.67,Smartphone Users,App Store,Completed
+C010,Loyalty Program,Email,2024-11-15,2024-12-31,3500,40000,2400,360,15.0,10.3,VIP Customers,Internal,Active
+C011,Content Marketing,Blog,2024-06-01,2024-12-31,5500,600000,12000,1440,12.0,26.2,All Audiences,Blog,Ongoing
+C012,Referral Campaign,Email,2024-08-15,2024-09-30,2500,25000,2000,300,15.0,12.0,Current Customers,Internal,Completed
+C013,Partnership Promo,Co-Marketing,2024-07-01,2024-08-31,6000,500000,15000,1650,11.0,27.5,Partner Audience,Co-Brand,Completed
+C014,Video Campaign,YouTube,2024-09-01,2024-10-31,11000,900000,27000,3240,12.0,29.5,Video Watchers,YouTube,Completed
+C015,Seasonal Bundle,Display Ads,2024-12-01,2024-12-31,8500,550000,19250,2310,12.0,27.2,General Audience,Google Ads,Active
+C016,Lead Generation,Webinar,2024-05-01,2024-05-31,7000,50000,3500,525,15.0,7.5,B2B Prospects,Webinar,Completed
+C017,Win-back Campaign,Email,2024-10-15,2024-11-30,4500,55000,3300,396,12.0,8.8,Inactive Users,Internal,Completed
+C018,Social Listening,Social Media,2024-04-01,2024-12-31,6000,450000,22500,1350,6.0,22.5,Social Audience,Twitter/X,Ongoing
+C019,Event Marketing,Event,2024-06-20,2024-06-22,13000,75000,6000,900,15.0,6.92,Local Audience,In-Person,Completed
+C020,Micro-Moments,Mobile,2024-11-01,2024-12-31,5500,400000,16000,1920,12.0,34.9,Mobile Users,Mobile Web,Active
