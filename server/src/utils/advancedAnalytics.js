@@ -442,6 +442,10 @@ export const performAdvancedAnalysis = async (data, columns, metricColumn, dimen
       outlierAnalysis.outliers
     );
     
+    // Determine if there's a cost or performance bottleneck
+    const isCostBottleneck = metricLower.includes('cost') || metricLower.includes('budget') || metricLower.includes('expense');
+    const performanceGap = topPerformers[0]?.value - (bottomPerformers[bottomPerformers.length - 1]?.value || 0);
+    
     // Context-specific recommendations
     let contextRecommendation = '';
     switch (metricContext) {
@@ -449,7 +453,7 @@ export const performAdvancedAnalysis = async (data, columns, metricColumn, dimen
         contextRecommendation = `Replicate business model of top revenue generator "${topPerformers[0]?.name}". Audit underperforming ${bottomPerformers.length} items for optimization gaps. ${correlationInsights ? 'Key drivers: ' + correlationInsights + '. ' : ''}`;
         break;
       case 'efficiency':
-        contextRecommendation = `Best-in-class efficiency: ${topPerformers[0]?.name} (${topPerformers[0]?.value.toFixed(2)}x ROI). Benchmark and scale winning tactics. Address ${bottleneck ? 'cost control' : 'performance gaps'}.`;
+        contextRecommendation = `Best-in-class efficiency: ${topPerformers[0]?.name} (${topPerformers[0]?.value.toFixed(2)}x ROI). Benchmark and scale winning tactics. Address ${isCostBottleneck ? 'cost control' : 'performance gaps'}.`;
         break;
       case 'rate':
         contextRecommendation = `Standardize practices from top performer (${topPerformers[0]?.value.toFixed(2)}% ${metricColumn}). Train underperformers to close ${Math.abs(topPerformers[0]?.value - bottomPerformers[bottomPerformers.length - 1]?.value).toFixed(2)}% gap.`;
