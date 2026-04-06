@@ -53,39 +53,157 @@ export const queryAnalysis = async (req, res) => {
       return res.status(400).json({ success: false, message: 'File has no data' });
     }
 
-    // Process query to find metric and dimension
+    // ENHANCED QUERY INTELLIGENCE - Multiple interpretation strategies
     const numericColumns = file.columns.filter(
       (col) => typeof file.data[0][col] === 'number'
     );
 
-    // Default to first numeric column if found, otherwise use first column
-    let metric = numericColumns[0];
-    let dimension = file.columns.find((c) => !numericColumns.includes(c)) || file.columns[0];
+    const textColumns = file.columns.filter(
+      (col) => typeof file.data[0][col] === 'string'
+    );
 
-    // Try to find better dimension/metric based on query
+    let metric = numericColumns[0] || file.columns[0];
+    let dimension = textColumns[0] || file.columns.find((c) => !numericColumns.includes(c)) || file.columns[1] || file.columns[0];
+
+    // Helper function for fuzzy string matching
+    const findBestMatch = (query, columnNames, keywords) => {
+      const lowerQuery = query.toLowerCase();
+      
+      // First try exact keyword match
+      for (const keyword of keywords) {
+        if (lowerQuery.includes(keyword)) {
+          const col = columnNames.find(c => c.toLowerCase().includes(keyword));
+          if (col) return col;
+        }
+      }
+
+      // Then try fuzzy match - look for partial matches
+      for (const keyword of keywords) {
+        for (const col of columnNames) {
+          const colLower = col.toLowerCase();
+          if (colLower.includes(keyword.substring(0, 3)) || keyword.includes(colLower.substring(0, 3))) {
+            return col;
+          }
+        }
+      }
+      
+      return null;
+    };
+
     const lowerQuery = query.toLowerCase();
-    if (lowerQuery.includes('category')) {
-      const catCol = file.columns.find((c) => c.toLowerCase().includes('category'));
-      if (catCol) dimension = catCol;
-    } else if (lowerQuery.includes('region')) {
-      const regCol = file.columns.find((c) => c.toLowerCase().includes('region'));
-      if (regCol) dimension = regCol;
-    } else if (lowerQuery.includes('product')) {
-      const prodCol = file.columns.find((c) => c.toLowerCase().includes('product'));
-      if (prodCol) dimension = prodCol;
-    } else if (lowerQuery.includes('date')) {
-      const dateCol = file.columns.find((c) => c.toLowerCase().includes('date'));
-      if (dateCol) dimension = dateCol;
+
+    // Strategy 1: Direct keyword matching for dimensions
+    const dimensionKeywords = [
+      'category', 'categories', 'cat',
+      'region', 'regions', 'location', 'city', 'state', 'country',
+      'product', 'products', 'item', 'items', 'name',
+      'channel', 'channels', 'platform',
+      'date', 'time', 'period', 'month', 'quarter', 'year',
+      'segment', 'segments', 'group', 'type', 'status', 'campaign',
+      'customer', 'client', 'account', 'audience', 'target'
+    ];
+
+    const foundDimension = findBestMatch(lowerQuery, file.columns, dimensionKeywords);
+    if (foundDimension && textColumns.includes(foundDimension)) {
+      dimension = foundDimension;
+    } else if (foundDimension && !numericColumns.includes(foundDimension)) {
+      dimension = foundDimension;
     }
 
-    // Find metric based on keywords
-    numericColumns.forEach(col => {
-      if (lowerQuery.includes('revenue') && col.toLowerCase().includes('revenue')) metric = col;
-      if (lowerQuery.includes('sales') && col.toLowerCase().includes('sales')) metric = col;
-      if (lowerQuery.includes('profit') && col.toLowerCase().includes('profit')) metric = col;
-      if (lowerQuery.includes('amount') && col.toLowerCase().includes('amount')) metric = col;
-      if (lowerQuery.includes('value') && col.toLowerCase().includes('value')) metric = col;
-    });
+    // Strategy 2: Direct keyword matching for metrics
+    const metricKeywords = [
+      'revenue', 'sales', 'sold',
+      'profit', 'earnings', 'income',
+      'amount', 'total', 'sum',
+      'count', 'quantity', 'qty', 'volume',
+      'value', 'price',
+      'roi', 'roas', 'return',
+      'impressions', 'clicks', 'conversions', 'ctr', 'conversion_rate',
+      'budget', 'cost', 'expense',
+      'growth', 'increase', 'decrease', 'change'
+    ];
+
+    const foundMetric = findBestMatch(lowerQuery, file.columns, metricKeywords);
+    if (foundMetric && numericColumns.includes(foundMetric)) {
+      metric = foundMetric;
+    }
+
+    // Strategy 3: Question type detection
+    if (lowerQuery.includes('top') || lowerQuery.includes('best') || lowerQuery.includes('highest')) {
+      // User wants to see TOP performers - use first text column as dimension
+      dimension = textColumns[0] || file.columns.find(c => !numericColumns.includes(c)) || file.columns[0];
+    }
+    
+    if (lowerQuery.includes('by') || lowerQuery.includes('grouped') || lowerQuery.includes('breakdown')) {
+      // User wants grouping - prioritize text columns
+      const afterBy = lowerQuery.split('by')[1];
+      if (afterBy) {
+        const col = file.columns.find(c => afterBy.includes(c.toLowerCase()) || c.toLowerCase().includes(afterBy.trim().split(' ')[0]));
+        if (col) dimension = col;
+      } else {
+        dimension = textColumns[0] || file.columns[0];
+      }
+    }
+
+    // Strategy 4: Comparative analysis ("compare X vs Y", "X vs Y")
+    if (lowerQuery.includes('vs') || lowerQuery.includes('versus') || lowerQuery.includes('compare')) {
+      const parts = lowerQuery.split(/vs|versus|compare/);
+      if (parts.length > 1) {
+        const item1 = parts[1].trim().split(/\s+/)[0];
+        const item2 = parts.length > 2 ? parts[2].trim().split(/\s+/)[0] : null;
+        
+        // Find which column might contain these items
+        const matchingColumn = file.columns.find(col => {
+          const colValues = file.data.map(r => String(r[col]).toLowerCase());
+          return colValues.some(v => v.includes(item1) || v.includes(item2));
+        });
+        if (matchingColumn && !numericColumns.includes(matchingColumn)) {
+          dimension = matchingColumn;
+        }
+      }
+    }
+
+    // Strategy 5: Temporal analysis (if query mentions time)
+    if (lowerQuery.includes('trend') || lowerQuery.includes('over time') || lowerQuery.includes('timeline')) {
+      const timeCol = file.columns.find(c => 
+        c.toLowerCase().includes('date') || 
+        c.toLowerCase().includes('time') || 
+        c.toLowerCase().includes('month') ||
+        c.toLowerCase().includes('period')
+      );
+      if (timeCol) dimension = timeCol;
+    }
+
+    // Strategy 6: Performance analysis keywords
+    if (lowerQuery.includes('performance') || lowerQuery.includes('efficiency') || lowerQuery.includes('quality')) {
+      const perfMetrics = numericColumns.filter(col => 
+        col.toLowerCase().includes('rate') || 
+        col.toLowerCase().includes('score') || 
+        col.toLowerCase().includes('rating') ||
+        col.toLowerCase().includes('roi')
+      );
+      if (perfMetrics.length > 0) metric = perfMetrics[0];
+    }
+
+    // Strategy 7: Distribution/composition analysis
+    if (lowerQuery.includes('distribution') || lowerQuery.includes('composition') || lowerQuery.includes('breakdown')) {
+      dimension = textColumns[0] || file.columns[0];
+    }
+
+    // Strategy 8: Pick second most common numeric/text column if exact keyword not found
+    if (metric === numericColumns[0] && numericColumns.length > 1 && !lowerQuery.includes(metric.toLowerCase())) {
+      // Try to find alternate metric
+      const alternateMetric = numericColumns.find(col => lowerQuery.includes(col.toLowerCase()));
+      if (alternateMetric) metric = alternateMetric;
+    }
+
+    // Log query interpretation for debugging
+    console.log('\n📌 QUERY INTELLIGENCE ENGINE:');
+    console.log(`  Query: "${query}"`);
+    console.log(`  🔹 Detected Metric: ${metric}`);
+    console.log(`  🔹 Detected Dimension: ${dimension}`);
+    console.log(`  📊 Available Numeric Columns: ${numericColumns.join(', ')}`);
+    console.log(`  📝 Available Text Columns: ${textColumns.join(', ')}\n`);
 
     // Generate chart data
     let chartData = [];

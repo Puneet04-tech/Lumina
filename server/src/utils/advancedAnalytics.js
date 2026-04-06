@@ -376,15 +376,63 @@ export const performAdvancedAnalysis = async (data, columns, metricColumn, dimen
       riskFactors.push(`Low data completeness (${dataQuality.completeness}%)`);
     }
     
-    // Generate multi-faceted insights
-    const advancedInsight = `${dimensionColumn} exhibits ${concentrationLevel} distribution. Primary driver "${topPerformers[0]?.name}" commands ${topConsumesPercentage.toFixed(1)}% of total ${metricColumn}. Performance ratio between top and bottom is ${performanceSpread.toFixed(1)}x. Data is ${trendInterpretation}. Risk Assessment: ${riskLevel}${riskFactors.length > 0 ? ' — ' + riskFactors.join('; ') : ''}.`;
+    // Generate multi-faceted insights - CONTEXT-AWARE based on metric & dimension
     
-    const advancedSummary = `Dataset comprises ${count} observations with ${columns.length} variables. ${metricColumn} averages ${average.toFixed(2)} (σ=${variabilityScore.toFixed(2)}, CV=${coefficientOfVariation.toFixed(1)}%). Value distribution spans ${min.toFixed(2)}-${max.toFixed(2)} with ${outlierAnalysis.count} significant outliers. Data integrity: ${dataQuality.completeness}% complete, ${dataQuality.uniquenessScore}% unique. ${topPerformers.length} top performers identified contributing ${topPerformers.reduce((sum, p) => sum + p.value, 0).toFixed(0)} total. Strategic focus needed on bottom-performing segments.`;
+    // Detect metric type for contextual insights
+    const metricLower = metricColumn.toLowerCase();
+    let metricContext = 'value';
+    if (metricLower.includes('revenue') || metricLower.includes('sales') || metricLower.includes('amount')) metricContext = 'revenue';
+    if (metricLower.includes('profit') || metricLower.includes('income')) metricContext = 'profit';
+    if (metricLower.includes('count') || metricLower.includes('quantity') || metricLower.includes('qty')) metricContext = 'volume';
+    if (metricLower.includes('rate') || metricLower.includes('conversion') || metricLower.includes('ctr')) metricContext = 'rate';
+    if (metricLower.includes('impression') || metricLower.includes('click')) metricContext = 'engagement';
+    if (metricLower.includes('cost') || metricLower.includes('budget')) metricContext = 'cost';
+    if (metricLower.includes('roi') || metricLower.includes('roas')) metricContext = 'efficiency';
+
+    // Generate context-specific insights
+    let contextInsight = '';
+    switch (metricContext) {
+      case 'revenue':
+        contextInsight = `Revenue concentration shows ${topConsumesPercentage.toFixed(1)}% driven by top performer "${topPerformers[0]?.name}". `;
+        if (coefficientOfVariation > 50) contextInsight += `High revenue variance (${coefficientOfVariation.toFixed(0)}%) indicates opportunity to standardize high-performing strategies. `;
+        if (trend.direction === 'upward') contextInsight += `Positive trend momentum of ${trend.percentChange}% suggests growing revenue potential. `;
+        break;
+      case 'profit':
+        contextInsight = `Profit distribution is ${concentrationLevel} with "${topPerformers[0]?.name}" contributing ${topConsumesPercentage.toFixed(1)}%. `;
+        if (performanceSpread > 5) contextInsight += `${performanceSpread.toFixed(1)}x spread indicates significant profit variability—investigate margin drivers. `;
+        break;
+      case 'volume':
+        contextInsight = `${metricColumn} shows ${topConsumesPercentage.toFixed(1)}% concentration in top performer. `;
+        if (trend.direction === 'downward') contextInsight += `Declining volume trend (${Math.abs(trend.percentChange)}%) requires growth intervention. `;
+        break;
+      case 'rate':
+        contextInsight = `${metricColumn} performance: ${average.toFixed(2)}% average. Top performer achieves ${(topPerformers[0]?.value).toFixed(2)}%. `;
+        if (coefficientOfVariation < 20) contextInsight += `Low variability (${coefficientOfVariation.toFixed(0)}%) indicates consistent performance. `;
+        if (coefficientOfVariation > 40) contextInsight += `High variability (${coefficientOfVariation.toFixed(0)}%) suggests inconsistent quality or external factors. `;
+        break;
+      case 'engagement':
+        contextInsight = `Engagement concentration: ${topConsumesPercentage.toFixed(1)}% from top performer. ${topPerformers.length} top opportunities identified. `;
+        break;
+      case 'cost':
+        contextInsight = `Cost distribution: ${concentrationLevel}. Average cost is ${average.toFixed(2)}, ranging ${min.toFixed(2)}-${max.toFixed(2)}. `;
+        if (trend.direction === 'upward') contextInsight += `Cost inflation trend (${trend.percentChange}%) requires cost management. `;
+        break;
+      case 'efficiency':
+        contextInsight = `Efficiency analysis: Top performer ROI is ${(topPerformers[0]?.value).toFixed(2)}%, average is ${average.toFixed(2)}%. `;
+        if (performanceSpread > 3) contextInsight += `${performanceSpread.toFixed(1)}x efficiency spread indicates best practice replication opportunity. `;
+        break;
+      default:
+        contextInsight = `${dimensionColumn} analysis shows ${topConsumesPercentage.toFixed(1)}% concentration in top performer. `;
+    }
+
+    const advancedInsight = `${contextInsight}${dimensionColumn} exhibits ${concentrationLevel} distribution. Performance ratio between top and bottom: ${performanceSpread.toFixed(1)}x. Data is ${trendInterpretation}. Risk Level: ${riskLevel}.`;
+    
+    const advancedSummary = `Analyzing ${metricColumn} by ${dimensionColumn}: ${count} observations analyzed. Average: ${average.toFixed(2)}, Range: ${min.toFixed(2)}-${max.toFixed(2)}. ${outlierAnalysis.count} outliers detected. Data quality: ${dataQuality.completeness}% complete. ${topPerformers.length} top performers contributing ${topConsumesPercentage.toFixed(1)}% of value. Variability coefficient: ${coefficientOfVariation.toFixed(1)}%.`;
     
     const correlationInsights = Object.entries(correlations)
       .filter(([_, corr]) => Math.abs(corr) > 0.5)
-      .map(([col, corr]) => `Strong ${corr > 0 ? 'positive' : 'negative'} correlation with ${col} (${Math.abs(corr * 100).toFixed(0)}%)`)
-      .join('. ');
+      .map(([col, corr]) => `${corr > 0 ? '📈' : '📉'} ${col} (${Math.abs(corr * 100).toFixed(0)}%)`)
+      .join(', ');
     
     const recommendations = generateRecommendations(
       data,
@@ -394,9 +442,25 @@ export const performAdvancedAnalysis = async (data, columns, metricColumn, dimen
       outlierAnalysis.outliers
     );
     
-    const advancedRecommendation = recommendations.length > 0 
-      ? recommendations.join(' ')
-      : `Focus on replicating success factors from top performers. Investigate ${outlierAnalysis.count} anomalies for root causes. ${correlationInsights ? 'Leverage identified correlations: ' + correlationInsights + '.' : ''} Implement targeted interventions for underperforming segments to achieve competitive parity.`;
+    // Context-specific recommendations
+    let contextRecommendation = '';
+    switch (metricContext) {
+      case 'revenue':
+        contextRecommendation = `Replicate business model of top revenue generator "${topPerformers[0]?.name}". Audit underperforming ${bottomPerformers.length} items for optimization gaps. ${correlationInsights ? 'Key drivers: ' + correlationInsights + '. ' : ''}`;
+        break;
+      case 'efficiency':
+        contextRecommendation = `Best-in-class efficiency: ${topPerformers[0]?.name} (${topPerformers[0]?.value.toFixed(2)}x ROI). Benchmark and scale winning tactics. Address ${bottleneck ? 'cost control' : 'performance gaps'}.`;
+        break;
+      case 'rate':
+        contextRecommendation = `Standardize practices from top performer (${topPerformers[0]?.value.toFixed(2)}% ${metricColumn}). Train underperformers to close ${Math.abs(topPerformers[0]?.value - bottomPerformers[bottomPerformers.length - 1]?.value).toFixed(2)}% gap.`;
+        break;
+      default:
+        contextRecommendation = recommendations.length > 0 
+          ? recommendations.join(' ')
+          : `Prioritize top performer "${topPerformers[0]?.name}" for replication. Investigate ${outlierAnalysis.count} anomalies. ${correlationInsights ? 'Leverage correlations: ' + correlationInsights + '. ' : ''}Implement quick wins in ${opportunityItems.filter(i => i.isQuickWin).length} high-potential items.`;
+    }
+    
+    const advancedRecommendation = contextRecommendation;
 
     const insights = {
       insight: advancedInsight,
