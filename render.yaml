@@ -18,7 +18,7 @@ services:
       - key: CORS_ORIGIN
         value: "https://lu-m-i-n-a.netlify.app"
       - key: GEMINI_MODEL
-        value: gemini-pro
+        value: gemini-1.5-pro
     
     # Build logs
     buildFilter:
