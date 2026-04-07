@@ -110,12 +110,12 @@ export function AdvancedInsights({ analysis }) {
             <div className="p-4 bg-gradient-to-r from-blue-900/50 to-indigo-900/50 rounded-lg border border-blue-700/30">
               <p className="text-blue-300 text-sm font-semibold mb-2">Direction</p>
               <div className="flex items-center gap-2">
-                {trend.direction === 'upward' ? (
+                {trend.direction?.toLowerCase() === 'upward' ? (
                   <>
                     <ArrowUp className="w-6 h-6 text-green-400" />
                     <p className="text-2xl font-bold text-green-200 capitalize">{trend.direction}</p>
                   </>
-                ) : trend.direction === 'downward' ? (
+                ) : trend.direction?.toLowerCase() === 'downward' ? (
                   <>
                     <ArrowDown className="w-6 h-6 text-red-400" />
                     <p className="text-2xl font-bold text-red-200 capitalize">{trend.direction}</p>
