@@ -5,7 +5,7 @@
 [build.environment]
   NODE_VERSION = "18.17.0"
   NPM_VERSION = "9.6.7"
-  NEXT_PUBLIC_API_URL = "https://lumina-backend.onrender.com"
+  NEXT_PUBLIC_API_URL = "https://lumina-7mir.onrender.com"
 
 [[redirects]]
   from = "/*"
