@@ -242,14 +242,22 @@ const localAnalysis = (data, columns, metric, dimension) => {
       completeness: Math.round(completeness),
       uniquenessScore: Math.round(uniquenessScore)
     },
-    opportunityItems: sorted.map(s => ({
-      name: s.name,
-      currentValue: s.value,
-      avgValue: stats.average,
-      gapPercentage: stats.average > 0 ? ((stats.average - s.value) / stats.average * 100) : 0,
-      priority: s.value < stats.average * 0.5 ? 'High' : s.value < stats.average ? 'Medium' : 'Low',
-      isQuickWin: s.value > stats.average * 0.75 && s.value < stats.average
-    }))
+    opportunityItems: sorted.map(s => {
+      const topValue = sorted.length > 0 ? sorted[0].value : 0;
+      const gapToTop = topValue - s.value;
+      const improvementNeeded = topValue > 0 ? (gapToTop / topValue * 100) : 0;
+      return {
+        name: s.name,
+        value: s.value,
+        currentValue: s.value,
+        avgValue: stats.average,
+        gapPercentage: stats.average > 0 ? ((stats.average - s.value) / stats.average * 100) : 0,
+        gapToTop: gapToTop,
+        improvementNeeded: improvementNeeded,
+        priority: s.value < stats.average * 0.5 ? 'High' : s.value < stats.average ? 'Medium' : 'Low',
+        isQuickWin: s.value > stats.average * 0.75 && s.value < stats.average
+      };
+    })
   };
 };
 

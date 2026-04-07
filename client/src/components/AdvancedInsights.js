@@ -16,14 +16,14 @@ export function AdvancedInsights({ analysis }) {
   } = analysis;
 
   // Calculate top performer impact
-  const topPerformerTotal = topPerformers.reduce((sum, p) => sum + p.value, 0);
-  const topPerformerShare = topPerformers.length > 0 ? (topPerformers[0].value / topPerformerTotal * 100) : 0;
+  const topPerformerTotal = topPerformers.reduce((sum, p) => sum + (p?.value || 0), 0);
+  const topPerformerShare = topPerformers.length > 0 && topPerformers[0]?.value ? (topPerformers[0].value / Math.max(topPerformerTotal, 1) * 100) : 0;
   
   // Calculate performance spread
   const allPerformers = [...topPerformers, ...bottomPerformers];
-  const avgPerformance = allPerformers.length > 0 ? allPerformers.reduce((sum, p) => sum + p.value, 0) / allPerformers.length : 0;
-  const topToBottomRatio = bottomPerformers.length > 0 && bottomPerformers[bottomPerformers.length - 1]?.value > 0 
-    ? (topPerformers[0]?.value / bottomPerformers[bottomPerformers.length - 1]?.value).toFixed(2)
+  const avgPerformance = allPerformers.length > 0 ? allPerformers.reduce((sum, p) => sum + (p?.value || 0), 0) / allPerformers.length : 0;
+  const topToBottomRatio = bottomPerformers.length > 0 && bottomPerformers[bottomPerformers.length - 1]?.value && topPerformers[0]?.value 
+    ? (topPerformers[0].value / Math.max(bottomPerformers[bottomPerformers.length - 1].value, 1)).toFixed(2)
     : 0;
 
   // Data quality assessment
@@ -64,7 +64,7 @@ export function AdvancedInsights({ analysis }) {
             <AlertCircle className="w-4 h-4 text-amber-400" />
           </div>
           <p className="text-3xl font-bold text-amber-200">{outliers.count || 0}</p>
-          <p className="text-amber-300/70 text-xs mt-1">Outliers • {outliers.lowerBound && outliers.upperBound ? `Range: ${outliers.lowerBound.toFixed(0)}-${outliers.upperBound.toFixed(0)}` : 'Review data'}</p>
+          <p className="text-amber-300/70 text-xs mt-1">Outliers • {outliers.lowerBound !== undefined && outliers.upperBound !== undefined ? `Range: ${(outliers.lowerBound || 0).toFixed(0)}-${(outliers.upperBound || 0).toFixed(0)}` : 'Review data'}</p>
         </div>
       </div>
 
@@ -77,20 +77,21 @@ export function AdvancedInsights({ analysis }) {
           </div>
           <div className="space-y-3">
             {topPerformers.map((performer, idx) => {
-              const percentage = (performer.value / topPerformerTotal * 100);
+              const perfValue = performer?.value || 0;
+              const percentage = topPerformerTotal > 0 ? (perfValue / topPerformerTotal * 100) : 0;
               return (
                 <div key={idx} className="p-4 bg-gradient-to-r from-green-900/50 to-emerald-900/50 rounded-lg border border-green-700/30 hover:border-green-600/50 transition-all">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <p className="font-bold text-green-200 text-lg">#{idx + 1} • {performer.name}</p>
-                      <p className="text-green-300/70 text-sm">Value: <span className="text-green-200 font-semibold">{performer.value.toFixed(2)}</span></p>
+                      <p className="font-bold text-green-200 text-lg">#{idx + 1} • {performer?.name || 'Unknown'}</p>
+                      <p className="text-green-300/70 text-sm">Value: <span className="text-green-200 font-semibold">{(perfValue || 0).toFixed(2)}</span></p>
                     </div>
                     <span className="px-3 py-1 bg-green-600/40 text-green-200 rounded-full text-sm font-bold border border-green-500/30">
-                      {percentage.toFixed(1)}%
+                      {isFinite(percentage) ? percentage.toFixed(1) : '0'}%
                     </span>
                   </div>
                   <div className="w-full bg-green-900/30 rounded-full h-3 border border-green-700/30 overflow-hidden">
-                    <div className="bg-gradient-to-r from-green-500 to-emerald-400 h-full rounded-full" style={{width: `${Math.min(percentage, 100)}%`}}></div>
+                    <div className="bg-gradient-to-r from-green-500 to-emerald-400 h-full rounded-full" style={{width: `${Math.min(Math.max(percentage, 0), 100)}%`}}></div>
                   </div>
                 </div>
               );
@@ -130,16 +131,16 @@ export function AdvancedInsights({ analysis }) {
             </div>
             <div className="p-4 bg-gradient-to-r from-blue-900/50 to-indigo-900/50 rounded-lg border border-blue-700/30">
               <p className="text-blue-300 text-sm font-semibold mb-2">Change Magnitude</p>
-              <p className="text-3xl font-bold text-blue-200">{trend.percentChange}%</p>
+              <p className="text-3xl font-bold text-blue-200">{isFinite(trend.percentChange || 0) ? (trend.percentChange || 0).toFixed(1) : '0'}%</p>
               <p className="text-blue-300/70 text-xs mt-2">Period-over-Period Change</p>
             </div>
             <div className="p-4 bg-gradient-to-r from-blue-900/50 to-indigo-900/50 rounded-lg border border-blue-700/30">
               <p className="text-blue-300 text-sm font-semibold mb-2">Trend Strength</p>
               <div className="flex items-end gap-2">
-                <p className="text-3xl font-bold text-blue-200">{(trend.strength * 100).toFixed(0)}%</p>
+                <p className="text-3xl font-bold text-blue-200">{isFinite((trend.strength || 0) * 100) ? ((trend.strength || 0) * 100).toFixed(0) : '0'}%</p>
               </div>
               <div className="w-full bg-blue-900/30 rounded-full h-2 mt-2 border border-blue-700/30 overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-500 to-cyan-400 h-full rounded-full" style={{width: `${trend.strength * 100}%`}}></div>
+                <div className="bg-gradient-to-r from-blue-500 to-cyan-400 h-full rounded-full" style={{width: `${Math.min(Math.max((trend.strength || 0) * 100, 0), 100)}%`}}></div>
               </div>
             </div>
           </div>
@@ -227,13 +228,13 @@ export function AdvancedInsights({ analysis }) {
                   <div className="flex items-center justify-between mb-2">
                     <p className="font-semibold text-yellow-200">{column}</p>
                     <span className={`text-sm font-bold ${correlation > 0 ? 'text-green-300' : 'text-red-300'}`}>
-                      {correlation > 0 ? '▲' : '▼'} {(correlation * 100).toFixed(0)}%
+                      {correlation > 0 ? '▲' : '▼'} {isFinite(correlation * 100) ? (correlation * 100).toFixed(0) : '0'}%
                     </span>
                   </div>
                   <div className="w-full bg-yellow-900/30 rounded-full h-3 border border-yellow-700/30 overflow-hidden">
                     <div
                       className={`h-full ${correlation > 0 ? 'bg-gradient-to-r from-green-500 to-emerald-400' : 'bg-gradient-to-r from-red-500 to-rose-400'}`}
-                      style={{ width: `${Math.abs(correlation) * 100}%` }}
+                      style={{ width: `${Math.min(Math.max(Math.abs(correlation) * 100, 0), 100)}%` }}
                     ></div>
                   </div>
                 </div>
@@ -260,27 +261,27 @@ export function AdvancedInsights({ analysis }) {
                     <div key={idx} className="p-4 bg-gradient-to-r from-orange-900/50 to-yellow-900/50 rounded-lg border border-orange-600/50 hover:border-orange-500/70 transition-all">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
-                          <p className="font-bold text-orange-200 text-lg">→ {item.name}</p>
-                          <p className="text-orange-300/70 text-sm">Current: <span className="text-orange-200 font-semibold">{item.value.toFixed(2)}</span></p>
+                          <p className="font-bold text-orange-200 text-lg">→ {item?.name || 'Unknown'}</p>
+                          <p className="text-orange-300/70 text-sm">Current: <span className="text-orange-200 font-semibold">{(item?.value || 0).toFixed(2)}</span></p>
                         </div>
                         <span className="px-3 py-1 bg-orange-600/60 text-orange-100 rounded-full text-xs font-bold border border-orange-400/50">
-                          {item.priority}
+                          {item?.priority || 'Medium'}
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-3 mb-3">
                         <div>
                           <p className="text-orange-300/60 text-xs">Gap to Top</p>
-                          <p className="text-lg font-bold text-yellow-300">{item.gapToTop.toFixed(2)}</p>
+                          <p className="text-lg font-bold text-yellow-300">{(item?.gapToTop || 0).toFixed(2)}</p>
                         </div>
                         <div>
                           <p className="text-orange-300/60 text-xs">Improvement Needed</p>
-                          <p className="text-lg font-bold text-green-300">{item.improvementNeeded.toFixed(1)}%</p>
+                          <p className="text-lg font-bold text-green-300">{isFinite(item?.improvementNeeded || 0) ? (item?.improvementNeeded || 0).toFixed(1) : '0'}%</p>
                         </div>
                       </div>
                       <div className="w-full bg-orange-900/30 rounded-full h-2 border border-orange-700/30 overflow-hidden">
-                        <div className="bg-gradient-to-r from-orange-400 to-yellow-300 h-full" style={{width: `${(item.value / topPerformers[0]?.value * 100)}`}}></div>
+                        <div className="bg-gradient-to-r from-orange-400 to-yellow-300 h-full" style={{width: `${Math.min(Math.max((item?.value || 0) / (topPerformers[0]?.value || 1) * 100, 0), 100)}%`}}></div>
                       </div>
-                      <p className="text-orange-300/70 text-xs mt-2">📌 Action: Focus on replicating {topPerformers[0]?.name}'s success factors</p>
+                      <p className="text-orange-300/70 text-xs mt-2">📌 Action: Focus on replicating {topPerformers[0]?.name || 'top performer'}'s success factors</p>
                     </div>
                   ))}
                 </div>
@@ -296,15 +297,15 @@ export function AdvancedInsights({ analysis }) {
                     <div key={idx} className="p-4 bg-orange-900/30 rounded-lg border border-orange-700/30 hover:border-orange-600/50 transition-all">
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <p className="font-semibold text-orange-200">{item.name}</p>
-                          <p className="text-orange-300/70 text-sm">Value: {item.value.toFixed(2)} | Gap: {item.gapToTop.toFixed(2)} ({item.improvementNeeded.toFixed(1)}%)</p>
+                          <p className="font-semibold text-orange-200">{item?.name || 'Unknown'}</p>
+                          <p className="text-orange-300/70 text-sm">Value: {(item?.value || 0).toFixed(2)} | Gap: {(item?.gapToTop || 0).toFixed(2)} ({isFinite(item?.improvementNeeded || 0) ? (item?.improvementNeeded || 0).toFixed(1) : '0'}%)</p>
                         </div>
-                        <span className={`px-2 py-1 text-xs font-bold rounded text-white border ${item.priority === 'High' ? 'bg-red-600/40 border-red-500/30' : item.priority === 'Medium' ? 'bg-yellow-600/40 border-yellow-500/30' : 'bg-blue-600/40 border-blue-500/30'}`}>
-                          {item.priority}
+                        <span className={`px-2 py-1 text-xs font-bold rounded text-white border ${item?.priority === 'High' ? 'bg-red-600/40 border-red-500/30' : item?.priority === 'Medium' ? 'bg-yellow-600/40 border-yellow-500/30' : 'bg-blue-600/40 border-blue-500/30'}`}>
+                          {item?.priority || 'Medium'}
                         </span>
                       </div>
                       <div className="w-full bg-orange-900/30 rounded-full h-2 border border-orange-700/30 overflow-hidden">
-                        <div className="bg-gradient-to-r from-amber-500 to-orange-400 h-full" style={{width: `${Math.max(5, item.value / topPerformers[0]?.value * 100)}`}}></div>
+                        <div className="bg-gradient-to-r from-amber-500 to-orange-400 h-full" style={{width: `${Math.min(Math.max((item?.value || 0) / (topPerformers[0]?.value || 1) * 100, 5), 100)}%`}}></div>
                       </div>
                     </div>
                   ))}
@@ -317,12 +318,12 @@ export function AdvancedInsights({ analysis }) {
           <div className="mt-6 p-4 bg-orange-900/20 rounded-lg border border-orange-700/30">
             <p className="text-orange-300 text-sm font-semibold mb-2">💡 Strategic Recommendations:</p>
             <ul className="text-orange-300/70 text-sm space-y-1">
-              {analysis.opportunityItems.filter(item => item.isQuickWin).length > 0 && (
-                <li>• <span className="text-orange-200">Prioritize Quick Wins:</span> {analysis.opportunityItems.filter(item => item.isQuickWin).length} items are 75%+ of top performer—close these gaps first for immediate ROI</li>
+              {(analysis?.opportunityItems?.filter(item => item?.isQuickWin)?.length || 0) > 0 && (
+                <li>• <span className="text-orange-200">Prioritize Quick Wins:</span> {analysis?.opportunityItems?.filter(item => item?.isQuickWin)?.length || 0} items are 75%+ of top performer—close these gaps first for immediate ROI</li>
               )}
-              <li>• <span className="text-orange-200">Benchmark Best Practices:</span> Conduct deep-dive on {topPerformers[0]?.name} success factors and replicate across underperformers</li>
-              <li>• <span className="text-orange-200">Resource Allocation:</span> Focus budget toward high-priority items ({analysis.opportunityItems.filter(item => item.priority === 'High').length} items) for maximum impact</li>
-              <li>• <span className="text-orange-200">Performance Monitoring:</span> Track progress monthly—expect {topPerformers[0]?.value && avgPerformance ? ((avgPerformance / topPerformers[0]?.value * 100).toFixed(0)) : '0'}% uplift potential if targets met</li>
+              <li>• <span className="text-orange-200">Benchmark Best Practices:</span> Conduct deep-dive on {topPerformers[0]?.name || 'top performer'} success factors and replicate across underperformers</li>
+              <li>• <span className="text-orange-200">Resource Allocation:</span> Focus budget toward high-priority items ({analysis?.opportunityItems?.filter(item => item?.priority === 'High')?.length || 0} items) for maximum impact</li>
+              <li>• <span className="text-orange-200">Performance Monitoring:</span> Track progress monthly—expect {topPerformers[0]?.value && avgPerformance ? ((avgPerformance / (topPerformers[0]?.value || 1) * 100).toFixed(0)) : '0'}% uplift potential if targets met</li>
             </ul>
           </div>
         </div>
@@ -335,11 +336,11 @@ export function AdvancedInsights({ analysis }) {
           <h3 className="text-xl font-bold bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">💡 Key Insights</h3>
         </div>
         <div className="space-y-2 text-slate-200 text-sm">
-          <p>✓ Top performer <span className="font-semibold text-green-300">{topPerformers[0]?.name}</span> drives <span className="font-semibold">{topPerformerShare.toFixed(1)}%</span> of total value</p>
-          <p>✓ Performance spread is <span className="font-semibold text-blue-300">{topToBottomRatio}x</span> between best and worst performers</p>
+          <p>✓ Top performer <span className="font-semibold text-green-300">{topPerformers[0]?.name || 'N/A'}</span> drives <span className="font-semibold">{isFinite(topPerformerShare) ? topPerformerShare.toFixed(1) : '0'}%</span> of total value</p>
+          <p>✓ Performance spread is <span className="font-semibold text-blue-300">{topToBottomRatio || '0'}x</span> between best and worst performers</p>
           <p>✓ Data quality score: <span className="font-semibold text-indigo-300">{qualityScore}%</span> ({qualityStatus})</p>
-          <p>✓ Trend direction is <span className="font-semibold">{trend.direction}</span> with <span className="font-semibold text-amber-300">{(trend.strength * 100).toFixed(0)}%</span> strength</p>
-          {outliers.count > 0 && <p>⚠️ {outliers.count} anomalies detected — review for data quality or business significance</p>}
+          <p>✓ Trend direction is <span className="font-semibold">{trend?.direction || 'Stable'}</span> with <span className="font-semibold text-amber-300">{isFinite((trend?.strength || 0) * 100) ? ((trend?.strength || 0) * 100).toFixed(0) : '0'}%</span> strength</p>
+          {(outliers?.count || 0) > 0 && <p>⚠️ {outliers.count} anomalies detected — review for data quality or business significance</p>}
         </div>
       </div>
     </div>
