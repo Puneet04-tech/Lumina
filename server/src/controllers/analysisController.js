@@ -173,6 +173,7 @@ Format your response as JSON with keys: answer, insights, recommendations, metri
     console.error('queryAnalysis error:', error);
     res.status(500).json({ success: false, message: error.message || 'Analysis failed' });
   }
+};
 
 /**
  * Save dashboard
