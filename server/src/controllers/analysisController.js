@@ -31,59 +31,79 @@ const calculateStats = (data, key) => {
 };
 
 /**
- * Analyze data with Ollama (Local LLM)
+ * Analyze data with Groq API (Free tier, globally accessible)
  */
-const analyzeWithOllama = async (data, columns, query, metric, dimension) => {
+const analyzeWithGroq = async (data, columns, query, metric, dimension) => {
   try {
-    const ollamaEndpoint = process.env.OLLAMA_ENDPOINT || 'http://localhost:11434';
-    const ollamaModel = process.env.OLLAMA_MODEL || 'tinyllama';
-    
-    if (!ollamaEndpoint) {
-      console.log('⚠️ Ollama endpoint not configured, using local intelligence');
+    const token = process.env.GROQ_API_TOKEN;
+    const model = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+
+    if (!token) {
+      console.log('⚠️ Groq API token not configured, using local intelligence');
       return null;
     }
 
-    const dataSample = data.slice(0, 20);
-    const prompt = `You are a data analyst. Analyze this data and answer the query concisely.
+    const dataSample = data.slice(0, 10);
+    const userPrompt = `You are a data analytics expert. Analyze this data and provide insights.
 
-Data: ${JSON.stringify(dataSample)}
+Data sample: ${JSON.stringify(dataSample)}
 Columns: ${columns.join(', ')}
 Total records: ${data.length}
+Metric analyzed: ${metric}
+Dimension: ${dimension}
 
-Query: "${query}"
+User query: "${query}"
 
-Provide JSON response with: answer, insights (array), recommendations (string)`;
+Provide your response in this exact JSON format:
+{"answer": "brief direct answer", "insights": ["insight1", "insight2", "insight3"], "recommendations": "actionable recommendations"}`;
 
     const response = await axios.post(
-      `${ollamaEndpoint}/api/generate`,
+      'https://api.groq.com/openai/v1/chat/completions',
       {
-        model: ollamaModel,
-        prompt: prompt,
-        stream: false,
+        model: model,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a concise data analytics assistant. Always respond with valid JSON only.'
+          },
+          {
+            role: 'user',
+            content: userPrompt
+          }
+        ],
         temperature: 0.7,
+        max_tokens: 500
       },
       {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
         timeout: 30000,
       }
     );
 
-    const content = response.data.response;
+    // Handle response
+    const content = response.data.choices[0].message.content;
+
+    // Extract JSON from content
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       try {
-        return JSON.parse(jsonMatch[0]);
-      } catch (e) {
-        // If JSON parsing fails, extract text-based insights
+        const parsed = JSON.parse(jsonMatch[0]);
         return {
-          answer: content.substring(0, 200),
-          insights: [content.substring(0, 100)],
-          recommendations: 'Review the analysis above'
+          answer: parsed.answer || query,
+          insights: Array.isArray(parsed.insights) ? parsed.insights : [String(parsed.insights || '')],
+          recommendations: String(parsed.recommendations || 'Review the analysis')
         };
+      } catch (e) {
+        // JSON parse failed, return null to fallback
+        return null;
       }
     }
     return null;
   } catch (error) {
-    console.log('⚠️ Ollama error:', error.message, '- Falling back to local intelligence');
+    console.log('⚠️ Groq API error:', error.message, '- Falling back to local intelligence');
     return null;
   }
 };
@@ -195,21 +215,21 @@ export const queryAnalysis = async (req, res) => {
         .slice(0, 20);
     }
 
-    // Try Ollama API first
-    console.log('🤖 Attempting Ollama analysis...');
-    let ollamaAnalysis = await analyzeWithOllama(file.data, file.columns, query, metric, dimension);
+    // Try Groq API first
+    console.log('🤖 Attempting Groq AI analysis...');
+    let groqAnalysis = await analyzeWithGroq(file.data, file.columns, query, metric, dimension);
     
     let analysisResult;
     let source = 'Unknown';
 
-    if (ollamaAnalysis) {
-      console.log('✅ Ollama succeeded');
+    if (groqAnalysis) {
+      console.log('✅ Groq API succeeded');
       analysisResult = {
-        insights: ollamaAnalysis.insights || [],
-        recommendations: ollamaAnalysis.recommendations || '',
-        answer: ollamaAnalysis.answer || query
+        insights: groqAnalysis.insights || [],
+        recommendations: groqAnalysis.recommendations || '',
+        answer: groqAnalysis.answer || query
       };
-      source = 'Ollama AI (Local)';
+      source = 'Groq AI (llama-3.3-70b)';
     } else {
       // Fallback to local intelligence
       console.log('📊 Using local intelligence fallback');

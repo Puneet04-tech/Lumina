@@ -23,8 +23,8 @@ dotenv.config({ path: envPath });
 
 // Verify environment variables are loaded
 console.log('🔑 Environment Variables Loaded:');
-console.log('   ✓ OLLAMA_MODEL:', process.env.OLLAMA_MODEL || '❌ NOT SET');
-console.log('   ✓ OLLAMA_ENDPOINT:', process.env.OLLAMA_ENDPOINT || 'http://localhost:11434');
+console.log('   ✓ GROQ_API_TOKEN:', process.env.GROQ_API_TOKEN ? `${process.env.GROQ_API_TOKEN.substring(0, 20)}...` : '❌ NOT SET');
+console.log('   ✓ GROQ_MODEL:', process.env.GROQ_MODEL || 'llama-3.3-70b-versatile');
 console.log('   ✓ PORT:', process.env.PORT || 5000);
 console.log('   ✓ NODE_ENV:', process.env.NODE_ENV || 'development');
 
