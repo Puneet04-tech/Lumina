@@ -85,7 +85,7 @@ Provide your response in this exact JSON format:
 
     // Handle response
     const content = response.data.choices[0].message.content;
-    console.log('📩 Groq response:', content.substring(0, 200));
+    console.log('📩 Groq response received:', content.substring(0, 300));
 
     // Extract JSON from content - try multiple patterns
     let parsed = null;
@@ -93,28 +93,33 @@ Provide your response in this exact JSON format:
     // Try to parse as direct JSON first
     try {
       parsed = JSON.parse(content);
+      console.log('✅ Direct JSON parse succeeded');
     } catch (e1) {
       // Try to extract JSON object from text
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         try {
           parsed = JSON.parse(jsonMatch[0]);
+          console.log('✅ Extracted JSON from text');
         } catch (e2) {
-          console.log('⚠️ Failed to parse JSON:', e2.message);
+          console.log('⚠️ Failed to parse extracted JSON:', e2.message);
         }
       }
     }
 
     if (parsed) {
-      return {
+      console.log('✅ Successfully parsed Groq response');
+      const result = {
         answer: parsed.answer || query,
         insights: Array.isArray(parsed.insights) ? parsed.insights : [String(parsed.insights || '')],
         recommendations: String(parsed.recommendations || 'Review the analysis')
       };
+      console.log('🎯 Returning analysis:', JSON.stringify(result).substring(0, 300));
+      return result;
     }
     
     // Fallback: extract insights from raw text
-    console.log('⚠️ Could not parse JSON, using raw content as answer');
+    console.log('⚠️ No JSON found, using raw content as fallback');
     return {
       answer: content.substring(0, 500),
       insights: [content.substring(0, 200)],
