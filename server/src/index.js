@@ -32,8 +32,35 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // CORS Configuration for Production
+// Normalize CORS_ORIGIN by removing trailing slash
+const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:3000';
+const normalizedOrigin = corsOrigin.replace(/\/$/, ''); // Remove trailing slash
+
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // If wildcard is set, allow all origins
+    if (normalizedOrigin === '*') {
+      return callback(null, true);
+    }
+    
+    // Normalize the incoming origin (remove trailing slash)
+    const incomingOrigin = origin.replace(/\/$/, '');
+    
+    // Check if origin matches (with or without trailing slash)
+    if (incomingOrigin === normalizedOrigin || origin === normalizedOrigin) {
+      return callback(null, true);
+    }
+    
+    // Allow localhost for development
+    if (incomingOrigin.includes('localhost') || incomingOrigin.includes('127.0.0.1')) {
+      return callback(null, true);
+    }
+    
+    callback(new Error('CORS not allowed'));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']

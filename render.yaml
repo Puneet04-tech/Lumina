@@ -16,7 +16,7 @@ services:
       - key: PORT
         value: 3500
       - key: CORS_ORIGIN
-        value: "*"
+        value: "https://lu-m-i-n-a.netlify.app"
       - key: GEMINI_MODEL
         value: gemini-pro
     
