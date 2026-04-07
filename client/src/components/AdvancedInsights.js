@@ -13,7 +13,21 @@ export function AdvancedInsights({ analysis }) {
     trend = {},
     dataQuality = {},
     correlations = {},
+    insights = [],
+    analysis: aiSummary = {}, // This contains 'answer' and 'recommendations'
   } = analysis;
+
+  // Split AI recommendations into categories
+  const getStrategyTiers = (rec) => {
+    if (!rec) return [];
+    // Priority 1 (Immediate): [Action]; Priority 2 (Strategic): [Action]; Priority 3 (Transformation): [Action]
+    return rec.split(';').map(tier => {
+      const [title, description] = tier.split(':').map(s => s.trim());
+      return { title: title || 'Strategic Action', description: description || tier };
+    });
+  };
+
+  const strategyTiers = getStrategyTiers(aiSummary.recommendations);
 
   // Calculate top performer impact
   const topPerformerTotal = topPerformers.reduce((sum, p) => sum + (p?.value || 0), 0);
@@ -32,6 +46,48 @@ export function AdvancedInsights({ analysis }) {
 
   return (
     <div className="space-y-6">
+      {/* Executive Intelligence Answer Card */}
+      {aiSummary.answer && (
+        <div className="bg-gradient-to-br from-indigo-900/40 to-slate-900/40 rounded-xl p-6 border border-indigo-700/50 backdrop-blur-md animate-slideInDown shadow-2xl shadow-indigo-500/10">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-indigo-600/30 rounded-lg border border-indigo-500/40">
+              <Lightbulb className="w-6 h-6 text-indigo-300" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-white mb-2 leading-tight">Master Intelligence Summary</h3>
+              <p className="text-slate-200 text-lg leading-relaxed">{aiSummary.answer}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Strategic Roadmap (3-Tier Strategy) */}
+      {strategyTiers.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-slideInUp" style={{animationDelay: '0.1s'}}>
+          {strategyTiers.map((tier, idx) => (
+            <div key={idx} className={`p-5 rounded-xl border backdrop-blur-sm transition-all hover:scale-[1.02] ${
+              idx === 0 ? 'bg-rose-900/40 border-rose-700/50' :
+              idx === 1 ? 'bg-amber-900/40 border-amber-700/50' :
+              'bg-blue-900/40 border-blue-700/50'
+            }`}>
+              <div className="flex items-center gap-2 mb-3">
+                <Zap className={`w-4 h-4 ${
+                  idx === 0 ? 'text-rose-400' :
+                  idx === 1 ? 'text-amber-400' :
+                  'text-blue-400'
+                }`} />
+                <p className={`text-xs font-bold uppercase tracking-tight ${
+                  idx === 0 ? 'text-rose-300' :
+                  idx === 1 ? 'text-amber-300' :
+                  'text-blue-300'
+                }`}>{tier.title}</p>
+              </div>
+              <p className="text-white font-medium text-sm leading-snug">{tier.description}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Executive KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-gradient-to-br from-indigo-900/40 to-slate-900/40 rounded-xl p-5 border border-indigo-700/30 backdrop-blur-sm animate-slideInUp">
@@ -67,6 +123,42 @@ export function AdvancedInsights({ analysis }) {
           <p className="text-amber-300/70 text-xs mt-1">Outliers • {outliers.lowerBound !== undefined && outliers.upperBound !== undefined ? `Range: ${(outliers.lowerBound || 0).toFixed(0)}-${(outliers.upperBound || 0).toFixed(0)}` : 'Review data'}</p>
         </div>
       </div>
+
+      {/* Hybrid Insights Section */}
+      {insights.length > 0 && (
+        <div className="bg-gradient-to-br from-indigo-900/40 to-slate-900/40 rounded-xl p-6 border border-indigo-700/30 backdrop-blur-sm animate-slideInUp shadow-lg shadow-indigo-500/10" style={{animationDelay: '0.2s'}}>
+          <div className="flex items-center gap-2 mb-6">
+            <BarChart3 className="w-6 h-6 text-indigo-400" />
+            <h3 className="text-xl font-bold bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text text-transparent">🧠 Hybrid Intelligence Insights</h3>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {insights.map((insight, idx) => {
+              const isAI = String(insight).includes('🤖');
+              const cleanInsight = String(insight).replace('🤖 AI Insight: ', '').replace('📊 Statistical Fact: ', '');
+              
+              return (
+                <div key={idx} className={`p-4 rounded-lg border transition-all hover:bg-slate-800/40 flex gap-4 ${
+                  isAI ? 'bg-indigo-900/20 border-indigo-500/20' : 'bg-slate-900/20 border-slate-700/30'
+                }`}>
+                  <div className={`mt-1 p-2 rounded-lg shrink-0 h-fit ${
+                    isAI ? 'bg-indigo-500/20' : 'bg-slate-700/30'
+                  }`}>
+                    {isAI ? <Zap className="w-4 h-4 text-indigo-400" /> : <Database className="w-4 h-4 text-slate-400" />}
+                  </div>
+                  <div>
+                    <p className={`text-[10px] font-bold mb-1 uppercase tracking-[0.1em] ${isAI ? 'text-indigo-400' : 'text-slate-400'}`}>
+                      {isAI ? 'AI Strategic Insight' : 'Statistical Fact'}
+                    </p>
+                    <p className="text-slate-200 text-[13px] leading-relaxed font-medium">
+                      {cleanInsight}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Top Performers */}
       {topPerformers.length > 0 && (
