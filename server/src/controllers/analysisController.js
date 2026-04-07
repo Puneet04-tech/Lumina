@@ -74,19 +74,41 @@ const analyzeWithGroq = async (data, columns, query, metric, dimension) => {
       return null;
     }
 
-    const dataSample = data.slice(0, 10);
-    const userPrompt = `You are a data analytics expert. Analyze this data and provide insights.
+    const dataSample = data.slice(0, 15);
+    const topPerformers = [...data].sort((a, b) => b[metric] - a[metric]).slice(0, 5);
+    const bottomPerformers = [...data].sort((a, b) => a[metric] - b[metric]).slice(0, 3);
+    
+    const userPrompt = `You are a Senior Data Scientist and Strategic Business Consultant. Analyze the provided dataset for the metric "${metric}" across the dimension "${dimension}".
 
-Data sample: ${JSON.stringify(dataSample)}
-Columns: ${columns.join(', ')}
-Total records: ${data.length}
-Metric analyzed: ${metric}
-Dimension: ${dimension}
+Data Context:
+- Dataset Size: ${data.length} records
+- Metric: ${metric}
+- Dimension: ${dimension}
+- Top 5 Performers: ${JSON.stringify(topPerformers.map(d => ({[dimension]: d[dimension], [metric]: d[metric]})))}
+- Bottom 3 Performers: ${JSON.stringify(bottomPerformers.map(d => ({[dimension]: d[dimension], [metric]: d[metric]})))}
+- Detailed Data Sample: ${JSON.stringify(dataSample.map(d => ({[dimension]: d[dimension], [metric]: d[metric]})))}
 
-User query: "${query}"
+User's Specific Query: "${query}"
 
-Provide your response in this exact JSON format:
-{"answer": "brief direct answer", "insights": ["insight1", "insight2", "insight3"], "recommendations": "actionable recommendations"}`;
+Instructions:
+1. Provide a "Master Intelligence Report" that goes beyond surface-level observations.
+2. Identify hidden correlations, performance clusters, and volatile segments.
+3. Calculate or estimate the potential ROI or impact of optimizing the bottom performers to reach at least the median.
+4. Give 5-7 distinct, high-value insights. Each insight should follow the format: "[Focus Area]: [Observation] -> [Business Impact]".
+5. Provide 3-5 hyper-specific, prioritized strategic recommendations (Short-term, Medium-term, Long-term).
+
+Response Format (STRICT JSON ONLY):
+{
+  "answer": "A comprehensive 2-3 sentence executive summary answering the user query directly.",
+  "insights": [
+    "Cluster Analysis: [Insight text...]",
+    "Growth Opportunity: [Insight text...]",
+    "Risk Mitigation: [Insight text...]",
+    "Efficiency Gap: [Insight text...]",
+    "Volatility Note: [Insight text...]"
+  ],
+  "recommendations": "Priority 1 (Immediate): [Action]; Priority 2 (Strategic): [Action]; Priority 3 (Transformation): [Action]"
+}`;
 
     const response = await axios.post(
       'https://api.groq.com/openai/v1/chat/completions',
@@ -95,15 +117,15 @@ Provide your response in this exact JSON format:
         messages: [
           {
             role: 'system',
-            content: 'You are a concise data analytics assistant. Always respond with valid JSON only.'
+            content: 'You are an elite Data Science Agent. provide deep, non-obvious business intelligence and strategic advice. Never provide generic advice. ALWAYS respond with valid JSON only.'
           },
           {
             role: 'user',
             content: userPrompt
           }
         ],
-        temperature: 0.7,
-        max_tokens: 500
+        temperature: 0.4,
+        max_tokens: 1000
       },
       {
         headers: {
@@ -199,17 +221,28 @@ const localAnalysis = (data, columns, metric, dimension) => {
 
   // Generate insights
   if (sorted.length > 0) {
-    insights.push(`Top performer: ${sorted[0].name} with ${parseFloat(sorted[0].value.toFixed(2))} total`);
+    const top = sorted[0];
+    const topPct = stats.sum > 0 ? (top.value / stats.sum * 100).toFixed(1) : 0;
+    insights.push(`👑 Dominant Performer: ${top.name} represents ${topPct}% of the total ${metric} value (${parseFloat(top.value.toFixed(2))}).`);
+    
     if (sorted.length > 1) {
-      insights.push(`Second: ${sorted[1].name} with ${parseFloat(sorted[1].value.toFixed(2))} total`);
+      const bottom = sorted[sorted.length - 1];
+      const ratio = bottom.value > 0 ? (top.value / bottom.value).toFixed(2) : '∞';
+      insights.push(`⚖️ Performance Disparity: There is a ${ratio}x gap between top (${top.name}) and bottom (${bottom.name}) performers.`);
     }
   }
 
   if (stats.average) {
-    insights.push(`Average value is ${stats.average.toFixed(2)}`);
-    const highPerformers = sorted.filter(s => s.value > stats.average * 1.5);
-    if (highPerformers.length > 0) {
-      insights.push(`${highPerformers.length} items performing significantly above average`);
+    const volatility = stats.average > 0 ? (stats.stdDev / stats.average * 100).toFixed(1) : 0;
+    const desc = volatility > 50 ? "High Volatility" : volatility > 20 ? "Moderate Variation" : "Stable Distribution";
+    insights.push(`📊 Distribution Profile: The data shows ${desc} (${volatility}% Coeff. of Variation) with an average of ${stats.average.toFixed(2)}.`);
+    
+    const aboveAvg = sorted.filter(s => s.value > stats.average).length;
+    const belowAvg = sorted.length - aboveAvg;
+    insights.push(`📈 Benchmarking: ${aboveAvg} items are performing above the mean, while ${belowAvg} items fall below it.`);
+    
+    if (stats.iqr > 0) {
+      insights.push(`🎯 Concentration: 50% of your data clusters between ${stats.q1.toFixed(2)} and ${stats.q3.toFixed(2)} (${metric}).`);
     }
   }
 
@@ -375,28 +408,36 @@ export const queryAnalysis = async (req, res) => {
     let analysisResult;
     let source = 'Unknown';
 
-    if (groqAnalysis && groqAnalysis.insights && groqAnalysis.insights.length > 0) {
-      console.log('✅ Groq API succeeded with insights');
+    if (groqAnalysis && groqAnalysis.insights) {
+      console.log('✅ Groq API succeeded, merging with local insights');
       
-      // Merge Groq insights with local insights for a "power" analysis
-      const combinedInsights = [
-        ...groqAnalysis.insights,
-        ...localResult.insights.filter(li => !groqAnalysis.insights.includes(li))
-      ];
+      // Categorize and merge insights for a "Power Dashboard"
+      const aiInsights = groqAnalysis.insights.map(i => `🤖 AI Insight: ${i}`);
+      const localInsights = localResult.insights.map(i => `📊 Statistical Fact: ${i}`);
+      
+      // Interleave AI and Statistical insights for a rich mix
+      const combinedInsights = [];
+      const maxLength = Math.max(aiInsights.length, localInsights.length);
+      for (let i = 0; i < maxLength; i++) {
+        if (aiInsights[i]) combinedInsights.push(aiInsights[i]);
+        if (localInsights[i]) combinedInsights.push(localInsights[i]);
+      }
 
       analysisResult = {
-        insights: combinedInsights,
-        recommendations: groqAnalysis.recommendations || localResult.recommendations,
-        answer: groqAnalysis.answer || query,
         ...localResult,
-        insights: combinedInsights, // Ensure combined is used
+        answer: groqAnalysis.answer || localResult.answer,
+        insights: combinedInsights,
+        recommendations: groqAnalysis.recommendations || localResult.recommendations
       };
-      source = 'Groq AI (llama-3.3-70b)';
+      source = 'Lumina Hybrid Intelligence (Groq AI + Local Stats)';
     } else {
       // Use local intelligence
-      console.log('📊 Using local intelligence');
-      analysisResult = localResult;
-      source = 'Local Intelligence Engine';
+      console.log('📊 Using local intelligence fallback');
+      analysisResult = {
+        ...localResult,
+        insights: localResult.insights.map(i => `📊 Statistical Fact: ${i}`)
+      };
+      source = 'Lumina Local Intelligence Engine';
     }
 
     const results = {
@@ -405,8 +446,8 @@ export const queryAnalysis = async (req, res) => {
       stats: calculateStats(file.data, metric),
       insights: analysisResult.insights || [],
       analysis: {
-        answer: analysisResult.answer || `Analyzed ${file.data.length} records`,
-        recommendations: analysisResult.recommendations || 'Review the data analysis'
+        answer: analysisResult.answer || `Comprehensive analysis of ${file.data.length} records completed.`,
+        recommendations: analysisResult.recommendations || 'Apply targeted optimizations based on the insights provided.'
       },
       topPerformers: (analysisResult.topPerformers && analysisResult.topPerformers.length > 0) 
         ? analysisResult.topPerformers 
