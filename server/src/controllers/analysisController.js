@@ -157,11 +157,10 @@ const localAnalysis = (data, columns, metric, dimension) => {
   console.log(`\n📈 LOCAL ANALYSIS:`);
   console.log(`   Data rows: ${data.length}`);
   console.log(`   Metric: "${metric}", Dimension: "${dimension}"`);
-  console.log(`   Sample row:`, JSON.stringify(data[0]));
+  console.log(`   Sample rows:`, data.slice(0, 3));
   
   const insights = [];
   const stats = calculateStats(data, metric);
-  console.log(`   Stats:`, stats);
   
   // Calculate toppers
   const groupedData = {};
@@ -183,8 +182,7 @@ const localAnalysis = (data, columns, metric, dimension) => {
     }))
     .sort((a, b) => b.value - a.value);
 
-  console.log(`   Grouped items: ${sorted.length}`);
-  console.log(`   Top 3:`, sorted.slice(0, 3));
+  console.log(`   ✅ Grouped into ${sorted.length} categories`);
 
   // Generate insights
   if (sorted.length > 0) {
@@ -284,6 +282,14 @@ export const queryAnalysis = async (req, res) => {
       return res.status(400).json({ success: false, message: 'File has no data' });
     }
 
+    console.log(`📂 File loaded:`, {
+      rowCount: file.data.length,
+      columnCount: file.columns.length,
+      columns: file.columns,
+      firstRow: file.data[0],
+      firstRowTypes: file.columns.map(col => `${col}=${typeof file.data[0][col]}`).join(', ')
+    });
+
     // Identify numeric and text columns
     const numericColumns = file.columns.filter(
       (col) => typeof file.data[0][col] === 'number'
@@ -318,6 +324,19 @@ export const queryAnalysis = async (req, res) => {
         .map(([name, value]) => ({ name, value }))
         .sort((a, b) => b.value - a.value)
         .slice(0, 20);
+      
+      console.log(`📊 Chart data created:`, {
+        groupedItemsCount: Object.keys(groupedData).length,
+        chartDataLength: chartData.length,
+        top3: chartData.slice(0, 3)
+      });
+    } else {
+      console.log(`⚠️ Chart data skipped - conditions not met:`, {
+        hasMetric: !!metric,
+        hasDimension: !!dimension,
+        numericColsCount: numericColumns.length,
+        textColsCount: textColumns.length
+      });
     }
 
     // Try Groq API first
@@ -379,6 +398,15 @@ export const queryAnalysis = async (req, res) => {
     };
 
     console.log(`✅ Analysis complete (${source})`);
+    console.log('📊 Results being returned:', {
+      topPerformersCount: results.topPerformers.length,
+      chartDataLength: results.data.length,
+      statsSum: results.stats.sum,
+      statsAverage: results.stats.average,
+      insightsCount: results.insights.length,
+      trendDirection: results.trend.direction,
+      trendStrength: results.trend.strength
+    });
     console.log('='.repeat(70) + '\n');
 
     res.json({
