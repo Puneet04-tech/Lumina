@@ -1,9 +1,11 @@
 /**
  * Parse AI query and extract intent
  * Example: "Top 5 products by revenue" -> { type: 'top', field: 'product', metric: 'revenue', limit: 5 }
+ * 
+ * Note: Analysis now handled by backend with Grok API + local intelligence fallback
  */
 export const parseQuery = async (query, columns) => {
-  // Basic query parsing - can be replaced with AI API call
+  // Basic query parsing - backend handles AI analysis
   const lowerQuery = query.toLowerCase();
 
   // Detect query type
@@ -95,68 +97,5 @@ export const processQuery = (data, parsedQuery) => {
         data: data.slice(0, limit),
         title: 'Data Analysis',
       };
-  }
-};
-
-/**
- * Call Gemini AI API for intelligent analysis
- */
-export const callGeminiAI = async (query, dataContext) => {
-  try {
-    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-
-    if (!apiKey) {
-      console.warn('Gemini API key not configured');
-      return null;
-    }
-
-    const prompt = `
-You are an AI data analyst. Based on the user query and data context, provide analysis insights.
-
-User Query: ${query}
-
-Data Context:
-- Total rows: ${dataContext.rowCount}
-- Columns: ${dataContext.columns.join(', ')}
-- Sample data: ${JSON.stringify(dataContext.sampleData || [])}
-
-Provide a JSON response with:
-{
-  "insight": "Brief insight about the data",
-  "recommendation": "Actionable recommendation",
-  "chartSuggestion": "Suggested chart type (bar, line, pie, area)"
-}
-    `;
-
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': apiKey,
-      },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-      }),
-    });
-
-    const result = await response.json();
-    const content = result.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (content) {
-      try {
-        return JSON.parse(content);
-      } catch {
-        return {
-          insight: content,
-          recommendation: 'Continue exploring your data',
-          chartSuggestion: 'bar',
-        };
-      }
-    }
-
-    return null;
-  } catch (error) {
-    console.error('Gemini API error:', error);
-    return null;
   }
 };

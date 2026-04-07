@@ -1,95 +1,8 @@
-import axios from 'axios';
-
-const GEMINI_API_KEY = process.env.GOOGLE_GEMINI_API_KEY;
-
 /**
- * Call Gemini API for intelligent data analysis
+ * AI Helper Functions
+ * Note: Analysis is now handled directly in analysisController.js
+ * which integrates Grok API with local intelligence fallback
  */
-export const analyzeWithGemini = async (query, dataContext) => {
-  try {
-    if (!GEMINI_API_KEY) {
-      return {
-        success: false,
-        message: 'Gemini API key not configured',
-      };
-    }
-
-    const prompt = `
-You are an AI data analyst. Analyze the following data based on user query:
-
-User Query: "${query}"
-
-Data Summary:
-- Total records: ${dataContext.rowCount}
-- Columns: ${dataContext.columns.join(', ')}
-- Data samples: ${JSON.stringify(dataContext.sampleData || {})}
-
-Provide analysis in this exact JSON format:
-{
-  "insight": "Key insight about the query",
-  "summary": "Summary of findings",
-  "recommendation": "What to do with this data",
-  "chartType": "bar|line|pie|area|scatter",
-  "confidence": 0.95
-}
-    `;
-
-    const response = await axios.post(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent',
-      {
-        contents: [
-          {
-            parts: [
-              {
-                text: prompt,
-              },
-            ],
-          },
-        ],
-      },
-      {
-        headers: {
-          'x-goog-api-key': GEMINI_API_KEY,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-
-    const content = response.data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (content) {
-      try {
-        const parsed = JSON.parse(content);
-        return {
-          success: true,
-          analysis: parsed,
-        };
-      } catch (parseError) {
-        return {
-          success: true,
-          analysis: {
-            insight: content,
-            summary: 'Analysis completed',
-            recommendation: 'Review the data',
-            chartType: 'bar',
-            confidence: 0.8,
-          },
-        };
-      }
-    }
-
-    return {
-      success: false,
-      message: 'No response from AI',
-    };
-  } catch (error) {
-    console.error('Gemini API Error:', error.message);
-    return {
-      success: false,
-      message: error.message,
-    };
-  }
-};
 
 /**
  * Process natural language query to structured format
@@ -98,29 +11,59 @@ export const processNaturalLanguageQuery = (query, columns) => {
   const lowerQuery = query.toLowerCase();
 
   // Detect operation type
-  let operation = 'aggregate';
-  if (lowerQuery.includes('top')) operation = 'top';
-  else if (lowerQuery.includes('bottom') || lowerQuery.includes('lowest')) operation = 'bottom';
-  else if (lowerQuery.includes('average') || lowerQuery.includes('avg')) operation = 'average';
-  else if (lowerQuery.includes('total') || lowerQuery.includes('sum')) operation = 'sum';
+  let operation = 'analyze';
+  if (lowerQuery.includes('compare')) operation = 'compare';
+  if (lowerQuery.includes('trend')) operation = 'trend';
+  if (lowerQuery.includes('top')) operation = 'ranking';
+  if (lowerQuery.includes('distribution')) operation = 'distribution';
 
-  // Extract numbers
-  const numberMatch = query.match(/(\d+)/);
-  const limit = numberMatch ? parseInt(numberMatch[1]) : 5;
-
-  // Try to find column reference
-  let targetColumn = columns[0];
-  for (const col of columns) {
-    if (lowerQuery.includes(col.toLowerCase())) {
-      targetColumn = col;
-      break;
-    }
-  }
+  // Detect columns mentioned in query
+  const mentionedColumns = columns.filter((col) =>
+    lowerQuery.includes(col.toLowerCase())
+  );
 
   return {
     operation,
-    limit,
-    targetColumn,
-    columns,
+    mentionedColumns,
+    query,
+    timestamp: new Date(),
+  };
+};
+
+/**
+ * Extract metrics from query text
+ */
+export const extractMetrics = (query) => {
+  const metrics = {
+    timeframe: null,
+    aggregation: 'sum', // sum, avg, count, max, min
+    compareTo: null,
+  };
+
+  const lowerQuery = query.toLowerCase();
+
+  // Detect aggregation
+  if (/average|avg|mean/.test(lowerQuery)) metrics.aggregation = 'average';
+  if (/count|how many/.test(lowerQuery)) metrics.aggregation = 'count';
+  if (/max|maximum|highest/.test(lowerQuery)) metrics.aggregation = 'max';
+  if (/min|minimum|lowest/.test(lowerQuery)) metrics.aggregation = 'min';
+
+  // Detect timeframe
+  if (/today|this day/.test(lowerQuery)) metrics.timeframe = 'day';
+  if (/this week/.test(lowerQuery)) metrics.timeframe = 'week';
+  if (/this month/.test(lowerQuery)) metrics.timeframe = 'month';
+  if (/this year/.test(lowerQuery)) metrics.timeframe = 'year';
+
+  return metrics;
+};
+
+/**
+ * Format analysis response
+ */
+export const formatAnalysisResponse = (data) => {
+  return {
+    success: true,
+    data,
+    generatedAt: new Date(),
   };
 };
