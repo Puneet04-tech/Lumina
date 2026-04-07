@@ -23,8 +23,8 @@ dotenv.config({ path: envPath });
 
 // Verify environment variables are loaded
 console.log('🔑 Environment Variables Loaded:');
-console.log('   ✓ GEMINI_API_KEY:', process.env.GEMINI_API_KEY ? `${process.env.GEMINI_API_KEY.substring(0, 15)}...` : '❌ NOT SET');
-console.log('   ✓ GEMINI_MODEL:', process.env.GEMINI_MODEL || '❌ NOT SET');
+console.log('   ✓ GROK_API_KEY:', process.env.GROK_API_KEY ? `${process.env.GROK_API_KEY.substring(0, 15)}...` : '❌ NOT SET');
+console.log('   ✓ GROK_MODEL:', process.env.GROK_MODEL || '❌ NOT SET');
 console.log('   ✓ PORT:', process.env.PORT || 5000);
 console.log('   ✓ NODE_ENV:', process.env.NODE_ENV || 'development');
 
