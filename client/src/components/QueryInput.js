@@ -17,7 +17,7 @@ export function QueryInput({ fileId, onQueryResult }) {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/analysis/query`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/analysis/query`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

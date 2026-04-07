@@ -43,7 +43,7 @@ export function FileUploadCard({ onUploadSuccess }) {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/files/upload`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/files/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
