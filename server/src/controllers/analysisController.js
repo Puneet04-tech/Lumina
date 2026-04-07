@@ -364,11 +364,19 @@ export const queryAnalysis = async (req, res) => {
 
     if (groqAnalysis && groqAnalysis.insights && groqAnalysis.insights.length > 0) {
       console.log('✅ Groq API succeeded with insights');
+      
+      // Merge Groq insights with local insights for a "power" analysis
+      const combinedInsights = [
+        ...groqAnalysis.insights,
+        ...localResult.insights.filter(li => !groqAnalysis.insights.includes(li))
+      ];
+
       analysisResult = {
-        insights: groqAnalysis.insights,
+        insights: combinedInsights,
         recommendations: groqAnalysis.recommendations || localResult.recommendations,
         answer: groqAnalysis.answer || query,
-        ...localResult  // Include all local analysis fields (topPerformers, trends, etc.)
+        ...localResult,
+        insights: combinedInsights, // Ensure combined is used
       };
       source = 'Groq AI (llama-3.3-70b)';
     } else {
