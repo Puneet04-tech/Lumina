@@ -2,32 +2,73 @@
 node_modules/
 .pnp
 .pnp.js
+package-lock.json
+yarn.lock
 
-# Environment variables
+# Environment variables (NEVER commit these!)
 .env
 .env.local
 .env.*.local
+.env.production
+.env.*.production
 
-# Build
+# Build outputs
 dist/
 build/
 .next/
 out/
+.nuxt/
+coverage/
 
-# IDE
+# IDE & Editor
 .vscode/
 .idea/
+.sublime-workspace
 *.swp
 *.swo
 *~
-
-# OS
 .DS_Store
 Thumbs.db
 
 # Logs
 *.log
 npm-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+
+# Database & uploads
+/uploads
+/data
+*.sqlite
+*.db
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Backups
+*.bak
+*.swp
+*.swo
+
+# Deployment
+Procfile
+.deploy.swp
 yarn-debug.log*
 yarn-error.log*
 

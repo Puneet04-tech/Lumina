@@ -1,6 +1,8 @@
 import { File } from '../models/File.js';
 import { Dashboard } from '../models/Dashboard.js';
 import { performAdvancedAnalysis, generateComparisonInsights } from '../utils/advancedAnalytics.js';
+import { checkConnection } from '../config/database.js';
+import { memoryStore } from '../config/memoryStore.js';
 
 /**
  * Calculate statistics from data
@@ -43,7 +45,12 @@ export const queryAnalysis = async (req, res) => {
     console.log('📁 File ID:', fileId);
 
     // Get file
-    const file = await File.findOne({ _id: fileId, userId: req.user._id });
+    let file;
+    if (checkConnection()) {
+      file = await File.findOne({ _id: fileId, userId: req.user._id });
+    } else {
+      file = memoryStore.getFileById(fileId);
+    }
 
     if (!file) {
       return res.status(404).json({ success: false, message: 'File not found' });

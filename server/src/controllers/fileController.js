@@ -2,6 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import Papa from 'papaparse';
 import { File } from '../models/File.js';
+import { checkConnection } from '../config/database.js';
+import { memoryStore } from '../config/memoryStore.js';
 
 export const uploadFile = async (req, res) => {
   try {
@@ -54,7 +56,7 @@ export const uploadFile = async (req, res) => {
       return processedRow;
     }).filter((row) => Object.values(row).some((val) => val !== null && val !== ''));
 
-    const file = new File({
+    const fileData = {
       name: req.file.filename,
       originalName: req.file.originalname,
       size: req.file.size,
@@ -63,10 +65,23 @@ export const uploadFile = async (req, res) => {
       columns,
       data,
       rowCount: data.length,
-      userId: req.user._id,
-    });
+      userId: req.user?._id || 'dev-user-1',
+    };
 
-    await file.save();
+    let file;
+    let fileId;
+
+    if (checkConnection()) {
+      // Use MongoDB
+      file = new File(fileData);
+      await file.save();
+      fileId = file._id;
+    } else {
+      // Use in-memory store (offline mode)
+      file = memoryStore.createFile(fileData);
+      fileId = file._id;
+      console.log('💾 File stored in memory (offline mode):', fileId);
+    }
 
     // Clean up uploaded file after saving to database
     try {
@@ -79,12 +94,12 @@ export const uploadFile = async (req, res) => {
       success: true,
       message: 'File uploaded successfully',
       file: {
-        _id: file._id,
+        _id: fileId,
         originalName: file.originalName,
         size: file.size,
         columns,
         rowCount: data.length,
-        uploadedAt: file.uploadedAt,
+        uploadedAt: file.createdAt || new Date(),
       },
     });
   } catch (error) {
@@ -102,7 +117,14 @@ export const uploadFile = async (req, res) => {
 
 export const getFiles = async (req, res) => {
   try {
-    const files = await File.find({ userId: req.user._id }).select('-data').sort({ createdAt: -1 });
+    const userId = req.user?._id || 'dev-user-1';
+    let files;
+
+    if (checkConnection()) {
+      files = await File.find({ userId }).select('-data').sort({ createdAt: -1 });
+    } else {
+      files = memoryStore.getFilesByUser(userId);
+    }
 
     res.json({
       success: true,
@@ -112,7 +134,7 @@ export const getFiles = async (req, res) => {
         size: file.size,
         columns: file.columns,
         rowCount: file.rowCount || 0,
-        uploadedAt: file.uploadedAt,
+        uploadedAt: file.uploadedAt || file.createdAt || new Date(),
       })),
     });
   } catch (error) {
@@ -123,7 +145,14 @@ export const getFiles = async (req, res) => {
 
 export const getFile = async (req, res) => {
   try {
-    const file = await File.findOne({ _id: req.params.id, userId: req.user._id });
+    const userId = req.user?._id || 'dev-user-1';
+    let file;
+
+    if (checkConnection()) {
+      file = await File.findOne({ _id: req.params.id, userId });
+    } else {
+      file = memoryStore.getFileById(req.params.id);
+    }
 
     if (!file) {
       return res.status(404).json({ success: false, message: 'File not found' });
@@ -145,15 +174,31 @@ export const getFile = async (req, res) => {
 
 export const deleteFile = async (req, res) => {
   try {
-    const file = await File.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
+    const fileId = req.params.id;
+    let file;
+    let deleted = false;
 
-    if (!file) {
+    if (checkConnection()) {
+      file = await File.findOneAndDelete({ _id: fileId, userId: req.user._id });
+      deleted = !!file;
+    } else {
+      file = memoryStore.getFileById(fileId);
+      if (file) {
+        deleted = memoryStore.deleteFile(fileId);
+      }
+    }
+
+    if (!deleted) {
       return res.status(404).json({ success: false, message: 'File not found' });
     }
 
     // Delete file from storage
-    if (fs.existsSync(file.path)) {
-      fs.unlinkSync(file.path);
+    if (file?.path && fs.existsSync(file.path)) {
+      try {
+        fs.unlinkSync(file.path);
+      } catch (e) {
+        console.log('Warning: Could not delete file:', e.message);
+      }
     }
 
     res.json({ success: true, message: 'File deleted successfully' });

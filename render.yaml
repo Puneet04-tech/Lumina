@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: lumina-backend
+    env: node
+    plan: free
+    region: oregon
+    
+    buildCommand: npm install
+    startCommand: npm start
+    
+    # Environment variables
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3500
+    
+    # Build logs
+    buildFilter:
+      paths:
+        - server/**
+    
+    # Health checks
+    healthCheckPath: /api/health
+    healthCheckInterval: 120
+    healthCheckTimeout: 30
+    
+    # Auto-deploy on push
+    autoDeploy: true
+    
+    # Disk
+    disk:
+      name: lumina-data
+      mountPath: /data
+      sizeGB: 1
