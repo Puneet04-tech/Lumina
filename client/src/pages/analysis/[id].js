@@ -481,9 +481,9 @@ export default function AnalysisPage() {
               )}
 
               {/* Advanced Analysis - 8 Comprehensive Sections */}
-              {analysisResults && analysisResults.analysis && Object.keys(analysisResults.analysis).length > 0 && (
+              {analysisResults && (
                 <div className="animate-slideInUp" style={{animationDelay: '0.5s'}}>
-                  <AdvancedInsights analysis={analysisResults.analysis} />
+                  <AdvancedInsights analysis={analysisResults} />
                 </div>
               )}
 
