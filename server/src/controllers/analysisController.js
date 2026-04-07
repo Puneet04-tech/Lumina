@@ -201,9 +201,14 @@ const localAnalysis = (data, columns, metric, dimension) => {
   }
 
   // Calculate trend
+  const firstValue = sorted.length > 0 ? sorted[0].value : 0;
+  const lastValue = sorted.length > 1 ? sorted[sorted.length - 1].value : firstValue;
+  const percentChange = firstValue > 0 ? ((lastValue - firstValue) / firstValue * 100) : 0;
+  
   const trend = {
     direction: sorted.length > 1 && sorted[0].value > sorted[1].value ? 'Upward' : sorted.length > 1 ? 'Downward' : 'Stable',
-    strength: stats.average > 0 ? Math.min((stats.max - stats.min) / stats.average, 1) : 0
+    strength: stats.average > 0 ? Math.min((stats.max - stats.min) / stats.average, 1) : 0,
+    percentChange: isFinite(percentChange) ? Math.round(percentChange * 10) / 10 : 0
   };
 
   // Calculate outliers  
