@@ -10,8 +10,23 @@ import axios from 'axios';
 const calculateStats = (data, key) => {
   if (!data || data.length === 0) return {};
 
-  const values = data.map((item) => parseFloat(item[key]) || 0).filter((v) => !isNaN(v));
-  if (values.length === 0) return {};
+  const values = data
+    .map((item) => {
+      const val = item[key];
+      // Handle various number formats
+      if (typeof val === 'number') return val;
+      if (typeof val === 'string') {
+        const parsed = parseFloat(val);
+        return isNaN(parsed) ? 0 : parsed;
+      }
+      return 0;
+    })
+    .filter((v) => !isNaN(v) && v !== null);
+  
+  if (values.length === 0) {
+    console.log(`⚠️ No valid numeric values found for key: "${key}"`);
+    return {};
+  }
 
   const sum = values.reduce((a, b) => a + b, 0);
   const avg = sum / values.length;
@@ -20,7 +35,7 @@ const calculateStats = (data, key) => {
   const sorted = [...values].sort((a, b) => a - b);
   const median = sorted[Math.floor(sorted.length / 2)];
 
-  return {
+  const result = {
     sum: parseFloat(sum.toFixed(2)),
     average: parseFloat(avg.toFixed(2)),
     median: parseFloat(median.toFixed(2)),
@@ -28,6 +43,10 @@ const calculateStats = (data, key) => {
     min: parseFloat(min.toFixed(2)),
     count: values.length,
   };
+  
+  console.log(`   Stats calculated:`, result);
+  return result;
+};
 };
 
 /**
@@ -334,15 +353,26 @@ export const queryAnalysis = async (req, res) => {
       stats: calculateStats(file.data, metric),
       insights: analysisResult.insights || [],
       analysis: {
-        answer: analysisResult.answer || `Analyzed ${file.data.length} records across ${chartData.length} categories`,
+        answer: analysisResult.answer || `Analyzed ${file.data.length} records`,
         recommendations: analysisResult.recommendations || 'Review the data analysis'
       },
-      topPerformers: analysisResult.topPerformers || [],
-      bottomPerformers: analysisResult.bottomPerformers || [],
+      topPerformers: (analysisResult.topPerformers && analysisResult.topPerformers.length > 0) 
+        ? analysisResult.topPerformers 
+        : chartData.slice(0, 5),
+      bottomPerformers: (analysisResult.bottomPerformers && analysisResult.bottomPerformers.length > 0)
+        ? analysisResult.bottomPerformers
+        : chartData.slice(-3).reverse(),
       trend: analysisResult.trend || { direction: 'Stable', strength: 0.5 },
       outliers: analysisResult.outliers || { count: 0, lowerBound: 0, upperBound: 0, items: [] },
       dataQuality: analysisResult.dataQuality || { completeness: 100, uniquenessScore: 100 },
-      opportunityItems: analysisResult.opportunityItems || [],
+      opportunityItems: analysisResult.opportunityItems || chartData.map(item => ({
+        name: item.name,
+        currentValue: item.value,
+        avgValue: calculateStats(file.data, metric).average || 0,
+        gapPercentage: 0,
+        priority: 'Medium',
+        isQuickWin: false
+      })),
       correlations: analysisResult.correlations || {},
       totalRows: file.data.length,
       numericColumns: numericColumns.length,
