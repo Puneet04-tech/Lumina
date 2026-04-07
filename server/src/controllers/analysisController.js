@@ -31,12 +31,15 @@ const calculateStats = (data, key) => {
 };
 
 /**
- * Analyze data with Grok API
+ * Analyze data with Ollama (Local LLM)
  */
-const analyzeWithGrok = async (data, columns, query, metric, dimension) => {
+const analyzeWithOllama = async (data, columns, query, metric, dimension) => {
   try {
-    if (!process.env.GROK_API_KEY) {
-      console.log('⚠️ Grok API key not configured, using local intelligence');
+    const ollamaEndpoint = process.env.OLLAMA_ENDPOINT || 'http://localhost:11434';
+    const ollamaModel = process.env.OLLAMA_MODEL || 'tinyllama';
+    
+    if (!ollamaEndpoint) {
+      console.log('⚠️ Ollama endpoint not configured, using local intelligence');
       return null;
     }
 
@@ -52,29 +55,35 @@ Query: "${query}"
 Provide JSON response with: answer, insights (array), recommendations (string)`;
 
     const response = await axios.post(
-      'https://api.x.ai/v1/chat/completions',
+      `${ollamaEndpoint}/api/generate`,
       {
-        model: process.env.GROK_MODEL || 'grok-beta',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 500,
+        model: ollamaModel,
+        prompt: prompt,
+        stream: false,
+        temperature: 0.7,
       },
       {
-        headers: {
-          'Authorization': `Bearer ${process.env.GROK_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        timeout: 10000,
+        timeout: 30000,
       }
     );
 
-    const content = response.data.choices[0].message.content;
+    const content = response.data.response;
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
+      try {
+        return JSON.parse(jsonMatch[0]);
+      } catch (e) {
+        // If JSON parsing fails, extract text-based insights
+        return {
+          answer: content.substring(0, 200),
+          insights: [content.substring(0, 100)],
+          recommendations: 'Review the analysis above'
+        };
+      }
     }
     return null;
   } catch (error) {
-    console.log('⚠️ Grok API error:', error.message, '- Falling back to local intelligence');
+    console.log('⚠️ Ollama error:', error.message, '- Falling back to local intelligence');
     return null;
   }
 };
@@ -186,21 +195,21 @@ export const queryAnalysis = async (req, res) => {
         .slice(0, 20);
     }
 
-    // Try Grok API first
-    console.log('🤖 Attempting Grok API analysis...');
-    let grokAnalysis = await analyzeWithGrok(file.data, file.columns, query, metric, dimension);
+    // Try Ollama API first
+    console.log('🤖 Attempting Ollama analysis...');
+    let ollamaAnalysis = await analyzeWithOllama(file.data, file.columns, query, metric, dimension);
     
     let analysisResult;
     let source = 'Unknown';
 
-    if (grokAnalysis) {
-      console.log('✅ Grok API succeeded');
+    if (ollamaAnalysis) {
+      console.log('✅ Ollama succeeded');
       analysisResult = {
-        insights: grokAnalysis.insights || [],
-        recommendations: grokAnalysis.recommendations || '',
-        answer: grokAnalysis.answer || query
+        insights: ollamaAnalysis.insights || [],
+        recommendations: ollamaAnalysis.recommendations || '',
+        answer: ollamaAnalysis.answer || query
       };
-      source = 'Grok AI';
+      source = 'Ollama AI (Local)';
     } else {
       // Fallback to local intelligence
       console.log('📊 Using local intelligence fallback');
