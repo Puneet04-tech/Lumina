@@ -34,6 +34,11 @@ const calculateStats = (data, key) => {
   const min = Math.min(...values);
   const sorted = [...values].sort((a, b) => a - b);
   const median = sorted[Math.floor(sorted.length / 2)];
+  const q1 = sorted[Math.floor(sorted.length * 0.25)];
+  const q3 = sorted[Math.floor(sorted.length * 0.75)];
+  const iqr = q3 - q1;
+  const variance = values.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / values.length;
+  const stdDev = Math.sqrt(variance);
 
   const result = {
     sum: parseFloat(sum.toFixed(2)),
@@ -42,6 +47,14 @@ const calculateStats = (data, key) => {
     max: parseFloat(max.toFixed(2)),
     min: parseFloat(min.toFixed(2)),
     count: values.length,
+    range: parseFloat((max - min).toFixed(2)),
+    q1: parseFloat(q1.toFixed(2)),
+    q3: parseFloat(q3.toFixed(2)),
+    iqr: parseFloat(iqr.toFixed(2)),
+    variance: parseFloat(variance.toFixed(2)),
+    stdDev: parseFloat(stdDev.toFixed(2)),
+    uniqueValues: new Set(values).size,
+    coefficientOfVariation: avg !== 0 ? parseFloat((stdDev / avg * 100).toFixed(2)) : 0
   };
   
   console.log(`   Stats calculated:`, result);
