@@ -85,23 +85,41 @@ Provide your response in this exact JSON format:
 
     // Handle response
     const content = response.data.choices[0].message.content;
+    console.log('📩 Groq response:', content.substring(0, 200));
 
-    // Extract JSON from content
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      try {
-        const parsed = JSON.parse(jsonMatch[0]);
-        return {
-          answer: parsed.answer || query,
-          insights: Array.isArray(parsed.insights) ? parsed.insights : [String(parsed.insights || '')],
-          recommendations: String(parsed.recommendations || 'Review the analysis')
-        };
-      } catch (e) {
-        // JSON parse failed, return null to fallback
-        return null;
+    // Extract JSON from content - try multiple patterns
+    let parsed = null;
+    
+    // Try to parse as direct JSON first
+    try {
+      parsed = JSON.parse(content);
+    } catch (e1) {
+      // Try to extract JSON object from text
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          parsed = JSON.parse(jsonMatch[0]);
+        } catch (e2) {
+          console.log('⚠️ Failed to parse JSON:', e2.message);
+        }
       }
     }
-    return null;
+
+    if (parsed) {
+      return {
+        answer: parsed.answer || query,
+        insights: Array.isArray(parsed.insights) ? parsed.insights : [String(parsed.insights || '')],
+        recommendations: String(parsed.recommendations || 'Review the analysis')
+      };
+    }
+    
+    // Fallback: extract insights from raw text
+    console.log('⚠️ Could not parse JSON, using raw content as answer');
+    return {
+      answer: content.substring(0, 500),
+      insights: [content.substring(0, 200)],
+      recommendations: 'Review the generated analysis'
+    };
   } catch (error) {
     console.log('⚠️ Groq API error:', error.message, '- Falling back to local intelligence');
     return null;
