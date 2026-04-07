@@ -47,7 +47,6 @@ const calculateStats = (data, key) => {
   console.log(`   Stats calculated:`, result);
   return result;
 };
-};
 
 /**
  * Analyze data with Groq API (Free tier, globally accessible)
