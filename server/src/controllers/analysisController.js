@@ -112,16 +112,17 @@ Provide your response in this exact JSON format:
       const result = {
         answer: parsed.answer || query,
         insights: Array.isArray(parsed.insights) ? parsed.insights : [String(parsed.insights || '')],
-        recommendations: String(parsed.recommendations || 'Review the analysis')
+        recommendations: String(parsed.recommendations || 'Review the analysis'),
+        // These will be enhanced by localAnalysis for complete response
       };
-      console.log('🎯 Returning analysis:', JSON.stringify(result).substring(0, 300));
+      console.log('🎯 Returning Groq insights');
       return result;
     }
     
     // Fallback: extract insights from raw text
     console.log('⚠️ No JSON found, using raw content as fallback');
     return {
-      answer: content.substring(0, 500),
+      answer: content.substring(0, 300),
       insights: [content.substring(0, 200)],
       recommendations: 'Review the generated analysis'
     };
@@ -142,13 +143,20 @@ const localAnalysis = (data, columns, metric, dimension) => {
   const groupedData = {};
   data.forEach((row) => {
     const key = String(row[dimension]);
-    if (!groupedData[key]) groupedData[key] = { sum: 0, count: 0 };
-    groupedData[key].sum += parseFloat(row[metric]) || 0;
+    if (!groupedData[key]) groupedData[key] = { sum: 0, count: 0, values: [] };
+    const val = parseFloat(row[metric]) || 0;
+    groupedData[key].sum += val;
     groupedData[key].count += 1;
+    groupedData[key].values.push(val);
   });
 
   const sorted = Object.entries(groupedData)
-    .map(([name, data]) => ({ name, value: data.sum, avg: data.sum / data.count }))
+    .map(([name, d]) => ({ 
+      name, 
+      value: d.sum, 
+      avg: d.sum / d.count,
+      values: d.values
+    }))
     .sort((a, b) => b.value - a.value);
 
   // Generate insights
@@ -167,10 +175,51 @@ const localAnalysis = (data, columns, metric, dimension) => {
     }
   }
 
+  // Calculate trend
+  const trend = {
+    direction: sorted.length > 1 && sorted[0].value > sorted[1].value ? 'Upward' : sorted.length > 1 ? 'Downward' : 'Stable',
+    strength: stats.average > 0 ? Math.min((stats.max - stats.min) / stats.average, 1) : 0
+  };
+
+  // Calculate outliers  
+  const q1_index = Math.floor(sorted.length * 0.25);
+  const q3_index = Math.floor(sorted.length * 0.75);
+  const q1 = sorted[q1_index]?.value || 0;
+  const q3 = sorted[q3_index]?.value || 0;
+  const iqr = q3 - q1;
+  const lowerBound = q1 - 1.5 * iqr;
+  const upperBound = q3 + 1.5 * iqr;
+  const outliers = sorted.filter(s => s.value < lowerBound || s.value > upperBound);
+
+  // Calculate data quality
+  const completeness = Math.min(data.length / Math.max(sorted.length, 1) * 100, 100);
+  const uniquenessScore = Math.min(sorted.length / data.length * 100, 100);
+
   return {
-    insights: insights,
+    insights: insights.length > 0 ? insights : ['Analysis complete'],
     recommendations: sorted.length > 0 ? 'Focus on top performers for maximum impact' : 'Consistent performance across segments',
-    source: 'Local Intelligence Engine'
+    source: 'Local Intelligence Engine',
+    topPerformers: sorted.slice(0, 5),
+    bottomPerformers: sorted.slice(-3).reverse(),
+    trend: trend,
+    outliers: { 
+      count: outliers.length,
+      lowerBound: Math.max(0, lowerBound),
+      upperBound: upperBound,
+      items: outliers
+    },
+    dataQuality: {
+      completeness: Math.round(completeness),
+      uniquenessScore: Math.round(uniquenessScore)
+    },
+    opportunityItems: sorted.map(s => ({
+      name: s.name,
+      currentValue: s.value,
+      avgValue: stats.average,
+      gapPercentage: stats.average > 0 ? ((stats.average - s.value) / stats.average * 100) : 0,
+      priority: s.value < stats.average * 0.5 ? 'High' : s.value < stats.average ? 'Medium' : 'Low',
+      isQuickWin: s.value > stats.average * 0.75 && s.value < stats.average
+    }))
   };
 };
 
@@ -242,39 +291,44 @@ export const queryAnalysis = async (req, res) => {
     console.log('🤖 Attempting Groq AI analysis...');
     let groqAnalysis = await analyzeWithGroq(file.data, file.columns, query, metric, dimension);
     
+    // Always perform local analysis for full analytics
+    const localResult = localAnalysis(file.data, file.columns, metric, dimension);
+    
     let analysisResult;
     let source = 'Unknown';
 
-    if (groqAnalysis) {
-      console.log('✅ Groq API succeeded');
+    if (groqAnalysis && groqAnalysis.insights && groqAnalysis.insights.length > 0) {
+      console.log('✅ Groq API succeeded with insights');
       analysisResult = {
-        insights: groqAnalysis.insights || [],
-        recommendations: groqAnalysis.recommendations || '',
-        answer: groqAnalysis.answer || query
+        insights: groqAnalysis.insights,
+        recommendations: groqAnalysis.recommendations || localResult.recommendations,
+        answer: groqAnalysis.answer || query,
+        ...localResult  // Include all local analysis fields (topPerformers, trends, etc.)
       };
       source = 'Groq AI (llama-3.3-70b)';
     } else {
-      // Fallback to local intelligence
-      console.log('📊 Using local intelligence fallback');
-      const localResult = localAnalysis(file.data, file.columns, metric, dimension);
-      analysisResult = {
-        insights: localResult.insights,
-        recommendations: localResult.recommendations,
-        answer: `Analyzed ${file.data.length} records across ${Object.keys(new Set(file.data.map(r => r[dimension]))).length} categories`
-      };
-      source = 'Local Intelligence (Fallback)';
+      // Use local intelligence
+      console.log('📊 Using local intelligence');
+      analysisResult = localResult;
+      source = 'Local Intelligence Engine';
     }
 
     const results = {
       type: 'bar',
       data: chartData,
       stats: calculateStats(file.data, metric),
-      insights: analysisResult.insights,
+      insights: analysisResult.insights || [],
       analysis: {
-        answer: analysisResult.answer,
-        recommendations: analysisResult.recommendations,
-        suggestedMetrics: ['Total', 'Average', 'Median', 'Count', 'Max', 'Min']
+        answer: analysisResult.answer || `Analyzed ${file.data.length} records across ${chartData.length} categories`,
+        recommendations: analysisResult.recommendations || 'Review the data analysis'
       },
+      topPerformers: analysisResult.topPerformers || [],
+      bottomPerformers: analysisResult.bottomPerformers || [],
+      trend: analysisResult.trend || { direction: 'Stable', strength: 0.5 },
+      outliers: analysisResult.outliers || { count: 0, lowerBound: 0, upperBound: 0, items: [] },
+      dataQuality: analysisResult.dataQuality || { completeness: 100, uniquenessScore: 100 },
+      opportunityItems: analysisResult.opportunityItems || [],
+      correlations: analysisResult.correlations || {},
       totalRows: file.data.length,
       numericColumns: numericColumns.length,
       source: source
