@@ -136,8 +136,14 @@ Provide your response in this exact JSON format:
  * Analyze data with local intelligence (fallback)
  */
 const localAnalysis = (data, columns, metric, dimension) => {
+  console.log(`\n📈 LOCAL ANALYSIS:`);
+  console.log(`   Data rows: ${data.length}`);
+  console.log(`   Metric: "${metric}", Dimension: "${dimension}"`);
+  console.log(`   Sample row:`, JSON.stringify(data[0]));
+  
   const insights = [];
   const stats = calculateStats(data, metric);
+  console.log(`   Stats:`, stats);
   
   // Calculate toppers
   const groupedData = {};
@@ -158,6 +164,9 @@ const localAnalysis = (data, columns, metric, dimension) => {
       values: d.values
     }))
     .sort((a, b) => b.value - a.value);
+
+  console.log(`   Grouped items: ${sorted.length}`);
+  console.log(`   Top 3:`, sorted.slice(0, 3));
 
   // Generate insights
   if (sorted.length > 0) {
@@ -265,11 +274,17 @@ export const queryAnalysis = async (req, res) => {
       (col) => typeof file.data[0][col] === 'string'
     );
 
+    console.log(`📊 Column analysis:`);
+    console.log(`   All columns: ${file.columns.join(', ')}`);
+    console.log(`   Numeric: ${numericColumns.join(', ')}`);
+    console.log(`   Text: ${textColumns.join(', ')}`);
+    console.log(`   First row types:`, file.columns.map(col => `${col}(${typeof file.data[0][col]})`).join(', '));
+
     // Find best metric and dimension
     let metric = numericColumns[0] || file.columns[0];
     let dimension = textColumns[0] || file.columns.find((c) => !numericColumns.includes(c)) || file.columns[1] || file.columns[0];
 
-    console.log(`🔍 Using metric: ${metric}, dimension: ${dimension}`);
+    console.log(`🔍 Selected metric: "${metric}", dimension: "${dimension}"`);
 
     // Generate chart data
     let chartData = [];
