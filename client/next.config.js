@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  output: 'export',  // Enable static export for Netlify
   images: {
     unoptimized: true,
   },
@@ -12,45 +13,13 @@ const nextConfig = {
     API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3500',
   },
   // Headers for security
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff'
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN'
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block'
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin'
-          }
-        ]
-      }
-    ];
-  },
+  // Note: Headers won't work with static export, security is handled by Netlify headers
+  
   // Redirects and rewrites
   async redirects() {
     return [];
   },
-  async rewrites() {
-    return {
-      beforeFiles: [
-        {
-          source: '/api/:path*',
-          destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3500'}/api/:path*`
-        }
-      ]
-    };
-  },
+  // Rewrites won't work with static export - API calls go directly to backend
 };
 
 export default nextConfig;
