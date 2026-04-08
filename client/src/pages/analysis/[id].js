@@ -492,30 +492,90 @@ export default function AnalysisPage() {
                 </div>
               )}
 
-              {/* Key Metrics Section */}
+              {/* Key Metrics Section - All Statistics */}
               {activeSection === 'metrics' && (
                 <div className="p-6 bg-gradient-to-br from-cyan-950/40 to-slate-900/40 rounded-xl border border-cyan-700/30 backdrop-blur-md animate-slideInUp">
-                  <h3 className="text-2xl font-bold text-cyan-300 mb-4">📈 Key Performance Metrics</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 bg-gradient-to-br from-cyan-900/20 to-slate-900/20 rounded-lg border border-cyan-600/30">
-                      <p className="text-cyan-300 text-sm font-semibold">Central Tendency</p>
-                      <p className="text-2xl font-bold text-cyan-200 mt-2">{formatNumber(analysisResults.stats?.average)}</p>
-                      <p className="text-xs text-cyan-300/70 mt-1">Mean | Median: {formatNumber(analysisResults.stats?.median)}</p>
+                  <h3 className="text-2xl font-bold text-cyan-300 mb-6">📈 Key Performance Metrics</h3>
+                  
+                  {/* Primary Metrics - 3 columns */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div className="p-5 bg-gradient-to-br from-blue-900/40 to-blue-800/40 rounded-lg border border-blue-700/30 hover:border-blue-600/50 transition-all">
+                      <p className="text-blue-300 text-sm font-medium">Count</p>
+                      <p className="text-3xl font-bold text-blue-200 mt-2">{analysisResults.stats.count}</p>
+                      <p className="text-blue-300/60 text-xs mt-2">Total data points</p>
                     </div>
-                    <div className="p-4 bg-gradient-to-br from-blue-900/20 to-slate-900/20 rounded-lg border border-blue-600/30">
-                      <p className="text-blue-300 text-sm font-semibold">Distribution Spread</p>
-                      <p className="text-2xl font-bold text-blue-200 mt-2">{formatNumber(analysisResults.stats?.stdDev)}</p>
-                      <p className="text-xs text-blue-300/70 mt-1">Std Dev | Range: {formatNumber(analysisResults.stats?.range)}</p>
+                    <div className="p-5 bg-gradient-to-br from-purple-900/40 to-purple-800/40 rounded-lg border border-purple-700/30 hover:border-purple-600/50 transition-all">
+                      <p className="text-purple-300 text-sm font-medium">Sum</p>
+                      <p className="text-3xl font-bold text-purple-200 mt-2">{formatNumber(analysisResults.stats.sum)}</p>
+                      <p className="text-purple-300/60 text-xs mt-2">Total value</p>
                     </div>
-                    <div className="p-4 bg-gradient-to-br from-purple-900/20 to-slate-900/20 rounded-lg border border-purple-600/30">
-                      <p className="text-purple-300 text-sm font-semibold">Extremes</p>
-                      <p className="text-2xl font-bold text-purple-200 mt-2">{formatNumber(analysisResults.stats?.max)}</p>
-                      <p className="text-xs text-purple-300/70 mt-1">Max | Min: {formatNumber(analysisResults.stats?.min)}</p>
+                    <div className="p-5 bg-gradient-to-br from-pink-900/40 to-pink-800/40 rounded-lg border border-pink-700/30 hover:border-pink-600/50 transition-all">
+                      <p className="text-pink-300 text-sm font-medium">Average</p>
+                      <p className="text-3xl font-bold text-pink-200 mt-2">{formatNumber(analysisResults.stats.average)}</p>
+                      <p className="text-pink-300/60 text-xs mt-2">Mean value</p>
                     </div>
-                    <div className="p-4 bg-gradient-to-br from-pink-900/20 to-slate-900/20 rounded-lg border border-pink-600/30">
-                      <p className="text-pink-300 text-sm font-semibold">Quartile Analysis</p>
-                      <p className="text-2xl font-bold text-pink-200 mt-2">IQR: {formatNumber(analysisResults.stats?.iqr)}</p>
-                      <p className="text-xs text-pink-300/70 mt-1">Q1: {formatNumber(analysisResults.stats?.q1)} | Q3: {formatNumber(analysisResults.stats?.q3)}</p>
+                  </div>
+
+                  {/* Central Tendency & Spread - 3 columns */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div className="p-5 bg-gradient-to-br from-emerald-900/40 to-emerald-800/40 rounded-lg border border-emerald-700/30 hover:border-emerald-600/50 transition-all">
+                      <p className="text-emerald-300 text-sm font-medium">Median</p>
+                      <p className="text-3xl font-bold text-emerald-200 mt-2">{formatNumber(analysisResults.stats.median)}</p>
+                      <p className="text-emerald-300/60 text-xs mt-2">Middle value (50%)</p>
+                    </div>
+                    <div className="p-5 bg-gradient-to-br from-amber-900/40 to-amber-800/40 rounded-lg border border-amber-700/30 hover:border-amber-600/50 transition-all">
+                      <p className="text-amber-300 text-sm font-medium">Range</p>
+                      <p className="text-3xl font-bold text-amber-200 mt-2">{formatNumber(analysisResults.stats.range)}</p>
+                      <p className="text-amber-300/60 text-xs mt-2">Max - Min span</p>
+                    </div>
+                    <div className="p-5 bg-gradient-to-br from-cyan-900/40 to-cyan-800/40 rounded-lg border border-cyan-700/30 hover:border-cyan-600/50 transition-all">
+                      <p className="text-cyan-300 text-sm font-medium">Std Deviation</p>
+                      <p className="text-3xl font-bold text-cyan-200 mt-2">{formatNumber(analysisResults.stats.stdDev)}</p>
+                      <p className="text-cyan-300/60 text-xs mt-2">Data spread</p>
+                    </div>
+                  </div>
+
+                  {/* Range Metrics - 4 columns */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div className="p-4 bg-gradient-to-br from-green-900/40 to-green-800/40 rounded-lg border border-green-700/30">
+                      <p className="text-green-300 text-xs font-medium uppercase">Max Value</p>
+                      <p className="text-2xl font-bold text-green-200 mt-2">{formatNumber(analysisResults.stats.max)}</p>
+                    </div>
+                    <div className="p-4 bg-gradient-to-br from-orange-900/40 to-orange-800/40 rounded-lg border border-orange-700/30">
+                      <p className="text-orange-300 text-xs font-medium uppercase">Min Value</p>
+                      <p className="text-2xl font-bold text-orange-200 mt-2">{formatNumber(analysisResults.stats.min)}</p>
+                    </div>
+                    <div className="p-4 bg-gradient-to-br from-rose-900/40 to-rose-800/40 rounded-lg border border-rose-700/30">
+                      <p className="text-rose-300 text-xs font-medium uppercase">Q1 (25th %ile)</p>
+                      <p className="text-2xl font-bold text-rose-200 mt-2">{formatNumber(analysisResults.stats.q1)}</p>
+                    </div>
+                    <div className="p-4 bg-gradient-to-br from-violet-900/40 to-violet-800/40 rounded-lg border border-violet-700/30">
+                      <p className="text-violet-300 text-xs font-medium uppercase">Q3 (75th %ile)</p>
+                      <p className="text-2xl font-bold text-violet-200 mt-2">{formatNumber(analysisResults.stats.q3)}</p>
+                    </div>
+                  </div>
+
+                  {/* Advanced Metrics - 4 columns */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="p-4 bg-gradient-to-br from-teal-900/40 to-teal-800/40 rounded-lg border border-teal-700/30">
+                      <p className="text-teal-300 text-xs font-medium uppercase">Unique Values</p>
+                      <p className="text-2xl font-bold text-teal-200 mt-2">{analysisResults.stats.uniqueValues}</p>
+                      <p className="text-teal-300/60 text-xs mt-1">Distinct count</p>
+                    </div>
+                    <div className="p-4 bg-gradient-to-br from-indigo-900/40 to-indigo-800/40 rounded-lg border border-indigo-700/30">
+                      <p className="text-indigo-300 text-xs font-medium uppercase">IQR</p>
+                      <p className="text-2xl font-bold text-indigo-200 mt-2">{formatNumber(analysisResults.stats.iqr)}</p>
+                      <p className="text-indigo-300/60 text-xs mt-1">Interquartile range</p>
+                    </div>
+                    <div className="p-4 bg-gradient-to-br from-fuchsia-900/40 to-fuchsia-800/40 rounded-lg border border-fuchsia-700/30">
+                      <p className="text-fuchsia-300 text-xs font-medium uppercase">Variance</p>
+                      <p className="text-2xl font-bold text-fuchsia-200 mt-2">{formatNumber(analysisResults.stats.variance)}</p>
+                      <p className="text-fuchsia-300/60 text-xs mt-1">Squared deviation</p>
+                    </div>
+                    <div className="p-4 bg-gradient-to-br from-sky-900/40 to-sky-800/40 rounded-lg border border-sky-700/30">
+                      <p className="text-sky-300 text-xs font-medium uppercase">Coeff. of Variation</p>
+                      <p className="text-2xl font-bold text-sky-200 mt-2">{formatNumber(analysisResults.stats.coefficientOfVariation)}%</p>
+                      <p className="text-sky-300/60 text-xs mt-1">Relative variability</p>
                     </div>
                   </div>
                 </div>
@@ -559,6 +619,15 @@ export default function AnalysisPage() {
                       <p className="text-orange-200 font-semibold mb-2">🚨 Outlier Exposure</p>
                       <p className="text-sm">Range of {formatNumber(analysisResults.stats?.range)} suggests presence of extreme values. Investigate outliers to determine if they're data errors or legitimate anomalies.</p>
                     </div>
+                    <div className="p-4 bg-gradient-to-br from-orange-900/40 to-slate-900/40 rounded-lg border border-orange-700/25 mt-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-2xl">🏥</span>
+                        <p className="text-orange-300 font-semibold">Portfolio Health Index</p>
+                      </div>
+                      <p className="text-slate-100 text-sm leading-relaxed">
+                        Dependency score: {((analysisResults.data?.[0]?.value / analysisResults.stats?.sum) * 100).toFixed(0)}% from top item. Diversification score: {analysisResults.stats?.uniqueValues > analysisResults.stats?.count / 2 ? 'GOOD' : 'NEEDS WORK'}. Overall health: {analysisResults.stats?.coefficientOfVariation > 50 ? '⚠️ Monitor' : '✅ Healthy'}.
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -579,6 +648,15 @@ export default function AnalysisPage() {
                     <div className="p-4 bg-slate-900/50 rounded-lg border border-green-700/20">
                       <p className="text-green-200 font-semibold mb-2">📊 Resource Allocation</p>
                       <p className="text-sm">Allocate resources proportionally to performance potential. Consider discontinuing items with values below Q1 ({formatNumber(analysisResults.stats?.q1)}) unless strategic.</p>
+                    </div>
+                    <div className="p-4 bg-gradient-to-br from-green-900/40 to-slate-900/40 rounded-lg border border-green-700/25 mt-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-2xl">💰</span>
+                        <p className="text-green-300 font-semibold">Opportunity Sizing</p>
+                      </div>
+                      <p className="text-slate-100 text-sm leading-relaxed">
+                        If bottom 20% items were uplifted to median performance, total value would increase from {formatNumber(analysisResults.stats?.sum)} to estimated {formatNumber(analysisResults.stats?.sum * 1.25)}, representing 25% potential upside without new investments.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -694,6 +772,24 @@ export default function AnalysisPage() {
                       <p className="text-purple-200 font-semibold mb-2">⏱️ 90-Day Action Plan</p>
                       <p className="text-sm">Week 1-2: Document top performer practices. Week 3-4: Train teams. Week 5-8: Test on 3-5 pilot items. Week 9-12: Full rollout and measure impact. Expected ROI: 20-35%.</p>
                     </div>
+                    <div className="p-4 bg-gradient-to-br from-purple-900/40 to-slate-900/40 rounded-lg border border-purple-700/25 mt-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-2xl">📊</span>
+                        <p className="text-purple-300 font-semibold">Performance Gap Analysis</p>
+                      </div>
+                      <p className="text-slate-100 text-sm leading-relaxed">
+                        Top performer ({formatNumber(analysisResults.stats?.max)}) vs Bottom performer ({formatNumber(analysisResults.stats?.min)}) shows {((analysisResults.stats?.max / analysisResults.stats?.min) * 100 - 100).toFixed(0)}% gap. This significant variance suggests opportunities for standardization and knowledge transfer across items.
+                      </p>
+                    </div>
+                    <div className="p-4 bg-gradient-to-br from-purple-900/40 to-slate-900/40 rounded-lg border border-purple-700/25">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-2xl">🎯</span>
+                        <p className="text-purple-300 font-semibold">Competitive Positioning</p>
+                      </div>
+                      <p className="text-slate-100 text-sm leading-relaxed">
+                        Your distribution shows {analysisResults.stats?.average > analysisResults.stats?.median ? 'concentration at top-end' : 'balanced distribution'}. Top performer alone drives significant market impact. Consider leveraging this strength in competitive positioning.
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -761,53 +857,6 @@ export default function AnalysisPage() {
                       </div>
                       <p className="text-slate-100 leading-relaxed font-medium mb-4 text-sm">
                         {analysisResults.analysis?.recommendations || 'Review the data to identify trends'}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* AI-Powered Deep Dive Cards */}
-                  <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Performance Gap Analysis */}
-                    <div className="bg-gradient-to-br from-indigo-950/40 to-slate-900/40 rounded-2xl p-6 border border-indigo-700/25 backdrop-blur-sm">
-                      <div className="flex items-center gap-2 mb-4">
-                        <span className="text-2xl">📊</span>
-                        <p className="text-indigo-300 font-semibold">Performance Gap Analysis</p>
-                      </div>
-                      <p className="text-slate-100 text-sm leading-relaxed">
-                        Top performer ({formatNumber(analysisResults.stats?.max)}) vs Bottom performer ({formatNumber(analysisResults.stats?.min)}) shows {((analysisResults.stats?.max / analysisResults.stats?.min) * 100 - 100).toFixed(0)}% gap. This significant variance suggests opportunities for standardization and knowledge transfer across items.
-                      </p>
-                    </div>
-
-                    {/* Opportunity Sizing */}
-                    <div className="bg-gradient-to-br from-green-950/40 to-slate-900/40 rounded-2xl p-6 border border-green-700/25 backdrop-blur-sm">
-                      <div className="flex items-center gap-2 mb-4">
-                        <span className="text-2xl">💰</span>
-                        <p className="text-green-300 font-semibold">Opportunity Sizing</p>
-                      </div>
-                      <p className="text-slate-100 text-sm leading-relaxed">
-                        If bottom 20% items were uplifted to median performance, total value would increase from {formatNumber(analysisResults.stats?.sum)} to estimated {formatNumber(analysisResults.stats?.sum * 1.25)}, representing 25% potential upside without new investments.
-                      </p>
-                    </div>
-
-                    {/* Portfolio Health */}
-                    <div className="bg-gradient-to-br from-orange-950/40 to-slate-900/40 rounded-2xl p-6 border border-orange-700/25 backdrop-blur-sm">
-                      <div className="flex items-center gap-2 mb-4">
-                        <span className="text-2xl">🏥</span>
-                        <p className="text-orange-300 font-semibold">Portfolio Health Index</p>
-                      </div>
-                      <p className="text-slate-100 text-sm leading-relaxed">
-                        Dependency score: {((analysisResults.data?.[0]?.value / analysisResults.stats?.sum) * 100).toFixed(0)}% from top item. Diversification score: {analysisResults.stats?.uniqueValues > analysisResults.stats?.count / 2 ? 'GOOD' : 'NEEDS WORK'}. Overall health: {analysisResults.stats?.coefficientOfVariation > 50 ? '⚠️ Monitor' : '✅ Healthy'}.
-                      </p>
-                    </div>
-
-                    {/* Competitive Positioning */}
-                    <div className="bg-gradient-to-br from-pink-950/40 to-slate-900/40 rounded-2xl p-6 border border-pink-700/25 backdrop-blur-sm">
-                      <div className="flex items-center gap-2 mb-4">
-                        <span className="text-2xl">🎯</span>
-                        <p className="text-pink-300 font-semibold">Competitive Positioning</p>
-                      </div>
-                      <p className="text-slate-100 text-sm leading-relaxed">
-                        Your distribution shows {analysisResults.stats?.average > analysisResults.stats?.median ? 'concentration at top-end' : 'balanced distribution'}. Top performer alone drives significant market impact. Consider leveraging this strength in competitive positioning.
                       </p>
                     </div>
                   </div>
