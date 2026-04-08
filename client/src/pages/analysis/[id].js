@@ -276,156 +276,161 @@ export default function AnalysisPage() {
           {/* Results */}
           {analysisResults && (
             <div className="space-y-8 mb-8">
-              {/* Chart Type Selector */}
-              <div className="p-6 bg-gradient-to-r from-slate-800/50 to-slate-900/50 rounded-xl border border-slate-700/50 backdrop-blur-md animate-slideInUp" style={{animationDelay: '0.2s'}}>
-                <h3 className="text-lg font-bold text-transparent bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text mb-4">📊 Chart Type</h3>
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    onClick={() => setChartDisplayType('bar')}
-                    className={`px-4 py-2 font-medium rounded-lg transition-all duration-300 ${
-                      chartDisplayType === 'bar'
-                        ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-500/30'
-                        : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white border border-slate-600/50'
-                    }`}
-                  >
-                    📊 Bar Chart
-                  </button>
-                  <button
-                    onClick={() => setChartDisplayType('line')}
-                    className={`px-4 py-2 font-medium rounded-lg transition-all duration-300 ${
-                      chartDisplayType === 'line'
-                        ? 'bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-lg shadow-purple-500/30'
-                        : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white border border-slate-600/50'
-                    }`}
-                  >
-                    📈 Line Chart
-                  </button>
-                  <button
-                    onClick={() => setChartDisplayType('pie')}
-                    className={`px-4 py-2 font-medium rounded-lg transition-all duration-300 ${
-                      chartDisplayType === 'pie'
-                        ? 'bg-gradient-to-r from-pink-600 to-pink-500 text-white shadow-lg shadow-pink-500/30'
-                        : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white border border-slate-600/50'
-                    }`}
-                  >
-                    🥧 Pie Chart
-                  </button>
-                  <button
-                    onClick={() => setChartDisplayType('area')}
-                    className={`px-4 py-2 font-medium rounded-lg transition-all duration-300 ${
-                      chartDisplayType === 'area'
-                        ? 'bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg shadow-green-500/30'
-                        : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white border border-slate-600/50'
-                    }`}
-                  >
-                    📉 Area Chart
-                  </button>
+              {/* Quick Analysis & Multi-Dimensional Insights - Show when no section is active */}
+              {activeSection === null && (
+                <div className="space-y-6">
+                  {/* Chart Type Selector */}
+                  <div className="p-6 bg-gradient-to-r from-slate-800/50 to-slate-900/50 rounded-xl border border-slate-700/50 backdrop-blur-md animate-slideInUp" style={{animationDelay: '0.2s'}}>
+                    <h3 className="text-lg font-bold text-transparent bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text mb-4">⚡ Quick Analysis</h3>
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        onClick={() => setChartDisplayType('bar')}
+                        className={`px-4 py-2 font-medium rounded-lg transition-all duration-300 ${
+                          chartDisplayType === 'bar'
+                            ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-500/30'
+                            : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white border border-slate-600/50'
+                        }`}
+                      >
+                        📊 Bar Chart
+                      </button>
+                      <button
+                        onClick={() => setChartDisplayType('line')}
+                        className={`px-4 py-2 font-medium rounded-lg transition-all duration-300 ${
+                          chartDisplayType === 'line'
+                            ? 'bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-lg shadow-purple-500/30'
+                            : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white border border-slate-600/50'
+                        }`}
+                      >
+                        📈 Line Chart
+                      </button>
+                      <button
+                        onClick={() => setChartDisplayType('pie')}
+                        className={`px-4 py-2 font-medium rounded-lg transition-all duration-300 ${
+                          chartDisplayType === 'pie'
+                            ? 'bg-gradient-to-r from-pink-600 to-pink-500 text-white shadow-lg shadow-pink-500/30'
+                            : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white border border-slate-600/50'
+                        }`}
+                      >
+                        🥧 Pie Chart
+                      </button>
+                      <button
+                        onClick={() => setChartDisplayType('area')}
+                        className={`px-4 py-2 font-medium rounded-lg transition-all duration-300 ${
+                          chartDisplayType === 'area'
+                            ? 'bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg shadow-green-500/30'
+                            : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white border border-slate-600/50'
+                        }`}
+                      >
+                        📉 Area Chart
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Primary Chart */}
+                  <div className="p-4 bg-gradient-to-r from-slate-800/50 to-slate-900/50 rounded-xl border border-slate-700/50 backdrop-blur-md animate-slideInUp" style={{animationDelay: '0.3s'}}>
+                    <div className="flex justify-between items-start mb-4">
+                      <h2 className="text-xl font-bold text-transparent bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text">📊 Primary Analysis</h2>
+                      <ExportButton
+                        fileName={file?.originalName}
+                        data={file?.data}
+                        columns={file?.columns}
+                        analysisData={analysisResults}
+                        onCaptureChart={captureChartAsImage}
+                      />
+                    </div>
+                    <div ref={chartRef} className="bg-slate-900/30 p-4 rounded-lg">
+                      {chartDisplayType === 'bar' && (
+                        <BarChartComponent
+                          data={analysisResults.data}
+                          xKey="name"
+                          yKey="value"
+                          title={`${analysisResults.yAxis} by ${analysisResults.xAxis}`}
+                        />
+                      )}
+                      {chartDisplayType === 'line' && (
+                        <LineChartComponent
+                          data={analysisResults.data}
+                          xKey="name"
+                          yKey="value"
+                          title={`${analysisResults.yAxis} Trend`}
+                        />
+                      )}
+                      {chartDisplayType === 'pie' && (
+                        <PieChartComponent
+                          data={analysisResults.data}
+                          nameKey="name"
+                          valueKey="value"
+                          title={`${analysisResults.yAxis} Distribution`}
+                        />
+                      )}
+                      {chartDisplayType === 'area' && (
+                        <AreaChartComponent
+                          data={analysisResults.data}
+                          xKey="name"
+                          yKey="value"
+                          title={`${analysisResults.yAxis} Over Time`}
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Multi-Dimensional Insights Charts */}
+                  <div className="animate-slideInUp" style={{animationDelay: '0.35s'}}>
+                    <h3 className="text-lg font-bold text-transparent bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text mb-4">🔍 Multi-Dimensional Insights</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                      {/* Radar Chart */}
+                      <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-lg border border-slate-700/50 backdrop-blur-sm p-3 animate-slideInUp" style={{animationDelay: '0.4s'}}>
+                        <RadarChartComponent
+                          data={analysisResults.data}
+                          xKey="name"
+                          yKey="value"
+                          title="Pattern"
+                        />
+                      </div>
+
+                      {/* Histogram */}
+                      <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-lg border border-slate-700/50 backdrop-blur-sm p-3 animate-slideInUp" style={{animationDelay: '0.45s'}}>
+                        <HistogramComponent
+                          data={analysisResults.data}
+                          xKey="name"
+                          yKey="value"
+                          title="Distribution"
+                        />
+                      </div>
+
+                      {/* Funnel */}
+                      <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-lg border border-slate-700/50 backdrop-blur-sm p-3 animate-slideInUp" style={{animationDelay: '0.5s'}}>
+                        <FunnelComponent
+                          data={analysisResults.data}
+                          xKey="name"
+                          yKey="value"
+                          title="Composition"
+                        />
+                      </div>
+
+                      {/* Bubble Chart */}
+                      <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-lg border border-slate-700/50 backdrop-blur-sm p-3 animate-slideInUp" style={{animationDelay: '0.55s'}}>
+                        <BubbleChartComponent
+                          data={analysisResults.data}
+                          xKey="name"
+                          yKey="value"
+                          title="Correlation"
+                        />
+                      </div>
+
+                      {/* Composed Chart */}
+                      <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-lg border border-slate-700/50 backdrop-blur-sm p-3 animate-slideInUp" style={{animationDelay: '0.6s'}}>
+                        <ComposedChartComponent
+                          data={analysisResults.data}
+                          xKey="name"
+                          yKey="value"
+                          title="Trend"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-
-              {/* Chart Container - Compact Main Chart */}
-              <div className="p-4 bg-gradient-to-r from-slate-800/50 to-slate-900/50 rounded-xl border border-slate-700/50 backdrop-blur-md animate-slideInUp" style={{animationDelay: '0.3s'}}>
-                <div className="flex justify-between items-start mb-4">
-                  <h2 className="text-xl font-bold text-transparent bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text">📊 Primary Analysis</h2>
-                  <ExportButton
-                    fileName={file?.originalName}
-                    data={file?.data}
-                    columns={file?.columns}
-                    analysisData={analysisResults}
-                    onCaptureChart={captureChartAsImage}
-                  />
-                </div>
-                <div ref={chartRef} className="bg-slate-900/30 p-4 rounded-lg">
-                  {chartDisplayType === 'bar' && (
-                    <BarChartComponent
-                      data={analysisResults.data}
-                      xKey="name"
-                      yKey="value"
-                      title={`${analysisResults.yAxis} by ${analysisResults.xAxis}`}
-                    />
-                  )}
-                  {chartDisplayType === 'line' && (
-                    <LineChartComponent
-                      data={analysisResults.data}
-                      xKey="name"
-                      yKey="value"
-                      title={`${analysisResults.yAxis} Trend`}
-                    />
-                  )}
-                  {chartDisplayType === 'pie' && (
-                    <PieChartComponent
-                      data={analysisResults.data}
-                      nameKey="name"
-                      valueKey="value"
-                      title={`${analysisResults.yAxis} Distribution`}
-                    />
-                  )}
-                  {chartDisplayType === 'area' && (
-                    <AreaChartComponent
-                      data={analysisResults.data}
-                      xKey="name"
-                      yKey="value"
-                      title={`${analysisResults.yAxis} Over Time`}
-                    />
-                  )}
-                </div>
-              </div>
-
-              {/* Additional Analysis Charts Grid - 5 Compact Charts */}
-              <div className="mt-6 animate-slideInUp" style={{animationDelay: '0.35s'}}>
-                <h3 className="text-lg font-bold text-transparent bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text mb-4">🔍 Multi-Dimensional Insights</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                  {/* Radar Chart */}
-                  <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-lg border border-slate-700/50 backdrop-blur-sm p-3 animate-slideInUp" style={{animationDelay: '0.4s'}}>
-                    <RadarChartComponent
-                      data={analysisResults.data}
-                      xKey="name"
-                      yKey="value"
-                      title="Pattern"
-                    />
-                  </div>
-
-                  {/* Histogram */}
-                  <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-lg border border-slate-700/50 backdrop-blur-sm p-3 animate-slideInUp" style={{animationDelay: '0.45s'}}>
-                    <HistogramComponent
-                      data={analysisResults.data}
-                      xKey="name"
-                      yKey="value"
-                      title="Distribution"
-                    />
-                  </div>
-
-                  {/* Funnel */}
-                  <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-lg border border-slate-700/50 backdrop-blur-sm p-3 animate-slideInUp" style={{animationDelay: '0.5s'}}>
-                    <FunnelComponent
-                      data={analysisResults.data}
-                      xKey="name"
-                      yKey="value"
-                      title="Composition"
-                    />
-                  </div>
-
-                  {/* Bubble Chart */}
-                  <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-lg border border-slate-700/50 backdrop-blur-sm p-3 animate-slideInUp" style={{animationDelay: '0.55s'}}>
-                    <BubbleChartComponent
-                      data={analysisResults.data}
-                      xKey="name"
-                      yKey="value"
-                      title="Correlation"
-                    />
-                  </div>
-
-                  {/* Composed Chart */}
-                  <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-lg border border-slate-700/50 backdrop-blur-sm p-3 animate-slideInUp" style={{animationDelay: '0.6s'}}>
-                    <ComposedChartComponent
-                      data={analysisResults.data}
-                      xKey="name"
-                      yKey="value"
-                      title="Trend"
-                    />
-                  </div>
-                </div>
-              </div>
+              )}
 
               {/* Action Buttons - Show specific sections on click */}
               <div className="p-4 bg-gradient-to-r from-slate-800/50 to-slate-900/50 rounded-xl border border-slate-700/50 backdrop-blur-md animate-slideInUp flex flex-wrap gap-3 justify-center" style={{animationDelay: '0.35s'}}>
