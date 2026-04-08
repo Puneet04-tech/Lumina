@@ -29,9 +29,7 @@ export default function AnalysisPage() {
   const [tableView, setTableView] = useState(true);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [chartDisplayType, setChartDisplayType] = useState('bar');
-  const [activeFilters, setActiveFilters] = useState({}); // Track active filters
-  const [filterOptions, setFilterOptions] = useState({}); // Available filter options
-  const [filteredData, setFilteredData] = useState(null); // Filtered data based on selections
+  const [activeSection, setActiveSection] = useState(null); // Track which section is visible: 'anomaly', 'statistics', 'strategic', 'insights'
 
   const captureChartAsImage = async () => {
     if (!chartRef.current) return null;
@@ -64,41 +62,6 @@ export default function AnalysisPage() {
       setChartDisplayType('bar');
     }
   }, [analysisResults]);
-
-  // Generate filter options from data
-  useEffect(() => {
-    if (file && file.data && file.data.length > 0) {
-      const options = {};
-      // Get text/category columns for filtering
-      file.columns.forEach((col) => {
-        if (typeof file.data[0][col] === 'string') {
-          const uniqueValues = [...new Set(file.data.map((row) => row[col]))];
-          if (uniqueValues.length > 1 && uniqueValues.length <= 20) {
-            options[col] = uniqueValues.sort();
-          }
-        }
-      });
-      setFilterOptions(options);
-    }
-  }, [file]);
-
-  // Apply filters to data
-  useEffect(() => {
-    if (file && file.data) {
-      let filtered = file.data;
-      const hasActiveFilters = Object.values(activeFilters).some((f) => f);
-
-      if (hasActiveFilters) {
-        filtered = file.data.filter((row) => {
-          return Object.entries(activeFilters).every(([column, value]) => {
-            return !value || row[column] === value;
-          });
-        });
-      }
-
-      setFilteredData(filtered);
-    }
-  }, [file, activeFilters]);
 
   const loadFile = async () => {
     try {
@@ -305,131 +268,6 @@ export default function AnalysisPage() {
             <QueryInput fileId={fileId} onQueryResult={setQueryResults} />
           </div>
 
-          {/* Filter Buttons - Segment Data by Category */}
-          {Object.keys(filterOptions).length > 0 && (
-            <div className="mb-8 animate-slideInUp" style={{animationDelay: '0.15s'}}>
-              <div className="p-6 bg-gradient-to-r from-slate-800/50 to-slate-900/50 rounded-xl border border-slate-700/50 backdrop-blur-md">
-                <h3 className="text-lg font-bold text-transparent bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text mb-4">🎯 Filter Data</h3>
-                {Object.entries(filterOptions).map(([column, options]) => (
-                  <div key={column} className="mb-4">
-                    <label className="block text-sm font-semibold text-slate-300 mb-2">{column}</label>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        onClick={() =>
-                          setActiveFilters((prev) => ({
-                            ...prev,
-                            [column]: null,
-                          }))
-                        }
-                        className={`px-3 py-1.5 rounded-lg font-medium transition-all duration-300 text-sm ${
-                          !activeFilters[column]
-                            ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-500/30'
-                            : 'bg-slate-700/50 text-slate-400 hover:bg-slate-600/50'
-                        }`}
-                      >
-                        All
-                      </button>
-                      {options.map((option) => (
-                        <button
-                          key={option}
-                          onClick={() =>
-                            setActiveFilters((prev) => ({
-                              ...prev,
-                              [column]: option,
-                            }))
-                          }
-                          className={`px-3 py-1.5 rounded-lg font-medium transition-all duration-300 text-sm ${
-                            activeFilters[column] === option
-                              ? 'bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-lg shadow-purple-500/30'
-                              : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white border border-slate-600/50'
-                          }`}
-                        >
-                          {option}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Query Results Section - Displays below query box and above graphs */}
-          {queryResults && (
-            <div className="mb-8 animate-slideInUp" style={{animationDelay: '0.2s'}}>
-              <div className="p-6 bg-gradient-to-br from-indigo-900/50 to-slate-900/50 rounded-xl border border-indigo-700/50 backdrop-blur-md">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-2xl font-bold text-transparent bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text">📋 Query Results</h2>
-                  <button
-                    onClick={() => setQueryResults(null)}
-                    className="px-3 py-1 text-xs font-semibold text-slate-400 hover:text-slate-200 bg-slate-700/50 hover:bg-slate-600/50 rounded-lg transition-all duration-300"
-                  >
-                    ✕ Close
-                  </button>
-                </div>
-                
-                {/* Query Result Data Table */}
-                {queryResults.data && Array.isArray(queryResults.data) && queryResults.data.length > 0 && (
-                  <div className="overflow-x-auto mb-4">
-                    <table className="w-full text-sm">
-                      <thead className="border-b border-indigo-700/30">
-                        <tr>
-                          {Object.keys(queryResults.data[0]).map((key) => (
-                            <th key={key} className="px-4 py-3 text-left font-semibold text-indigo-300">
-                              {key}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {queryResults.data.slice(0, 10).map((row, idx) => (
-                          <tr key={idx} className="border-b border-slate-800/50 hover:bg-indigo-900/30 transition-colors">
-                            {Object.values(row).map((value, colIdx) => (
-                              <td key={colIdx} className="px-4 py-3 text-slate-200">
-                                {typeof value === 'number' ? formatNumber(value) : String(value)}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    {queryResults.data.length > 10 && (
-                      <div className="p-3 text-xs text-slate-400 border-t border-slate-800/50">
-                        Showing 10 of {queryResults.data.length} results
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Query Insights */}
-                {queryResults.insights && (
-                  <div className="bg-slate-900/30 rounded-lg p-4 border border-slate-700/30">
-                    {Array.isArray(queryResults.insights) ? (
-                      <ul className="space-y-2">
-                        {queryResults.insights.map((insight, idx) => (
-                          <li key={idx} className="flex items-start gap-2 text-slate-300 text-sm">
-                            <span className="text-indigo-400 font-bold mt-0.5">→</span>
-                            <span>{insight}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-slate-300">{queryResults.insights}</p>
-                    )}
-                  </div>
-                )}
-
-                {/* Query Summary */}
-                {queryResults.analysis?.answer && (
-                  <div className="mt-4 p-4 bg-gradient-to-br from-emerald-900/30 to-slate-900/30 rounded-lg border border-emerald-700/30">
-                    <p className="text-emerald-300 text-sm font-semibold mb-2">📊 Summary</p>
-                    <p className="text-slate-200 text-sm">{queryResults.analysis.answer}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
           {/* Results */}
           {analysisResults && (
             <div className="space-y-8 mb-8">
@@ -528,86 +366,64 @@ export default function AnalysisPage() {
                 </div>
               </div>
 
-              {/* AI Insights - Premium Custom Design */}
-              {analysisResults.insights && Array.isArray(analysisResults.insights) && (
-                <div className="animate-slideInUp" style={{animationDelay: '0.4s'}}>
-                  {/* Header */}
-                  <div className="mb-6">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-1 h-8 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full"></div>
-                      <h2 className="text-3xl font-bold text-transparent bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text">Advanced Intelligence Analysis</h2>
-                    </div>
-                    <p className="text-slate-400 text-sm ml-4">Multi-dimensional insights with risk assessment & strategic recommendations</p>
-                  </div>
+              {/* Action Buttons - Show specific sections on click */}
+              <div className="p-4 bg-gradient-to-r from-slate-800/50 to-slate-900/50 rounded-xl border border-slate-700/50 backdrop-blur-md animate-slideInUp flex flex-wrap gap-3 justify-center" style={{animationDelay: '0.35s'}}>
+                <button
+                  onClick={() => setActiveSection(activeSection === 'anomaly' ? null : 'anomaly')}
+                  className={`px-4 py-2 font-semibold rounded-lg transition-all duration-300 flex items-center gap-2 ${
+                    activeSection === 'anomaly'
+                      ? 'bg-gradient-to-r from-red-600 to-red-500 text-white shadow-lg shadow-red-500/30'
+                      : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white border border-slate-600/50'
+                  }`}
+                >
+                  🚨 Anomaly
+                </button>
+                <button
+                  onClick={() => setActiveSection(activeSection === 'statistics' ? null : 'statistics')}
+                  className={`px-4 py-2 font-semibold rounded-lg transition-all duration-300 flex items-center gap-2 ${
+                    activeSection === 'statistics'
+                      ? 'bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg shadow-green-500/30'
+                      : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white border border-slate-600/50'
+                  }`}
+                >
+                  📊 Statistics
+                </button>
+                <button
+                  onClick={() => setActiveSection(activeSection === 'strategic' ? null : 'strategic')}
+                  className={`px-4 py-2 font-semibold rounded-lg transition-all duration-300 flex items-center gap-2 ${
+                    activeSection === 'strategic'
+                      ? 'bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-lg shadow-purple-500/30'
+                      : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white border border-slate-600/50'
+                  }`}
+                >
+                  💡 Strategic
+                </button>
+                <button
+                  onClick={() => setActiveSection(activeSection === 'insights' ? null : 'insights')}
+                  className={`px-4 py-2 font-semibold rounded-lg transition-all duration-300 flex items-center gap-2 ${
+                    activeSection === 'insights'
+                      ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-500/30'
+                      : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white border border-slate-600/50'
+                  }`}
+                >
+                  🎯 Insights
+                </button>
+              </div>
 
-                  {/* Main Insight Card - Featured */}
-                  <div className="mb-6 bg-gradient-to-br from-indigo-950/80 via-slate-900/60 to-purple-950/40 rounded-2xl p-8 border border-indigo-700/30 backdrop-blur-sm overflow-hidden relative">
-                    <div className="relative z-10">
-                      <div className="flex items-start justify-between mb-6">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center">
-                            <span className="text-lg">🎯</span>
-                          </div>
-                          <div>
-                            <p className="text-indigo-300/80 text-xs font-semibold uppercase tracking-widest">Advanced Insight</p>
-                            <p className="text-indigo-200 text-sm font-semibold">Key Findings & Intelligence</p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-4">
-                        {analysisResults.insights.map((insight, idx) => (
-                          <div key={idx} className="flex items-start gap-3 p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors">
-                            <div className="mt-1 w-2 h-2 bg-indigo-500 rounded-full"></div>
-                            <p className="text-slate-100 font-medium">{insight}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Summary & Recommendation Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Summary Card */}
-                    <div className="bg-gradient-to-br from-emerald-950/60 to-slate-900/40 rounded-2xl p-7 border border-emerald-700/25 backdrop-blur-sm group hover:border-emerald-600/40 transition-all duration-300">
-                      <div className="flex items-center gap-2 mb-4">
-                        <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <span>📊</span>
-                        </div>
-                        <p className="text-emerald-300/80 text-xs font-semibold uppercase tracking-widest">Statistical Summary</p>
-                      </div>
-                      <p className="text-slate-100 leading-relaxed font-medium mb-4 text-sm">
-                        {analysisResults.analysis?.answer || 'Data analysis summary'}
-                      </p>
-                    </div>
-
-                    {/* Recommendation Card */}
-                    <div className="bg-gradient-to-br from-violet-950/60 to-slate-900/40 rounded-2xl p-7 border border-violet-700/25 backdrop-blur-sm group hover:border-violet-600/40 transition-all duration-300">
-                      <div className="flex items-center gap-2 mb-4">
-                        <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <span>💡</span>
-                        </div>
-                        <p className="text-violet-300/80 text-xs font-semibold uppercase tracking-widest">Strategic Actions</p>
-                      </div>
-                      <p className="text-slate-100 leading-relaxed font-medium mb-4 text-sm">
-                        {analysisResults.analysis?.recommendations || 'Review the data to identify trends'}
-                      </p>
-                    </div>
+              {/* Anomaly Section - Only shows when selected */}
+              {activeSection === 'anomaly' && (
+                <div className="p-6 bg-gradient-to-br from-red-950/40 to-slate-900/40 rounded-xl border border-red-700/30 backdrop-blur-md animate-slideInUp">
+                  <h3 className="text-2xl font-bold text-red-300 mb-4">🚨 Anomaly Detection</h3>
+                  <div className="space-y-3 text-slate-200">
+                    <p className="text-sm leading-relaxed">{analysisResults.analysis?.anomalies || 'Analyzing data for statistical anomalies and outliers...'}</p>
                   </div>
                 </div>
               )}
 
-              {/* Advanced Analysis - 8 Comprehensive Sections */}
-              {analysisResults && (
-                <div className="animate-slideInUp" style={{animationDelay: '0.5s'}}>
-                  <AdvancedInsights analysis={analysisResults} />
-                </div>
-              )}
-
-              {/* Statistics */}
-              {analysisResults.stats && (
-                <div className="p-6 bg-gradient-to-r from-slate-800/50 to-slate-900/50 rounded-xl border border-slate-700/50 backdrop-blur-md animate-slideInUp" style={{animationDelay: '0.6s'}}>
-                  <h2 className="text-2xl font-bold text-transparent bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text mb-6">📈 Comprehensive Statistics</h2>
+              {/* Statistics Section - Only shows when selected */}
+              {activeSection === 'statistics' && (
+                <div className="p-6 bg-gradient-to-br from-green-950/40 to-slate-900/40 rounded-xl border border-green-700/30 backdrop-blur-md animate-slideInUp">
+                  <h3 className="text-2xl font-bold text-green-300 mb-6">📊 Comprehensive Statistics</h3>
                   
                   {/* Primary Metrics - 3 columns */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -692,39 +508,95 @@ export default function AnalysisPage() {
                   </div>
                 </div>
               )}
+
+              {/* Strategic Section - Only shows when selected */}
+              {activeSection === 'strategic' && (
+                <div className="p-6 bg-gradient-to-br from-purple-950/40 to-slate-900/40 rounded-xl border border-purple-700/30 backdrop-blur-md animate-slideInUp">
+                  <h3 className="text-2xl font-bold text-purple-300 mb-4">💡 Strategic Recommendations</h3>
+                  <div className="space-y-3 text-slate-200">
+                    <p className="text-sm leading-relaxed">{analysisResults.analysis?.recommendations || 'Based on the analysis, consider focusing on high-performing segments and investigating underperforming areas.'}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Insights Section - Only shows when selected */}
+              {activeSection === 'insights' && analysisResults.insights && Array.isArray(analysisResults.insights) && (
+                <div className="animate-slideInUp">
+                  {/* Header */}
+                  <div className="mb-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-1 h-8 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full"></div>
+                      <h2 className="text-3xl font-bold text-transparent bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text">Advanced Intelligence Analysis</h2>
+                    </div>
+                    <p className="text-slate-400 text-sm ml-4">Multi-dimensional insights with risk assessment & strategic recommendations</p>
+                  </div>
+
+                  {/* Main Insight Card - Featured */}
+                  <div className="mb-6 bg-gradient-to-br from-indigo-950/80 via-slate-900/60 to-purple-950/40 rounded-2xl p-8 border border-indigo-700/30 backdrop-blur-sm overflow-hidden relative">
+                    <div className="relative z-10">
+                      <div className="flex items-start justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center">
+                            <span className="text-lg">🎯</span>
+                          </div>
+                          <div>
+                            <p className="text-indigo-300/80 text-xs font-semibold uppercase tracking-widest">Advanced Insight</p>
+                            <p className="text-indigo-200 text-sm font-semibold">Key Findings & Intelligence</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        {analysisResults.insights.map((insight, idx) => (
+                          <div key={idx} className="flex items-start gap-3 p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors">
+                            <div className="mt-1 w-2 h-2 bg-indigo-500 rounded-full"></div>
+                            <p className="text-slate-100 font-medium">{insight}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Summary & Recommendation Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Summary Card */}
+                    <div className="bg-gradient-to-br from-emerald-950/60 to-slate-900/40 rounded-2xl p-7 border border-emerald-700/25 backdrop-blur-sm group hover:border-emerald-600/40 transition-all duration-300">
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <span>📊</span>
+                        </div>
+                        <p className="text-emerald-300/80 text-xs font-semibold uppercase tracking-widest">Statistical Summary</p>
+                      </div>
+                      <p className="text-slate-100 leading-relaxed font-medium mb-4 text-sm">
+                        {analysisResults.analysis?.answer || 'Data analysis summary'}
+                      </p>
+                    </div>
+
+                    {/* Recommendation Card */}
+                    <div className="bg-gradient-to-br from-violet-950/60 to-slate-900/40 rounded-2xl p-7 border border-violet-700/25 backdrop-blur-sm group hover:border-violet-600/40 transition-all duration-300">
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <span>💡</span>
+                        </div>
+                        <p className="text-violet-300/80 text-xs font-semibold uppercase tracking-widest">Strategic Actions</p>
+                      </div>
+                      <p className="text-slate-100 leading-relaxed font-medium mb-4 text-sm">
+                        {analysisResults.analysis?.recommendations || 'Review the data to identify trends'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Data Preview - Shows filtered data based on active filters */}
-          <div className="mb-8 animate-slideInUp" style={{animationDelay: '0.5s'}}>
+          {/* Data Preview - Toggle between Chart and Table */}
+          <div className="mb-8 animate-slideInUp" style={{animationDelay: '0.7s'}}>
             <div className="bg-gradient-to-br from-indigo-900/40 to-slate-900/40 rounded-xl p-6 border border-indigo-700/30 backdrop-blur-sm">
               <div className="flex justify-between items-center mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
-                    Filtered Data Preview
-                  </h2>
-                  <div className="flex items-center gap-2 mt-2">
-                    <p className="text-sm text-slate-400">
-                      {Object.values(activeFilters).some((f) => f) ? '🎯' : '📊'} Showing{' '}
-                      <span className="font-semibold text-indigo-300">
-                        {filteredData?.length || 0}
-                      </span>
-                      {' '}of{' '}
-                      <span className="font-semibold text-indigo-300">
-                        {file?.data?.length || 0}
-                      </span>
-                      {' '}rows
-                    </p>
-                    {Object.values(activeFilters).some((f) => f) && (
-                      <button
-                        onClick={() => setActiveFilters({})}
-                        className="ml-2 px-2 py-1 text-xs font-semibold text-slate-300 hover:text-white bg-slate-700/50 hover:bg-slate-600/50 rounded transition-all duration-300"
-                      >
-                        Clear Filters
-                      </button>
-                    )}
-                  </div>
-                </div>
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
+                  Data Preview
+                </h2>
                 <button
                   onClick={() => setTableView(!tableView)}
                   className={`px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:scale-105 ${
@@ -737,8 +609,8 @@ export default function AnalysisPage() {
                 </button>
               </div>
 
-              {/* Table View - Shows filtered data */}
-              {tableView && filteredData && filteredData.length > 0 && (
+              {/* Table View */}
+              {tableView && file && file.data && file.data.length > 0 && (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="border-b border-indigo-700/30 sticky top-0 bg-slate-900/50 backdrop-blur">
@@ -751,7 +623,7 @@ export default function AnalysisPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredData.slice(0, 25).map((row, idx) => (
+                      {file.data.slice(0, 25).map((row, idx) => (
                         <tr key={idx} className="border-b border-slate-800/50 hover:bg-indigo-900/20 transition-colors">
                           {file.columns.map((col) => (
                             <td key={`${idx}-${col}`} className="px-4 py-3 text-slate-300">
@@ -762,23 +634,14 @@ export default function AnalysisPage() {
                       ))}
                     </tbody>
                   </table>
-                  {filteredData.length > 25 && (
+                  {file.data.length > 25 && (
                     <div className="flex items-center justify-between p-4 bg-slate-800/20 border-t border-slate-800/50 rounded-b-lg">
                       <p className="text-sm text-slate-400">
-                        Showing <span className="font-semibold text-indigo-300">25</span> of <span className="font-semibold text-indigo-300">{filteredData.length}</span> rows
+                        Showing <span className="font-semibold text-indigo-300">25</span> of <span className="font-semibold text-indigo-300">{file.data.length}</span> rows
                       </p>
                       <p className="text-xs text-slate-500">💡 Tip: Export to Excel/CSV to view all data</p>
                     </div>
                   )}
-                </div>
-              )}
-
-              {/* No data message */}
-              {tableView && filteredData && filteredData.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <p className="text-2xl mb-2">📭</p>
-                  <p className="text-slate-300 font-semibold mb-1">No Data Found</p>
-                  <p className="text-slate-500 text-sm">Try adjusting your filters to see data</p>
                 </div>
               )}
 
