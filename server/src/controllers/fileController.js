@@ -3,7 +3,7 @@ import path from 'path';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import JSON5 from 'json5';
-import { PDFParse } from 'pdf-parse';
+import pdf from 'pdf-parse';
 import { File } from '../models/File.js';
 import { checkConnection } from '../config/database.js';
 import { memoryStore } from '../config/memoryStore.js';
@@ -74,56 +74,21 @@ export const uploadFile = async (req, res) => {
         }
       } else if (ext === '.pdf') {
         const dataBuffer = fs.readFileSync(req.file.path);
-        const parser = new PDFParse({ data: dataBuffer });
+        const result = await pdf(dataBuffer);
         
-        // Try to extract tables first as it's more structured
-        const tableResult = await parser.getTable();
+        // Simpler PDF extraction: Split text into lines and look for data-like rows
+        const textLines = result.text.split('\n').filter(line => line.trim().length > 0);
         
-        if (tableResult && tableResult.pages && tableResult.pages.length > 0) {
-          // Flatten all tables from all pages
-          const allTables = [];
-          tableResult.pages.forEach(page => {
-            if (page.tables && page.tables.length > 0) {
-              page.tables.forEach(table => {
-                if (table.length > 1) { // Need at least header and one data row
-                  allTables.push(table);
-                }
-              });
-            }
-          });
-
-          if (allTables.length > 0) {
-            // Use the first table found (or we could merge if headers match)
-            const mainTable = allTables[0];
-            const header = mainTable[0];
-            const rows = mainTable.slice(1);
-            
-            data = rows.map(row => {
-              const obj = {};
-              header.forEach((colName, index) => {
-                obj[colName || `Column_${index + 1}`] = row[index];
-              });
-              return obj;
-            });
-            columns = header.map((h, i) => h || `Column_${i + 1}`);
-          }
+        if (textLines.length > 0) {
+          data = textLines.map((line, index) => ({
+            id: index + 1,
+            Line: index + 1,
+            Content: line.trim()
+          }));
+          columns = ['Line', 'Content'];
+        } else {
+          throw new Error('No readable text found in PDF');
         }
-
-        // If no tables found, try simple text extraction and heuristic parsing
-        if (data.length === 0) {
-          const textResult = await parser.getText();
-          const lines = textResult.text.split('\n').filter(l => l.trim().length > 0);
-          
-          if (lines.length > 5) { // Arbitrary minimum for "data"
-            // Simple heuristic: check if it looks like tab/space separated
-            // For now, we'll store lines as single-column data for the AI to reason about
-            data = lines.map(line => ({ "Content": line.trim() }));
-            columns = ["Content"];
-          } else {
-            throw new Error('Could not extract structured data or sufficient text from PDF');
-          }
-        }
-        await parser.destroy();
       } else {
         throw new Error('Unsupported file format');
       }
