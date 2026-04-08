@@ -31,8 +31,11 @@ export function FileUploadCard({ onUploadSuccess }) {
   };
 
   const uploadFile = async (file) => {
-    if (!file.name.endsWith('.csv')) {
-      toast.error('Please upload a CSV file');
+    const allowedExtensions = ['.csv', '.xlsx', '.xls', '.json', '.pdf'];
+    const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+
+    if (!allowedExtensions.includes(fileExtension)) {
+      toast.error('Please upload a CSV, Excel, JSON, or PDF file');
       return;
     }
 
@@ -92,7 +95,7 @@ export function FileUploadCard({ onUploadSuccess }) {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".csv"
+        accept=".csv,.xlsx,.xls,.json,.pdf"
         onChange={(e) => e.target.files && uploadFile(e.target.files[0])}
         className="hidden"
       />
@@ -118,7 +121,7 @@ export function FileUploadCard({ onUploadSuccess }) {
               </div>
             </div>
             <h3 className="text-2xl font-bold bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text text-transparent mb-2 group-hover:scale-105 transition-transform">
-              Upload Your CSV Data
+              Upload Your Data
             </h3>
             <p className="text-slate-400 mb-6 font-medium">Drop your file here or click to browse</p>
             <button
@@ -129,7 +132,7 @@ export function FileUploadCard({ onUploadSuccess }) {
               📁 Browse Files
             </button>
             <p className="text-sm text-slate-400 mt-6 font-semibold">
-              💾 CSV files only • 📦 Up to 50MB
+              💾 CSV, Excel, JSON, PDF • 📦 Up to 50MB
             </p>
             <div className="mt-6 pt-6 border-t border-slate-700/50 flex items-center justify-center gap-2 text-slate-400 text-xs">
               <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />

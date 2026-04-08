@@ -1,6 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import Papa from 'papaparse';
+import * as XLSX from 'xlsx';
+import JSON5 from 'json5';
+import { PDFParse } from 'pdf-parse';
 import { File } from '../models/File.js';
 import { checkConnection } from '../config/database.js';
 import { memoryStore } from '../config/memoryStore.js';
@@ -11,50 +14,141 @@ export const uploadFile = async (req, res) => {
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
 
-    let fileContent;
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    let data = [];
+    let columns = [];
+
     try {
-      fileContent = fs.readFileSync(req.file.path, 'utf8');
-    } catch (readError) {
-      return res.status(400).json({ success: false, message: 'Failed to read file: ' + readError.message });
-    }
+      if (ext === '.csv') {
+        const fileContent = fs.readFileSync(req.file.path, 'utf8');
+        const parsed = Papa.parse(fileContent, {
+          header: true,
+          dynamicTyping: false,
+          skipEmptyLines: true,
+          transformHeader: (h) => h.trim(),
+        });
 
-    // Parse CSV with lenient settings
-    const parsed = Papa.parse(fileContent, {
-      header: true,
-      dynamicTyping: false, // Keep as strings first
-      skipEmptyLines: true,
-      transformHeader: (h) => h.trim(),
-    });
+        const criticalErrors = (parsed.errors || []).filter(
+          (err) => err.type === 'Delimiter' || err.type === 'FieldMismatch'
+        );
 
-    // Check for critical parse errors (not warnings)
-    const criticalErrors = (parsed.errors || []).filter(
-      (err) => err.type === 'Delimiter' || err.type === 'FieldMismatch'
-    );
+        if (criticalErrors.length > 0 && parsed.data.length === 0) {
+          throw new Error('Invalid CSV format: ' + (criticalErrors[0]?.message || 'Unknown error'));
+        }
 
-    if (criticalErrors.length > 0 && parsed.data.length === 0) {
-      console.error('CSV Parse Errors:', parsed.errors);
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid CSV format: ' + (criticalErrors[0]?.message || 'Unknown error'),
+        columns = parsed.meta.fields || [];
+        data = parsed.data;
+      } else if (ext === '.xlsx' || ext === '.xls') {
+        const workbook = XLSX.readFile(req.file.path);
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        
+        // Convert to JSON with headers
+        data = XLSX.utils.sheet_to_json(worksheet, {
+          defval: null,
+          raw: false // Use formatted strings for better consistency
+        });
+
+        if (data.length > 0) {
+          columns = Object.keys(data[0]);
+        }
+      } else if (ext === '.json') {
+        const fileContent = fs.readFileSync(req.file.path, 'utf8');
+        const jsonData = JSON5.parse(fileContent);
+        
+        if (Array.isArray(jsonData)) {
+          data = jsonData;
+        } else if (jsonData && typeof jsonData === 'object') {
+          // If it's a single object, wrap it in an array or look for a data property
+          if (jsonData.data && Array.isArray(jsonData.data)) {
+            data = jsonData.data;
+          } else {
+            data = [jsonData];
+          }
+        } else {
+          throw new Error('Invalid JSON structure: Expected an array or object containing data');
+        }
+
+        if (data.length > 0) {
+          columns = Object.keys(data[0]);
+        }
+      } else if (ext === '.pdf') {
+        const dataBuffer = fs.readFileSync(req.file.path);
+        const parser = new PDFParse({ data: dataBuffer });
+        
+        // Try to extract tables first as it's more structured
+        const tableResult = await parser.getTable();
+        
+        if (tableResult && tableResult.pages && tableResult.pages.length > 0) {
+          // Flatten all tables from all pages
+          const allTables = [];
+          tableResult.pages.forEach(page => {
+            if (page.tables && page.tables.length > 0) {
+              page.tables.forEach(table => {
+                if (table.length > 1) { // Need at least header and one data row
+                  allTables.push(table);
+                }
+              });
+            }
+          });
+
+          if (allTables.length > 0) {
+            // Use the first table found (or we could merge if headers match)
+            const mainTable = allTables[0];
+            const header = mainTable[0];
+            const rows = mainTable.slice(1);
+            
+            data = rows.map(row => {
+              const obj = {};
+              header.forEach((colName, index) => {
+                obj[colName || `Column_${index + 1}`] = row[index];
+              });
+              return obj;
+            });
+            columns = header.map((h, i) => h || `Column_${i + 1}`);
+          }
+        }
+
+        // If no tables found, try simple text extraction and heuristic parsing
+        if (data.length === 0) {
+          const textResult = await parser.getText();
+          const lines = textResult.text.split('\n').filter(l => l.trim().length > 0);
+          
+          if (lines.length > 5) { // Arbitrary minimum for "data"
+            // Simple heuristic: check if it looks like tab/space separated
+            // For now, we'll store lines as single-column data for the AI to reason about
+            data = lines.map(line => ({ "Content": line.trim() }));
+            columns = ["Content"];
+          } else {
+            throw new Error('Could not extract structured data or sufficient text from PDF');
+          }
+        }
+        await parser.destroy();
+      } else {
+        throw new Error('Unsupported file format');
+      }
+    } catch (parseError) {
+      console.error('File Parse Error:', parseError);
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Failed to process file: ' + parseError.message 
       });
     }
 
-    const columns = parsed.meta.fields || [];
-    
     // Convert numeric fields after parsing
-    const data = parsed.data.map((row) => {
+    const processedData = data.map((row) => {
       const processedRow = {};
       for (const key in row) {
         const value = row[key];
         // Try to convert to number if it looks like a number
-        if (value !== null && value !== '' && !isNaN(value) && !isNaN(parseFloat(value))) {
+        if (value !== null && value !== undefined && value !== '' && !isNaN(value) && !isNaN(parseFloat(value))) {
           processedRow[key] = parseFloat(value);
         } else {
           processedRow[key] = value;
         }
       }
       return processedRow;
-    }).filter((row) => Object.values(row).some((val) => val !== null && val !== ''));
+    }).filter((row) => Object.values(row).some((val) => val !== null && val !== undefined && val !== ''));
 
     const fileData = {
       name: req.file.filename,
@@ -63,8 +157,8 @@ export const uploadFile = async (req, res) => {
       mimeType: req.file.mimetype,
       path: req.file.path,
       columns,
-      data,
-      rowCount: data.length,
+      data: processedData,
+      rowCount: processedData.length,
       userId: req.user?._id || 'dev-user-1',
     };
 
@@ -98,7 +192,7 @@ export const uploadFile = async (req, res) => {
         originalName: file.originalName,
         size: file.size,
         columns,
-        rowCount: data.length,
+        rowCount: processedData.length,
         uploadedAt: file.createdAt || new Date(),
       },
     });

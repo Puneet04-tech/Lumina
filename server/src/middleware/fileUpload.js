@@ -31,11 +31,22 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  // Accept only CSV files
-  if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv')) {
+  // Accept CSV, Excel, JSON, and PDF files
+  const allowedExtensions = ['.csv', '.xlsx', '.xls', '.json', '.pdf'];
+  const ext = path.extname(file.originalname).toLowerCase();
+  
+  const allowedMimeTypes = [
+    'text/csv',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-excel',
+    'application/json',
+    'application/pdf'
+  ];
+
+  if (allowedExtensions.includes(ext) || allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Only CSV files are allowed'), false);
+    cb(new Error('Only CSV, Excel, JSON, and PDF files are allowed'), false);
   }
 };
 
