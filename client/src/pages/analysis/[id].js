@@ -10,6 +10,11 @@ import {
   LineChartComponent,
   PieChartComponent,
   AreaChartComponent,
+  RadarChartComponent,
+  HistogramComponent,
+  FunnelComponent,
+  BubbleChartComponent,
+  ComposedChartComponent,
 } from '@/components/Charts';
 import api from '@/utils/api';
 import toast from 'react-hot-toast';
@@ -318,10 +323,10 @@ export default function AnalysisPage() {
                 </div>
               </div>
 
-              {/* Chart */}
-              <div className="p-6 bg-gradient-to-r from-slate-800/50 to-slate-900/50 rounded-xl border border-slate-700/50 backdrop-blur-md animate-slideInUp" style={{animationDelay: '0.3s'}}>
-                <div className="flex justify-between items-start mb-6">
-                  <h2 className="text-2xl font-bold text-transparent bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text">📊 Visualization</h2>
+              {/* Chart Container - Compact Main Chart */}
+              <div className="p-4 bg-gradient-to-r from-slate-800/50 to-slate-900/50 rounded-xl border border-slate-700/50 backdrop-blur-md animate-slideInUp" style={{animationDelay: '0.3s'}}>
+                <div className="flex justify-between items-start mb-4">
+                  <h2 className="text-xl font-bold text-transparent bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text">📊 Primary Analysis</h2>
                   <ExportButton
                     fileName={file?.originalName}
                     data={file?.data}
@@ -330,39 +335,95 @@ export default function AnalysisPage() {
                     onCaptureChart={captureChartAsImage}
                   />
                 </div>
-                <div ref={chartRef}>
-                {chartDisplayType === 'bar' && (
-                  <BarChartComponent
-                    data={analysisResults.data}
-                    xKey="name"
-                    yKey="value"
-                    title={`${analysisResults.yAxis} by ${analysisResults.xAxis}`}
-                  />
-                )}
-                {chartDisplayType === 'line' && (
-                  <LineChartComponent
-                    data={analysisResults.data}
-                    xKey="name"
-                    yKey="value"
-                    title={`${analysisResults.yAxis} Trend`}
-                  />
-                )}
-                {chartDisplayType === 'pie' && (
-                  <PieChartComponent
-                    data={analysisResults.data}
-                    nameKey="name"
-                    valueKey="value"
-                    title={`${analysisResults.yAxis} Distribution`}
-                  />
-                )}
-                {chartDisplayType === 'area' && (
-                  <AreaChartComponent
-                    data={analysisResults.data}
-                    xKey="name"
-                    yKey="value"
-                    title={`${analysisResults.yAxis} Over Time`}
-                  />
-                )}
+                <div ref={chartRef} className="bg-slate-900/30 p-4 rounded-lg">
+                  {chartDisplayType === 'bar' && (
+                    <BarChartComponent
+                      data={analysisResults.data}
+                      xKey="name"
+                      yKey="value"
+                      title={`${analysisResults.yAxis} by ${analysisResults.xAxis}`}
+                    />
+                  )}
+                  {chartDisplayType === 'line' && (
+                    <LineChartComponent
+                      data={analysisResults.data}
+                      xKey="name"
+                      yKey="value"
+                      title={`${analysisResults.yAxis} Trend`}
+                    />
+                  )}
+                  {chartDisplayType === 'pie' && (
+                    <PieChartComponent
+                      data={analysisResults.data}
+                      nameKey="name"
+                      valueKey="value"
+                      title={`${analysisResults.yAxis} Distribution`}
+                    />
+                  )}
+                  {chartDisplayType === 'area' && (
+                    <AreaChartComponent
+                      data={analysisResults.data}
+                      xKey="name"
+                      yKey="value"
+                      title={`${analysisResults.yAxis} Over Time`}
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Additional Analysis Charts Grid - 5 Compact Charts */}
+              <div className="mt-6 animate-slideInUp" style={{animationDelay: '0.35s'}}>
+                <h3 className="text-lg font-bold text-transparent bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text mb-4">🔍 Multi-Dimensional Insights</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                  {/* Radar Chart */}
+                  <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-lg border border-slate-700/50 backdrop-blur-sm p-3 animate-slideInUp" style={{animationDelay: '0.4s'}}>
+                    <RadarChartComponent
+                      data={analysisResults.data}
+                      xKey="name"
+                      yKey="value"
+                      title="Pattern"
+                    />
+                  </div>
+
+                  {/* Histogram */}
+                  <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-lg border border-slate-700/50 backdrop-blur-sm p-3 animate-slideInUp" style={{animationDelay: '0.45s'}}>
+                    <HistogramComponent
+                      data={analysisResults.data}
+                      xKey="name"
+                      yKey="value"
+                      title="Distribution"
+                    />
+                  </div>
+
+                  {/* Funnel */}
+                  <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-lg border border-slate-700/50 backdrop-blur-sm p-3 animate-slideInUp" style={{animationDelay: '0.5s'}}>
+                    <FunnelComponent
+                      data={analysisResults.data}
+                      xKey="name"
+                      yKey="value"
+                      title="Composition"
+                    />
+                  </div>
+
+                  {/* Bubble Chart */}
+                  <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-lg border border-slate-700/50 backdrop-blur-sm p-3 animate-slideInUp" style={{animationDelay: '0.55s'}}>
+                    <BubbleChartComponent
+                      data={analysisResults.data}
+                      xKey="name"
+                      yKey="value"
+                      title="Correlation"
+                    />
+                  </div>
+
+                  {/* Composed Chart */}
+                  <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-lg border border-slate-700/50 backdrop-blur-sm p-3 animate-slideInUp" style={{animationDelay: '0.6s'}}>
+                    <ComposedChartComponent
+                      data={analysisResults.data}
+                      xKey="name"
+                      yKey="value"
+                      title="Trend"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -922,46 +983,8 @@ export default function AnalysisPage() {
 
               {/* Chart Visualization View */}
               {!tableView && analysisResults && (
-                <div>
-                  <div ref={chartRef} className="bg-slate-900/30 p-6 rounded-lg">
-                    {chartDisplayType === 'bar' && (
-                      <BarChartComponent
-                        data={analysisResults.data}
-                        xKey="name"
-                        yKey="value"
-                        title={`${analysisResults.yAxis} by ${analysisResults.xAxis}`}
-                      />
-                    )}
-                    {chartDisplayType === 'line' && (
-                      <LineChartComponent
-                        data={analysisResults.data}
-                        xKey="name"
-                        yKey="value"
-                        title={`${analysisResults.yAxis} Trend`}
-                      />
-                    )}
-                    {chartDisplayType === 'pie' && (
-                      <PieChartComponent
-                        data={analysisResults.data}
-                        nameKey="name"
-                        valueKey="value"
-                        title={`${analysisResults.yAxis} Distribution`}
-                      />
-                    )}
-                    {chartDisplayType === 'area' && (
-                      <AreaChartComponent
-                        data={analysisResults.data}
-                        xKey="name"
-                        yKey="value"
-                        title={`${analysisResults.yAxis} Over Time`}
-                      />
-                    )}
-                  </div>
-                  <div className="mt-4 p-4 bg-slate-800/20 rounded-lg border border-slate-700/30">
-                    <p className="text-sm text-slate-400">
-                      📊 Total data points in chart: <span className="font-semibold text-indigo-300">{analysisResults.data?.length || 0}</span>
-                    </p>
-                  </div>
+                <div className="p-4 bg-slate-900/30 rounded-lg border border-slate-700/30 text-center text-slate-400">
+                  <p className="text-sm">💡 Use the Primary Analysis section above to explore your data with different chart types</p>
                 </div>
               )}
             </div>

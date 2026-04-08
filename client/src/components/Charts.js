@@ -392,3 +392,234 @@ const CustomScatterDot = (props) => {
     />
   );
 }
+
+// Radar Chart Component
+export function RadarChartComponent({ data, xKey, yKey, title }) {
+  // Transform data for radar chart
+  const radarData = data.slice(0, 8).map(item => ({
+    name: item[xKey],
+    value: item[yKey],
+  }));
+
+  return (
+    <div className="premium-card relative group h-full">
+      <div className="absolute -inset-px bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl opacity-0 group-hover:opacity-20 blur transition duration-500" />
+      <div className="relative">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-bold bg-gradient-to-r from-violet-300 to-indigo-300 bg-clip-text text-transparent">
+            📡 {title}
+          </h3>
+        </div>
+        <ResponsiveContainer width="100%" height={220}>
+          <RadarChart data={radarData}>
+            <defs>
+              <filter id="radarGlow">
+                <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                <feMerge>
+                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+            <PolarGrid stroke="rgba(99, 102, 241, 0.2)" />
+            <PolarAngleAxis dataKey="name" tick={{ fontSize: 11, fill: 'rgba(148, 163, 184, 0.6)' }} />
+            <PolarRadiusAxis tick={{ fontSize: 10, fill: 'rgba(148, 163, 184, 0.4)' }} />
+            <Radar name={yKey} dataKey="value" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.6} filter="url(#radarGlow)" />
+            <Tooltip content={<PremiumTooltip />} />
+          </RadarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
+// Histogram (Distribution Chart)
+export function HistogramComponent({ data, xKey, yKey, title }) {
+  const histData = data.slice(0, 10).map(item => ({
+    name: item[xKey],
+    frequency: item[yKey],
+  }));
+
+  return (
+    <div className="premium-card relative group h-full">
+      <div className="absolute -inset-px bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl opacity-0 group-hover:opacity-20 blur transition duration-500" />
+      <div className="relative">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-bold bg-gradient-to-r from-emerald-300 to-teal-300 bg-clip-text text-transparent">
+            📊 {title}
+          </h3>
+        </div>
+        <ResponsiveContainer width="100%" height={220}>
+          <BarChart data={histData} margin={{ top: 10, right: 15, left: 0, bottom: 15 }}>
+            <defs>
+              <linearGradient id="histGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#10b981" stopOpacity={1} />
+                <stop offset="100%" stopColor="#06b6d4" stopOpacity={0.8} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(16, 185, 129, 0.2)" vertical={false} />
+            <XAxis dataKey="name" stroke="rgba(148, 163, 184, 0.4)" tick={{ fontSize: 10 }} />
+            <YAxis stroke="rgba(148, 163, 184, 0.4)" tick={{ fontSize: 10 }} />
+            <Tooltip content={<PremiumTooltip />} />
+            <Bar dataKey="frequency" fill="url(#histGradient)" radius={[8, 8, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
+// Funnel Chart Component
+export function FunnelComponent({ data, xKey, yKey, title }) {
+  const funnelData = data.slice(0, 6).map((item, idx) => ({
+    name: item[xKey],
+    value: item[yKey],
+    fill: ['#ec4899', '#f43f5e', '#f97316', '#eab308', '#84cc16', '#22c55e'][idx],
+  }));
+
+  return (
+    <div className="premium-card relative group h-full">
+      <div className="absolute -inset-px bg-gradient-to-r from-pink-600 to-rose-600 rounded-xl opacity-0 group-hover:opacity-20 blur transition duration-500" />
+      <div className="relative">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-bold bg-gradient-to-r from-pink-300 to-rose-300 bg-clip-text text-transparent">
+            🔥 {title}
+          </h3>
+        </div>
+        <div className="space-y-2 pt-2">
+          {funnelData.map((item, idx) => {
+            const percentage = (item.value / funnelData[0].value) * 100;
+            return (
+              <div key={idx} className="flex flex-col gap-1">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-300 truncate">{item.name}</span>
+                  <span className="text-slate-400">{percentage.toFixed(0)}%</span>
+                </div>
+                <div className="w-full h-5 bg-slate-700/30 rounded-lg overflow-hidden border border-slate-600/50">
+                  <div
+                    className="h-full transition-all duration-500 flex items-center justify-end pr-2"
+                    style={{
+                      width: `${percentage}%`,
+                      background: `linear-gradient(to right, ${item.fill}40, ${item.fill})`,
+                      boxShadow: `inset 0 0 8px ${item.fill}40`
+                    }}
+                  >
+                    {percentage > 15 && <span className="text-xs font-bold text-white">{item.value}</span>}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Bubble Chart Component
+export function BubbleChartComponent({ data, xKey, yKey, title }) {
+  const bubbleData = data.slice(0, 8).map((item, idx) => ({
+    x: idx + 1,
+    y: item[yKey],
+    z: Math.abs(item[yKey]) * 0.5,
+    name: item[xKey],
+  }));
+
+  return (
+    <div className="premium-card relative group h-full">
+      <div className="absolute -inset-px bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl opacity-0 group-hover:opacity-20 blur transition duration-500" />
+      <div className="relative">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-bold bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent">
+            💧 {title}
+          </h3>
+        </div>
+        <ResponsiveContainer width="100%" height={220}>
+          <ScatterChart margin={{ top: 10, right: 15, bottom: 15, left: 40 }}>
+            <defs>
+              <filter id="bubbleGlow">
+                <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                <feMerge>
+                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(6, 182, 212, 0.2)" />
+            <XAxis type="number" dataKey="x" stroke="rgba(148, 163, 184, 0.4)" tick={{ fontSize: 10 }} />
+            <YAxis type="number" dataKey="y" stroke="rgba(148, 163, 184, 0.4)" tick={{ fontSize: 10 }} />
+            <Tooltip content={<PremiumTooltip />} />
+            <Scatter name={title} data={bubbleData} fill="#06b6d4" fillOpacity={0.6} shape={<CustomBubbleDot />} filter="url(#bubbleGlow)" />
+          </ScatterChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
+// Custom Bubble Dot
+const CustomBubbleDot = (props) => {
+  const { cx, cy, payload } = props;
+  const z = payload?.z || 5;
+  return (
+    <circle
+      cx={cx}
+      cy={cy}
+      r={Math.min(z, 15)}
+      fill="#06b6d4"
+      fillOpacity={0.7}
+      stroke="#0891b2"
+      strokeWidth={1}
+      filter="url(#bubbleGlow)"
+      style={{
+        transition: 'all 0.3s ease',
+        cursor: 'pointer',
+      }}
+      onMouseEnter={(e) => {
+        e.target.setAttribute('fillOpacity', 1);
+      }}
+      onMouseLeave={(e) => {
+        e.target.setAttribute('fillOpacity', 0.7);
+      }}
+    />
+  );
+}
+
+// Composed Chart Component (Combination of Bar and Line)
+export function ComposedChartComponent({ data, xKey, yKey, title }) {
+  const composedData = data.slice(0, 10).map((item, idx) => ({
+    name: item[xKey],
+    value: item[yKey],
+    trend: item[yKey] * (1 + Math.random() * 0.3),
+  }));
+
+  return (
+    <div className="premium-card relative group h-full">
+      <div className="absolute -inset-px bg-gradient-to-r from-amber-600 to-orange-600 rounded-xl opacity-0 group-hover:opacity-20 blur transition duration-500" />
+      <div className="relative">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-bold bg-gradient-to-r from-amber-300 to-orange-300 bg-clip-text text-transparent">
+            📈 {title}
+          </h3>
+        </div>
+        <ResponsiveContainer width="100%" height={220}>
+          <BarChart data={composedData} margin={{ top: 10, right: 15, left: 0, bottom: 15 }}>
+            <defs>
+              <linearGradient id="composedGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#f59e0b" stopOpacity={1} />
+                <stop offset="100%" stopColor="#d97706" stopOpacity={0.8} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(245, 158, 11, 0.2)" vertical={false} />
+            <XAxis dataKey="name" stroke="rgba(148, 163, 184, 0.4)" tick={{ fontSize: 10 }} />
+            <YAxis stroke="rgba(148, 163, 184, 0.4)" tick={{ fontSize: 10 }} yAxisId="left" />
+            <YAxis stroke="rgba(148, 163, 184, 0.4)" tick={{ fontSize: 10 }} yAxisId="right" orientation="right" />
+            <Tooltip content={<PremiumTooltip />} />
+            <Bar yAxisId="left" dataKey="value" fill="url(#composedGradient)" radius={[6, 6, 0, 0]} />
+            <Line yAxisId="right" type="monotone" dataKey="trend" stroke="#fbbf24" strokeWidth={2} dot={{ r: 3, fill: '#fbbf24' }} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
