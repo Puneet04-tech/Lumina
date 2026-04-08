@@ -77,7 +77,19 @@ export const uploadFile = async (req, res) => {
         }
       } else if (ext === '.pdf') {
         const dataBuffer = fs.readFileSync(req.file.path);
-        const result = await pdf(dataBuffer);
+        
+        // Final attempt at robust pdf-parse call
+        let result;
+        if (typeof pdf === 'function') {
+          result = await pdf(dataBuffer);
+        } else if (pdf && typeof pdf.default === 'function') {
+          result = await pdf.default(dataBuffer);
+        } else if (pdf && typeof pdf.pdf === 'function') {
+          result = await pdf.pdf(dataBuffer);
+        } else {
+          console.error('PDF Library structure:', typeof pdf, Object.keys(pdf || {}));
+          throw new Error('PDF parsing library was not initialized correctly');
+        }
         
         // Simpler PDF extraction: Split text into lines and look for data-like rows
         const textLines = result.text.split('\n').filter(line => line.trim().length > 0);
