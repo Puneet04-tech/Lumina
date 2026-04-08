@@ -160,35 +160,25 @@ Response Format (STRICT JSON ONLY):
       }
     }
 
-    const result = {
-      answer: parsed.answer || query,
-      insights: Array.isArray(parsed.insights) ? parsed.insights : [String(parsed.insights || '')],
-      recommendations: String(parsed.recommendations || 'Review the analysis'),
-      anomalyReasons: Array.isArray(parsed.anomalyReasons) ? parsed.anomalyReasons : []
-    };
-    console.log('🎯 Returning Groq insights with anomalies');
-    return result;
-  }
-}
-
-if (parsed) {
-  console.log('✅ Successfully parsed Groq response');
-  const result = {
-    answer: parsed.answer || query,
-    insights: Array.isArray(parsed.insights) ? parsed.insights : [String(parsed.insights || '')],
-    recommendations: String(parsed.recommendations || 'Review the analysis'),
-    anomalyReasons: Array.isArray(parsed.anomalyReasons) ? parsed.anomalyReasons : []
-  };
-  console.log('🎯 Returning Groq insights');
-  return result;
-}
+    if (parsed) {
+      console.log('✅ Successfully parsed Groq response');
+      const result = {
+        answer: parsed.answer || query,
+        insights: Array.isArray(parsed.insights) ? parsed.insights : [String(parsed.insights || '')],
+        recommendations: String(parsed.recommendations || 'Review the analysis'),
+        anomalyReasons: Array.isArray(parsed.anomalyReasons) ? parsed.anomalyReasons : []
+      };
+      console.log('🎯 Returning Groq insights with anomalies');
+      return result;
+    }
     
     // Fallback: extract insights from raw text
     console.log('⚠️ No JSON found, using raw content as fallback');
     return {
       answer: content.substring(0, 300),
       insights: [content.substring(0, 200)],
-      recommendations: 'Review the generated analysis'
+      recommendations: 'Review the generated analysis',
+      anomalyReasons: []
     };
   } catch (error) {
     console.log('⚠️ Groq API error:', error.message, '- Falling back to local intelligence');
