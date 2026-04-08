@@ -3,8 +3,9 @@ import path from 'path';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import JSON5 from 'json5';
-import pdf_namespace from 'pdf-parse';
-const pdf = pdf_namespace.default || pdf_namespace;
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const pdf = require('pdf-parse');
 
 import { File } from '../models/File.js';
 import { checkConnection } from '../config/database.js';
@@ -76,7 +77,7 @@ export const uploadFile = async (req, res) => {
         }
       } else if (ext === '.pdf') {
         const dataBuffer = fs.readFileSync(req.file.path);
-        const result = await (typeof pdf === 'function' ? pdf(dataBuffer) : (pdf.default ? pdf.default(dataBuffer) : pdf(dataBuffer)));
+        const result = await pdf(dataBuffer);
         
         // Simpler PDF extraction: Split text into lines and look for data-like rows
         const textLines = result.text.split('\n').filter(line => line.trim().length > 0);
