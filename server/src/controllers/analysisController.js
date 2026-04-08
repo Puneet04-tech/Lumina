@@ -93,21 +93,21 @@ User's Specific Query: "${query}"
 Instructions:
 1. Provide a "Master Intelligence Report" that goes beyond surface-level observations.
 2. Identify hidden correlations, performance clusters, and volatile segments.
-3. Calculate or estimate the potential ROI or impact of optimizing the bottom performers to reach at least the median.
-4. Give 5-7 distinct, high-value insights. Each insight should follow the format: "[Focus Area]: [Observation] -> [Business Impact]".
-5. Provide 3-5 hyper-specific, prioritized strategic recommendations (Short-term, Medium-term, Long-term).
+3. ADOMALY DETECTION (CRITICAL): Examine the data for any statistical outliers or odd behavior. Provide a "reason" for why these points are anomalous (e.g., "Standard Deviation exceeds 3x", "Unusual Gap to Median", "Potential data entry error").
+4. Provide 5-7 distinct, high-value insights in the "insights" field.
+5. Provide a specific array called "anomalyReasons" where each entry maps a suspicious data point to a logical reasoning.
 
 Response Format (STRICT JSON ONLY):
 {
-  "answer": "A comprehensive 2-3 sentence executive summary answering the user query directly.",
+  "answer": "A comprehensive 2-3 sentence executive summary.",
   "insights": [
-    "Cluster Analysis: [Insight text...]",
-    "Growth Opportunity: [Insight text...]",
-    "Risk Mitigation: [Insight text...]",
-    "Efficiency Gap: [Insight text...]",
-    "Volatility Note: [Insight text...]"
+    "Cluster Analysis: [text...]", 
+    "Growth Opportunity: [text...]"
   ],
-  "recommendations": "Priority 1 (Immediate): [Action]; Priority 2 (Strategic): [Action]; Priority 3 (Transformation): [Action]"
+  "recommendations": "Priority 1: [Action]; Priority 2: [Action]",
+  "anomalyReasons": [
+    {"item": "Name of Item", "reason": "Specific reason why this is an anomaly", "severity": "High/Medium/Low"}
+  ]
 }`;
 
     const response = await axios.post(
@@ -160,17 +160,28 @@ Response Format (STRICT JSON ONLY):
       }
     }
 
-    if (parsed) {
-      console.log('✅ Successfully parsed Groq response');
-      const result = {
-        answer: parsed.answer || query,
-        insights: Array.isArray(parsed.insights) ? parsed.insights : [String(parsed.insights || '')],
-        recommendations: String(parsed.recommendations || 'Review the analysis'),
-        // These will be enhanced by localAnalysis for complete response
-      };
-      console.log('🎯 Returning Groq insights');
-      return result;
-    }
+    const result = {
+      answer: parsed.answer || query,
+      insights: Array.isArray(parsed.insights) ? parsed.insights : [String(parsed.insights || '')],
+      recommendations: String(parsed.recommendations || 'Review the analysis'),
+      anomalyReasons: Array.isArray(parsed.anomalyReasons) ? parsed.anomalyReasons : []
+    };
+    console.log('🎯 Returning Groq insights with anomalies');
+    return result;
+  }
+}
+
+if (parsed) {
+  console.log('✅ Successfully parsed Groq response');
+  const result = {
+    answer: parsed.answer || query,
+    insights: Array.isArray(parsed.insights) ? parsed.insights : [String(parsed.insights || '')],
+    recommendations: String(parsed.recommendations || 'Review the analysis'),
+    anomalyReasons: Array.isArray(parsed.anomalyReasons) ? parsed.anomalyReasons : []
+  };
+  console.log('🎯 Returning Groq insights');
+  return result;
+}
     
     // Fallback: extract insights from raw text
     console.log('⚠️ No JSON found, using raw content as fallback');
@@ -282,7 +293,16 @@ const localAnalysis = (data, columns, metric, dimension) => {
       count: outliers.length,
       lowerBound: Math.max(0, lowerBound),
       upperBound: upperBound,
-      items: outliers
+      items: outliers,
+      reasons: outliers.map(o => {
+        const severity = o.value > stats.average * 2 ? 'High' : o.value < stats.average * 0.3 ? 'Critical' : 'Medium';
+        const deviation = Math.abs(o.value - stats.average) / stats.average * 100;
+        return {
+          item: o.name,
+          reason: `Deviation: ${deviation.toFixed(1)}% from mean. ${o.value > stats.average ? 'Extremely high success / Risk profile' : 'Underperforming relative to peers'}`,
+          severity
+        };
+      })
     },
     dataQuality: {
       completeness: Math.round(completeness),
@@ -415,6 +435,16 @@ export const queryAnalysis = async (req, res) => {
       const aiInsights = groqAnalysis.insights.map(i => `🤖 AI Insight: ${i}`);
       const localInsights = localResult.insights.map(i => `📊 Statistical Fact: ${i}`);
       
+      // Combine anomaly reasons
+      const combinedAnomalies = [
+        ...(groqAnalysis.anomalyReasons || []),
+        ...(localResult.outliers.reasons || [])
+      ].reduce((acc, current) => {
+        const x = acc.find(item => item.item === current.item);
+        if (!x) return acc.concat([current]);
+        else return acc;
+      }, []);
+
       // Interleave AI and Statistical insights for a rich mix
       const combinedInsights = [];
       const maxLength = Math.max(aiInsights.length, localInsights.length);
@@ -427,7 +457,11 @@ export const queryAnalysis = async (req, res) => {
         ...localResult,
         answer: groqAnalysis.answer || localResult.answer,
         insights: combinedInsights,
-        recommendations: groqAnalysis.recommendations || localResult.recommendations
+        recommendations: groqAnalysis.recommendations || localResult.recommendations,
+        outliers: {
+          ...localResult.outliers,
+          reasons: combinedAnomalies
+        }
       };
       source = 'Lumina Hybrid Intelligence (Groq AI + Local Stats)';
     } else {
@@ -435,7 +469,11 @@ export const queryAnalysis = async (req, res) => {
       console.log('📊 Using local intelligence fallback');
       analysisResult = {
         ...localResult,
-        insights: localResult.insights.map(i => `📊 Statistical Fact: ${i}`)
+        insights: localResult.insights.map(i => `📊 Statistical Fact: ${i}`),
+        outliers: {
+          ...localResult.outliers,
+          reasons: localResult.outliers.reasons || []
+        }
       };
       source = 'Lumina Local Intelligence Engine';
     }

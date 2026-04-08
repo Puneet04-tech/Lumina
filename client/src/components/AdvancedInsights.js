@@ -246,7 +246,8 @@ export function AdvancedInsights({ analysis }) {
             <AlertCircle className="w-6 h-6 text-amber-400" />
             <h3 className="text-xl font-bold bg-gradient-to-r from-amber-300 to-orange-300 bg-clip-text text-transparent">⚠️ Anomalies & Outliers Detected</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div className="p-4 bg-gradient-to-r from-amber-900/50 to-orange-900/50 rounded-lg border border-amber-700/30">
               <p className="text-amber-300 text-sm font-semibold mb-2">Outlier Count</p>
               <p className="text-3xl font-bold text-amber-200">{outliers.count}</p>
@@ -260,6 +261,33 @@ export function AdvancedInsights({ analysis }) {
               <p className="text-amber-300/70 text-xs mt-2">Values outside this range flagged as anomalies</p>
             </div>
           </div>
+
+          {/* Deep Reasoning Panel */}
+          {outliers.reasons && outliers.reasons.length > 0 && (
+            <div className="space-y-3">
+              <p className="text-amber-300 text-xs font-bold uppercase tracking-widest pl-1 mb-2">🧠 Deep Reasoning Analysis</p>
+              {outliers.reasons.map((reason, idx) => (
+                <div key={idx} className="flex gap-4 p-4 bg-amber-900/20 border border-amber-700/30 rounded-lg group hover:bg-amber-800/20 transition-all">
+                  <div className={`mt-1 p-2 rounded-lg h-fit ${
+                    reason.severity === 'High' || reason.severity === 'Critical' ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'
+                  }`}>
+                    <AlertCircle className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center mb-1">
+                      <p className="font-bold text-amber-200">{reason.item}</p>
+                      <span className={`text-[10px] font-black px-2 py-0.5 rounded border uppercase ${
+                        reason.severity === 'High' || reason.severity === 'Critical' ? 'border-red-500/50 text-red-400 bg-red-500/10' : 'border-amber-500/50 text-amber-400 bg-amber-500/10'
+                      }`}>
+                        {reason.severity || 'Medium'} Risk
+                      </span>
+                    </div>
+                    <p className="text-amber-300/80 text-sm leading-relaxed">{reason.reason}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
