@@ -25,9 +25,13 @@ export default function AnalysisPage() {
   const [file, setFile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [analysisResults, setAnalysisResults] = useState(null);
+  const [queryResults, setQueryResults] = useState(null); // Separate query results
   const [tableView, setTableView] = useState(true);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [chartDisplayType, setChartDisplayType] = useState('bar');
+  const [activeFilters, setActiveFilters] = useState({}); // Track active filters
+  const [filterOptions, setFilterOptions] = useState({}); // Available filter options
+  const [filteredData, setFilteredData] = useState(null); // Filtered data based on selections
 
   const captureChartAsImage = async () => {
     if (!chartRef.current) return null;
@@ -60,6 +64,41 @@ export default function AnalysisPage() {
       setChartDisplayType('bar');
     }
   }, [analysisResults]);
+
+  // Generate filter options from data
+  useEffect(() => {
+    if (file && file.data && file.data.length > 0) {
+      const options = {};
+      // Get text/category columns for filtering
+      file.columns.forEach((col) => {
+        if (typeof file.data[0][col] === 'string') {
+          const uniqueValues = [...new Set(file.data.map((row) => row[col]))];
+          if (uniqueValues.length > 1 && uniqueValues.length <= 20) {
+            options[col] = uniqueValues.sort();
+          }
+        }
+      });
+      setFilterOptions(options);
+    }
+  }, [file]);
+
+  // Apply filters to data
+  useEffect(() => {
+    if (file && file.data) {
+      let filtered = file.data;
+      const hasActiveFilters = Object.values(activeFilters).some((f) => f);
+
+      if (hasActiveFilters) {
+        filtered = file.data.filter((row) => {
+          return Object.entries(activeFilters).every(([column, value]) => {
+            return !value || row[column] === value;
+          });
+        });
+      }
+
+      setFilteredData(filtered);
+    }
+  }, [file, activeFilters]);
 
   const loadFile = async () => {
     try {
@@ -263,8 +302,133 @@ export default function AnalysisPage() {
 
           {/* AI Query */}
           <div className="mb-8 animate-slideInUp" style={{animationDelay: '0.1s'}}>
-            <QueryInput fileId={fileId} onQueryResult={setAnalysisResults} />
+            <QueryInput fileId={fileId} onQueryResult={setQueryResults} />
           </div>
+
+          {/* Filter Buttons - Segment Data by Category */}
+          {Object.keys(filterOptions).length > 0 && (
+            <div className="mb-8 animate-slideInUp" style={{animationDelay: '0.15s'}}>
+              <div className="p-6 bg-gradient-to-r from-slate-800/50 to-slate-900/50 rounded-xl border border-slate-700/50 backdrop-blur-md">
+                <h3 className="text-lg font-bold text-transparent bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text mb-4">🎯 Filter Data</h3>
+                {Object.entries(filterOptions).map(([column, options]) => (
+                  <div key={column} className="mb-4">
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">{column}</label>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() =>
+                          setActiveFilters((prev) => ({
+                            ...prev,
+                            [column]: null,
+                          }))
+                        }
+                        className={`px-3 py-1.5 rounded-lg font-medium transition-all duration-300 text-sm ${
+                          !activeFilters[column]
+                            ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-500/30'
+                            : 'bg-slate-700/50 text-slate-400 hover:bg-slate-600/50'
+                        }`}
+                      >
+                        All
+                      </button>
+                      {options.map((option) => (
+                        <button
+                          key={option}
+                          onClick={() =>
+                            setActiveFilters((prev) => ({
+                              ...prev,
+                              [column]: option,
+                            }))
+                          }
+                          className={`px-3 py-1.5 rounded-lg font-medium transition-all duration-300 text-sm ${
+                            activeFilters[column] === option
+                              ? 'bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-lg shadow-purple-500/30'
+                              : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white border border-slate-600/50'
+                          }`}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Query Results Section - Displays below query box and above graphs */}
+          {queryResults && (
+            <div className="mb-8 animate-slideInUp" style={{animationDelay: '0.2s'}}>
+              <div className="p-6 bg-gradient-to-br from-indigo-900/50 to-slate-900/50 rounded-xl border border-indigo-700/50 backdrop-blur-md">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold text-transparent bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text">📋 Query Results</h2>
+                  <button
+                    onClick={() => setQueryResults(null)}
+                    className="px-3 py-1 text-xs font-semibold text-slate-400 hover:text-slate-200 bg-slate-700/50 hover:bg-slate-600/50 rounded-lg transition-all duration-300"
+                  >
+                    ✕ Close
+                  </button>
+                </div>
+                
+                {/* Query Result Data Table */}
+                {queryResults.data && Array.isArray(queryResults.data) && queryResults.data.length > 0 && (
+                  <div className="overflow-x-auto mb-4">
+                    <table className="w-full text-sm">
+                      <thead className="border-b border-indigo-700/30">
+                        <tr>
+                          {Object.keys(queryResults.data[0]).map((key) => (
+                            <th key={key} className="px-4 py-3 text-left font-semibold text-indigo-300">
+                              {key}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {queryResults.data.slice(0, 10).map((row, idx) => (
+                          <tr key={idx} className="border-b border-slate-800/50 hover:bg-indigo-900/30 transition-colors">
+                            {Object.values(row).map((value, colIdx) => (
+                              <td key={colIdx} className="px-4 py-3 text-slate-200">
+                                {typeof value === 'number' ? formatNumber(value) : String(value)}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {queryResults.data.length > 10 && (
+                      <div className="p-3 text-xs text-slate-400 border-t border-slate-800/50">
+                        Showing 10 of {queryResults.data.length} results
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Query Insights */}
+                {queryResults.insights && (
+                  <div className="bg-slate-900/30 rounded-lg p-4 border border-slate-700/30">
+                    {Array.isArray(queryResults.insights) ? (
+                      <ul className="space-y-2">
+                        {queryResults.insights.map((insight, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-slate-300 text-sm">
+                            <span className="text-indigo-400 font-bold mt-0.5">→</span>
+                            <span>{insight}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-slate-300">{queryResults.insights}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Query Summary */}
+                {queryResults.analysis?.answer && (
+                  <div className="mt-4 p-4 bg-gradient-to-br from-emerald-900/30 to-slate-900/30 rounded-lg border border-emerald-700/30">
+                    <p className="text-emerald-300 text-sm font-semibold mb-2">📊 Summary</p>
+                    <p className="text-slate-200 text-sm">{queryResults.analysis.answer}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Results */}
           {analysisResults && (
@@ -531,13 +695,36 @@ export default function AnalysisPage() {
             </div>
           )}
 
-          {/* Data Preview - Toggle between Chart and Table */}
+          {/* Data Preview - Shows filtered data based on active filters */}
           <div className="mb-8 animate-slideInUp" style={{animationDelay: '0.5s'}}>
             <div className="bg-gradient-to-br from-indigo-900/40 to-slate-900/40 rounded-xl p-6 border border-indigo-700/30 backdrop-blur-sm">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
-                  Data Preview
-                </h2>
+                <div>
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
+                    Filtered Data Preview
+                  </h2>
+                  <div className="flex items-center gap-2 mt-2">
+                    <p className="text-sm text-slate-400">
+                      {Object.values(activeFilters).some((f) => f) ? '🎯' : '📊'} Showing{' '}
+                      <span className="font-semibold text-indigo-300">
+                        {filteredData?.length || 0}
+                      </span>
+                      {' '}of{' '}
+                      <span className="font-semibold text-indigo-300">
+                        {file?.data?.length || 0}
+                      </span>
+                      {' '}rows
+                    </p>
+                    {Object.values(activeFilters).some((f) => f) && (
+                      <button
+                        onClick={() => setActiveFilters({})}
+                        className="ml-2 px-2 py-1 text-xs font-semibold text-slate-300 hover:text-white bg-slate-700/50 hover:bg-slate-600/50 rounded transition-all duration-300"
+                      >
+                        Clear Filters
+                      </button>
+                    )}
+                  </div>
+                </div>
                 <button
                   onClick={() => setTableView(!tableView)}
                   className={`px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:scale-105 ${
@@ -550,8 +737,8 @@ export default function AnalysisPage() {
                 </button>
               </div>
 
-              {/* Table View */}
-              {tableView && file && file.data && file.data.length > 0 && (
+              {/* Table View - Shows filtered data */}
+              {tableView && filteredData && filteredData.length > 0 && (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="border-b border-indigo-700/30 sticky top-0 bg-slate-900/50 backdrop-blur">
@@ -564,7 +751,7 @@ export default function AnalysisPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {file.data.slice(0, 25).map((row, idx) => (
+                      {filteredData.slice(0, 25).map((row, idx) => (
                         <tr key={idx} className="border-b border-slate-800/50 hover:bg-indigo-900/20 transition-colors">
                           {file.columns.map((col) => (
                             <td key={`${idx}-${col}`} className="px-4 py-3 text-slate-300">
@@ -575,14 +762,23 @@ export default function AnalysisPage() {
                       ))}
                     </tbody>
                   </table>
-                  {file.data.length > 25 && (
+                  {filteredData.length > 25 && (
                     <div className="flex items-center justify-between p-4 bg-slate-800/20 border-t border-slate-800/50 rounded-b-lg">
                       <p className="text-sm text-slate-400">
-                        Showing <span className="font-semibold text-indigo-300">25</span> of <span className="font-semibold text-indigo-300">{file.data.length}</span> rows
+                        Showing <span className="font-semibold text-indigo-300">25</span> of <span className="font-semibold text-indigo-300">{filteredData.length}</span> rows
                       </p>
                       <p className="text-xs text-slate-500">💡 Tip: Export to Excel/CSV to view all data</p>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* No data message */}
+              {tableView && filteredData && filteredData.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <p className="text-2xl mb-2">📭</p>
+                  <p className="text-slate-300 font-semibold mb-1">No Data Found</p>
+                  <p className="text-slate-500 text-sm">Try adjusting your filters to see data</p>
                 </div>
               )}
 
