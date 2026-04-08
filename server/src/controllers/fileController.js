@@ -3,7 +3,7 @@ import path from 'path';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import JSON5 from 'json5';
-import pdf from 'pdf-parse';
+import pdf from 'pdf-parse/lib/pdf-parse.js';
 import { File } from '../models/File.js';
 import { checkConnection } from '../config/database.js';
 import { memoryStore } from '../config/memoryStore.js';
