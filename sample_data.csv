@@ -1,13 +1,19 @@
-Date,Product,Category,Sales,Quantity,Region,Customer_Type,Rating
-2024-01-01,Laptop,Electronics,1200,2,North,B2B,4.5
-2024-01-02,Mouse,Electronics,25,50,South,B2C,4.8
-2024-01-03,Keyboard,Electronics,75,30,East,B2C,4.6
-2024-01-04,Monitor,Electronics,350,5,West,B2B,4.7
-2024-01-05,Desk Chair,Furniture,150,3,North,B2C,4.4
-2024-01-06,Standing Desk,Furniture,400,2,South,B2B,4.9
-2024-01-07,Bookshelf,Furniture,120,4,East,B2C,4.3
-2024-01-08,Desk Lamp,Accessories,45,15,West,B2C,4.5
-2024-01-09,Cable Organizer,Accessories,15,100,North,B2C,4.2
+Date,Product,Category,Unit_Price,Quantity,Sales_Revenue,Cost,Profit,Region,Customer_Type,Rating
+2024-01-01,Laptop,Electronics,1200,2,2400,1400,1000,North,B2B,4.5
+2024-01-02,Mouse,Electronics,25,50,1250,500,750,South,B2C,4.8
+2024-01-03,Keyboard,Electronics,75,30,2250,900,1350,East,B2C,4.6
+2024-01-04,Monitor,Electronics,350,5,1750,900,850,West,B2B,4.7
+2024-01-05,Desk Chair,Furniture,150,3,450,200,250,North,B2C,4.4
+2024-01-06,Standing Desk,Furniture,400,2,800,400,400,South,B2B,4.9
+2024-01-07,Bookshelf,Furniture,120,4,480,180,300,East,B2C,4.3
+2024-01-08,Desk Lamp,Accessories,45,15,675,300,375,West,B2C,4.5
+2024-01-09,Cable Organizer,Accessories,15,100,1500,400,1100,North,B2C,4.2
+2024-01-10,USB Hub,Accessories,35,80,2800,800,2000,South,B2B,4.6
+2024-01-11,Monitor Stand,Accessories,55,20,1100,400,700,East,B2C,4.4
+2024-01-12,Office Chair,Furniture,250,5,1250,600,650,West,B2C,4.8
+2024-01-13,Desk Organizer,Accessories,30,40,1200,350,850,North,B2B,4.5
+2024-01-14,Tablet,Electronics,600,3,1800,900,900,South,B2C,4.7
+2024-01-15,Headphones,Electronics,150,12,1800,600,1200,East,B2B,4.9
 2024-01-10,USB Hub,Electronics,60,25,South,B2B,4.6
 2024-01-11,Laptop,Electronics,1200,1,East,B2B,4.7
 2024-01-12,Monitor,Electronics,350,8,West,B2C,4.5

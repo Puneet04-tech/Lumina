@@ -1,8 +1,12 @@
-Campaign_ID,Campaign_Name,Channel,Start_Date,End_Date,Budget,Impressions,Clicks,Conversions,Conversion_Rate,ROI,Target_Audience,Platform,Status
-C001,Summer Sale 2024,Email,2024-06-01,2024-06-30,5000,150000,3500,420,12.0,8.4,Young Professionals,Internal,Completed
-C002,New Product Launch,Social Media,2024-05-15,2024-06-15,8000,450000,12500,1875,15.0,23.4,Tech Enthusiasts,Facebook,Completed
-C003,Holiday Promotion,Display Ads,2024-11-01,2024-12-25,12000,800000,28000,3360,12.0,28.0,General Audience,Google Ads,Completed
-C004,Back to School,Search,2024-08-01,2024-09-15,6500,120000,5600,672,12.0,10.3,Students/Parents,Google Search,Completed
+Campaign_ID,Campaign_Name,Channel,Start_Date,End_Date,Budget,Impressions,Clicks,Conversions,Conversion_Rate,Revenue,Cost_Per_Click,Cost_Per_Impression,ROI,Target_Audience,Platform,Status,Performance_Score
+C001,Summer Sale 2024,Email,2024-06-01,2024-06-30,5000,150000,3500,420,12.0,42000,1.43,0.033,8.4,Young Professionals,Internal,Completed,85
+C002,New Product Launch,Social Media,2024-05-15,2024-06-15,8000,450000,12500,1875,15.0,93750,0.64,0.018,11.7,Tech Enthusiasts,Facebook,Completed,92
+C003,Holiday Promotion,Display Ads,2024-11-01,2024-12-25,12000,800000,28000,3360,12.0,235200,0.43,0.015,19.6,General Audience,Google Ads,Completed,88
+C004,Back to School,Search,2024-08-01,2024-09-15,6500,120000,5600,672,12.0,50400,1.16,0.054,7.8,Students/Parents,Google Search,Completed,78
+C005,Flash Sale,Email,2024-02-14,2024-02-28,3500,200000,4200,630,15.0,31500,0.83,0.018,9.0,Previous Customers,Internal,Completed,80
+C006,Brand Awareness,Social Media,2024-03-01,2024-03-31,7000,600000,8400,840,10.0,42000,0.83,0.012,6.0,General Audience,Instagram,Completed,75
+C007,Product Promotion,Display Ads,2024-04-01,2024-04-30,9000,500000,15000,1875,12.5,84375,0.60,0.018,9.4,Tech Enthusiasts,Google Ads,Completed,86
+C008,Seasonal Campaign,Search,2024-07-01,2024-07-31,8500,350000,7700,924,12.0,55440,1.10,0.024,6.5,Professionals,Google Search,Completed,82
 C005,Flash Sale Weekend,SMS,2024-07-20,2024-07-22,3000,85000,4250,510,12.0,17.0,Existing Customers,SMS,Completed
 C006,Brand Awareness,Influencer,2024-04-01,2024-05-31,15000,1200000,45000,2700,6.0,18.0,Millennials,Instagram,Completed
 C007,Q1 Webinar Series,Email,2024-01-05,2024-03-31,4000,35000,1750,262,15.0,6.55,B2B Clients,Internal,Completed
