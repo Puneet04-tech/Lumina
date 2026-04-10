@@ -21,6 +21,7 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
   Radar,
+  ComposedChart,
 } from 'recharts';
 import { generateRandomColor } from '@/utils/helpers';
 
@@ -461,7 +462,7 @@ export function HistogramComponent({ data, xKey, yKey, title }) {
             <XAxis dataKey="name" stroke="rgba(148, 163, 184, 0.4)" tick={{ fontSize: 10 }} />
             <YAxis stroke="rgba(148, 163, 184, 0.4)" tick={{ fontSize: 10 }} />
             <Tooltip content={<PremiumTooltip />} />
-            <Bar dataKey="frequency" fill="url(#histGradient)" radius={[8, 8, 0, 0]} />
+            <Bar dataKey="frequency" fill="url(#histGradient)" radius={[8, 8, 0, 0]} barCategoryGap={0} maxBarSize={50} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -603,7 +604,7 @@ export function ComposedChartComponent({ data, xKey, yKey, title }) {
           </h3>
         </div>
         <ResponsiveContainer width="100%" height={220}>
-          <BarChart data={composedData} margin={{ top: 10, right: 15, left: 0, bottom: 15 }}>
+          <ComposedChart data={composedData} margin={{ top: 10, right: 15, left: 0, bottom: 15 }}>
             <defs>
               <linearGradient id="composedGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#f59e0b" stopOpacity={1} />
@@ -617,7 +618,7 @@ export function ComposedChartComponent({ data, xKey, yKey, title }) {
             <Tooltip content={<PremiumTooltip />} />
             <Bar yAxisId="left" dataKey="value" fill="url(#composedGradient)" radius={[6, 6, 0, 0]} />
             <Line yAxisId="right" type="monotone" dataKey="trend" stroke="#fbbf24" strokeWidth={2} dot={{ r: 3, fill: '#fbbf24' }} />
-          </BarChart>
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
     </div>
