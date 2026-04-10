@@ -200,7 +200,7 @@ export default function HomePage() {
             className="premium-card group cursor-pointer transform hover:scale-105 transition-all duration-500 border border-indigo-500/30 group-hover:border-indigo-500/80 group-hover:shadow-lg group-hover:shadow-indigo-500/20"
             style={{ animationDelay: '0s' }}
           >
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-600 to-purple-600 group-hover:h-full transition-all duration-500 rounded-t-xl" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-t-xl" />
             <div className="text-6xl mb-4 animate-bounce group-hover:animate-none transition-all duration-300" style={{ animationDuration: '2s' }}>
               📤
             </div>
@@ -219,7 +219,7 @@ export default function HomePage() {
             className="premium-card group cursor-pointer transform hover:scale-105 transition-all duration-500 border border-purple-500/30 group-hover:border-purple-500/80 group-hover:shadow-lg group-hover:shadow-purple-500/20"
             style={{ animationDelay: '0.2s' }}
           >
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-600 to-pink-600 group-hover:h-full transition-all duration-500 rounded-t-xl" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-t-xl" />
             <div className="text-6xl mb-4 animate-bounce group-hover:animate-none transition-all duration-300" style={{ animationDuration: '2s', animationDelay: '0.2s' }}>
               🤖
             </div>
@@ -238,7 +238,7 @@ export default function HomePage() {
             className="premium-card group cursor-pointer transform hover:scale-105 transition-all duration-500 border border-pink-500/30 group-hover:border-pink-500/80 group-hover:shadow-lg group-hover:shadow-pink-500/20"
             style={{ animationDelay: '0.4s' }}
           >
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-600 to-indigo-600 group-hover:h-full transition-all duration-500 rounded-t-xl" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-600 to-indigo-600 rounded-t-xl" />
             <div className="text-6xl mb-4 animate-bounce group-hover:animate-none transition-all duration-300" style={{ animationDuration: '2s', animationDelay: '0.4s' }}>
               📊
             </div>
