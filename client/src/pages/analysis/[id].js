@@ -303,6 +303,62 @@ export default function AnalysisPage() {
             <QueryInput fileId={fileId} onQueryResult={setQueryResults} />
           </div>
 
+          {/* Query Results Box */}
+          {queryResults && (
+            <div className="mb-8 animate-slideInUp" style={{animationDelay: '0.15s'}}>
+              <div className="bg-gradient-to-br from-indigo-950/60 to-slate-900/40 rounded-xl border border-indigo-700/30 backdrop-blur-md p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center">
+                    <span>📊</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-indigo-300">Query Results</h3>
+                </div>
+                
+                <div className="space-y-3">
+                  {Array.isArray(queryResults) ? (
+                    queryResults.map((result, idx) => (
+                      <div key={idx} className="p-3 bg-slate-900/50 rounded-lg border border-indigo-600/20 hover:border-indigo-600/40 transition-all">
+                        <p className="text-slate-100 font-medium">{result}</p>
+                      </div>
+                    ))
+                  ) : typeof queryResults === 'object' ? (
+                    <div className="p-4 bg-slate-900/50 rounded-lg border border-indigo-600/20">
+                      <div className="text-slate-100">
+                        {queryResults.answer && (
+                          <div className="mb-3">
+                            <p className="text-indigo-300 text-sm font-semibold mb-1">Answer:</p>
+                            <p className="text-slate-100">{queryResults.answer}</p>
+                          </div>
+                        )}
+                        {queryResults.insights && (
+                          <div>
+                            <p className="text-indigo-300 text-sm font-semibold mb-2">Insights:</p>
+                            <ul className="space-y-1">
+                              {Array.isArray(queryResults.insights) ? (
+                                queryResults.insights.map((insight, i) => (
+                                  <li key={i} className="flex items-start gap-2 text-slate-100 text-sm">
+                                    <span className="text-indigo-400 mt-0.5">•</span>
+                                    <span>{insight}</span>
+                                  </li>
+                                ))
+                              ) : (
+                                <li className="text-slate-100 text-sm">{queryResults.insights}</li>
+                              )}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-slate-900/50 rounded-lg border border-indigo-600/20">
+                      <p className="text-slate-100">{String(queryResults)}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Results */}
           {analysisResults && (
             <div className="space-y-8 mb-8">
