@@ -394,7 +394,7 @@ const analyzeChannelAggregate = (data, channelColumn, spendColumn) => {
     bottomChannels: channelResults.slice(-3).reverse()
   };
 };
- */
+
 const analyzeWithGroq = async (data, columns, query, metric, dimension) => {
   try {
     const token = process.env.GROQ_API_TOKEN;
@@ -870,7 +870,6 @@ export const queryAnalysis = async (req, res) => {
           insights: universalAnalysisResult.insights
         }
       })
-    };
     };
 
     console.log(`✅ Analysis complete (${source})`);
