@@ -62,7 +62,161 @@ const calculateStats = (data, key) => {
 };
 
 /**
- * Analyze data with Groq API (Free tier, globally accessible)
+ * Detect query type and extract metrics intelligently
+ */
+const detectQueryIntent = (query, columns, numericColumns, textColumns) => {
+  const lowerQuery = query.toLowerCase();
+  
+  // Channel/Group aggregation detection
+  const isChannelQuery = 
+    lowerQuery.includes('channel') || 
+    lowerQuery.includes('by channel') ||
+    lowerQuery.includes('per channel') ||
+    lowerQuery.includes('group by') ||
+    lowerQuery.includes('segment') ||
+    lowerQuery.includes('category') ||
+    lowerQuery.includes('breakdown');
+
+  // Spend/Cost detection
+  const isSpendQuery = 
+    lowerQuery.includes('spend') ||
+    lowerQuery.includes('cost') ||
+    lowerQuery.includes('budget') ||
+    lowerQuery.includes('revenue') ||
+    lowerQuery.includes('sales') ||
+    lowerQuery.includes('total');
+
+  // Find optimal channel column (dimension)
+  let channelColumn = null;
+  if (isChannelQuery) {
+    const possibleChannelNames = ['channel', 'marketing_channel', 'platform', 'category', 'segment', 'source', 'type', 'campaign_channel'];
+    channelColumn = textColumns.find(col => possibleChannelNames.includes(col.toLowerCase()));
+    
+    if (!channelColumn && textColumns.length > 0) {
+      channelColumn = textColumns[0]; // Fallback to first text column
+    }
+  }
+
+  // Find optimal spend column (metric)
+  let spendColumn = null;
+  if (isSpendQuery) {
+    const possibleSpendNames = ['spend', 'cost', 'budget', 'revenue', 'sales', 'amount', 'total', 'value'];
+    spendColumn = numericColumns.find(col => possibleSpendNames.includes(col.toLowerCase()));
+    
+    if (!spendColumn && numericColumns.length > 0) {
+      spendColumn = numericColumns[0]; // Fallback to first numeric column
+    }
+  }
+
+  return {
+    isChannelQuery,
+    isSpendQuery,
+    isAggregation: isChannelQuery,
+    channelColumn,
+    spendColumn,
+    queryType: isChannelQuery ? (isSpendQuery ? 'channel_spend' : 'channel_analysis') : (isSpendQuery ? 'spend_analysis' : 'general')
+  };
+};
+
+/**
+ * Perform channel-specific aggregation with advanced analytics
+ */
+const analyzeChannelAggregate = (data, channelColumn, spendColumn) => {
+  console.log(`\n💡 CHANNEL AGGREGATION ANALYSIS`);
+  console.log(`   Channel Column: ${channelColumn}`);
+  console.log(`   Spend Column: ${spendColumn}`);
+
+  const channelData = {};
+  let totalSpend = 0;
+
+  // Aggregate by channel
+  data.forEach(row => {
+    const channel = String(row[channelColumn]).trim();
+    const spend = parseFloat(row[spendColumn]) || 0;
+    
+    if (!channelData[channel]) {
+      channelData[channel] = {
+        channel,
+        totalSpend: 0,
+        count: 0,
+        spends: [],
+        minSpend: Infinity,
+        maxSpend: -Infinity
+      };
+    }
+    
+    channelData[channel].totalSpend += spend;
+    channelData[channel].count += 1;
+    channelData[channel].spends.push(spend);
+    channelData[channel].minSpend = Math.min(channelData[channel].minSpend, spend);
+    channelData[channel].maxSpend = Math.max(channelData[channel].maxSpend, spend);
+    totalSpend += spend;
+  });
+
+  // Calculate statistics for each channel
+  const channelResults = Object.values(channelData).map(ch => {
+    const avgSpend = ch.totalSpend / ch.count;
+    const sorted = ch.spends.sort((a, b) => a - b);
+    const median = sorted[Math.floor(sorted.length / 2)];
+    const variance = ch.spends.reduce((sum, val) => sum + Math.pow(val - avgSpend, 2), 0) / ch.spends.length;
+    const stdDev = Math.sqrt(variance);
+    
+    return {
+      channel: ch.channel,
+      totalSpend: parseFloat(ch.totalSpend.toFixed(2)),
+      count: ch.count,
+      avgSpend: parseFloat(avgSpend.toFixed(2)),
+      medianSpend: parseFloat(median.toFixed(2)),
+      minSpend: parseFloat(ch.minSpend.toFixed(2)),
+      maxSpend: parseFloat(ch.maxSpend.toFixed(2)),
+      stdDev: parseFloat(stdDev.toFixed(2)),
+      percentOfTotal: parseFloat((ch.totalSpend / totalSpend * 100).toFixed(2)),
+      efficiency: ch.count > 0 ? parseFloat((ch.totalSpend / ch.count).toFixed(2)) : 0
+    };
+  });
+
+  // Sort by total spend descending
+  channelResults.sort((a, b) => b.totalSpend - a.totalSpend);
+
+  // Generate channel-specific insights
+  const insights = [];
+  
+  // Top channel
+  if (channelResults.length > 0) {
+    const topChannel = channelResults[0];
+    insights.push(`🏆 Top Channel: "${topChannel.channel}" dominates with $${topChannel.totalSpend.toLocaleString()} (${topChannel.percentOfTotal}% of budget)`);
+    
+    // Efficiency insight
+    if (channelResults.length > 1) {
+      const sorted = channelResults.sort((a, b) => b.efficiency - a.efficiency);
+      insights.push(`⚡ Most Efficient: "${sorted[0].channel}" has best spend-to-count ratio at $${sorted[0].efficiency}`);
+    }
+
+    // Distribution insight
+    const concentrationTop3 = channelResults.slice(0, 3).reduce((sum, ch) => sum + ch.percentOfTotal, 0);
+    insights.push(`📊 Concentration: Top 3 channels account for ${concentrationTop3}% of total spend`);
+    
+    // Variability insight
+    const avgVariance = channelResults.reduce((sum, ch) => sum + ch.stdDev, 0) / channelResults.length;
+    insights.push(`📈 Consistency: Channels show "${avgVariance > totalSpend/channelResults.length * 0.5 ? 'High' : 'Moderate'}" variability in spending patterns`);
+
+    // Underutilized channels
+    const underutilized = channelResults.filter(ch => ch.percentOfTotal < 5);
+    if (underutilized.length > 0) {
+      insights.push(`⚠️ Underutilized: ${underutilized.length} channel(s) receive < 5% of budget - review allocation strategy`);
+    }
+  }
+
+  return {
+    channelData: channelResults,
+    totalSpend: parseFloat(totalSpend.toFixed(2)),
+    totalChannels: channelResults.length,
+    averageSpendPerChannel: parseFloat((totalSpend / channelResults.length).toFixed(2)),
+    insights,
+    topChannels: channelResults.slice(0, 5),
+    bottomChannels: channelResults.slice(-3).reverse()
+  };
+};
  */
 const analyzeWithGroq = async (data, columns, query, metric, dimension) => {
   try {
@@ -373,15 +527,32 @@ export const queryAnalysis = async (req, res) => {
     console.log(`   Text: ${textColumns.join(', ')}`);
     console.log(`   First row types:`, file.columns.map(col => `${col}(${typeof file.data[0][col]})`).join(', '));
 
-    // Find best metric and dimension
-    let metric = numericColumns[0] || file.columns[0];
-    let dimension = textColumns[0] || file.columns.find((c) => !numericColumns.includes(c)) || file.columns[1] || file.columns[0];
+    // Detect query intent and extract metrics intelligently
+    const queryIntent = detectQueryIntent(query, file.columns, numericColumns, textColumns);
+    console.log(`🎯 Query Intent Detection:`, queryIntent);
+
+    // Use intelligent metric/dimension selection
+    let metric = queryIntent.spendColumn || numericColumns[0] || file.columns[0];
+    let dimension = queryIntent.channelColumn || textColumns[0] || file.columns.find((c) => !numericColumns.includes(c)) || file.columns[1] || file.columns[0];
 
     console.log(`🔍 Selected metric: "${metric}", dimension: "${dimension}"`);
 
-    // Generate chart data
+    // Generate chart data with intelligent aggregation
     let chartData = [];
-    if (metric && dimension && numericColumns.length > 0 && textColumns.length > 0) {
+    let channelAnalysis = null;
+
+    // If channel aggregation is detected, perform specialized analysis
+    if (queryIntent.isChannelQuery && queryIntent.channelColumn && queryIntent.spendColumn) {
+      console.log('💼 Performing channel-level aggregation...');
+      channelAnalysis = analyzeChannelAggregate(file.data, queryIntent.channelColumn, queryIntent.spendColumn);
+      
+      // Transform channel analysis into chart data
+      chartData = channelAnalysis.channelData.map(ch => ({
+        name: ch.channel,
+        value: ch.totalSpend
+      }));
+    } else {
+      // Standard grouping
       const groupedData = {};
       file.data.forEach((row) => {
         const key = String(row[dimension]);
@@ -393,27 +564,35 @@ export const queryAnalysis = async (req, res) => {
         .map(([name, value]) => ({ name, value }))
         .sort((a, b) => b.value - a.value)
         .slice(0, 20);
-      
-      console.log(`📊 Chart data created:`, {
-        groupedItemsCount: Object.keys(groupedData).length,
-        chartDataLength: chartData.length,
-        top3: chartData.slice(0, 3)
-      });
-    } else {
-      console.log(`⚠️ Chart data skipped - conditions not met:`, {
-        hasMetric: !!metric,
-        hasDimension: !!dimension,
-        numericColsCount: numericColumns.length,
-        textColsCount: textColumns.length
-      });
+    }
+
+    // Prepare enhanced data for Groq analysis
+    let enhancedData = file.data;
+    let analysisMetric = metric;
+    let analysisDimension = dimension;
+
+    // If channel analysis is available, use it in Groq
+    if (channelAnalysis) {
+      enhancedData = channelAnalysis.channelData;
+      analysisMetric = 'totalSpend';
+      analysisDimension = 'channel';
+      console.log('📡 Using channel analysis data for Groq...');
     }
 
     // Try Groq API first
     console.log('🤖 Attempting Groq AI analysis...');
-    let groqAnalysis = await analyzeWithGroq(file.data, file.columns, query, metric, dimension);
+    let groqAnalysis = await analyzeWithGroq(enhancedData, file.columns, query, analysisMetric, analysisDimension);
     
     // Always perform local analysis for full analytics
-    const localResult = localAnalysis(file.data, file.columns, metric, dimension);
+    const localResult = localAnalysis(enhancedData, file.columns, analysisMetric, analysisDimension);
+
+    // Inject channel-specific insights if available
+    if (channelAnalysis) {
+      localResult.insights = [
+        ...channelAnalysis.insights,
+        ...localResult.insights
+      ];
+    }
     
     let analysisResult;
     let source = 'Unknown';
@@ -497,7 +676,20 @@ export const queryAnalysis = async (req, res) => {
       correlations: analysisResult.correlations || {},
       totalRows: file.data.length,
       numericColumns: numericColumns.length,
-      source: source
+      source: source,
+      // Include channel analysis if available
+      ...(channelAnalysis && {
+        channelAnalysis: {
+          channels: channelAnalysis.channelData,
+          totalSpend: channelAnalysis.totalSpend,
+          topChannels: channelAnalysis.topChannels,
+          bottomChannels: channelAnalysis.bottomChannels,
+          totalChannels: channelAnalysis.totalChannels,
+          averagePerChannel: channelAnalysis.averageSpendPerChannel,
+          insights: channelAnalysis.insights
+        }
+      })
+    };
     };
 
     console.log(`✅ Analysis complete (${source})`);

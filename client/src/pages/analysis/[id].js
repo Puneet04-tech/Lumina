@@ -314,38 +314,83 @@ export default function AnalysisPage() {
                   <h3 className="text-xl font-bold text-indigo-300">Query Results</h3>
                 </div>
                 
+                {/* Channel Analysis Display */}
+                {queryResults.channelAnalysis && (
+                  <div className="mb-6 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                      <div className="p-3 bg-slate-900/50 rounded-lg border border-cyan-600/30">
+                        <p className="text-cyan-300 text-xs font-semibold">Total Spend</p>
+                        <p className="text-2xl font-bold text-cyan-200 mt-1">${queryResults.channelAnalysis.totalSpend?.toLocaleString()}</p>
+                      </div>
+                      <div className="p-3 bg-slate-900/50 rounded-lg border border-emerald-600/30">
+                        <p className="text-emerald-300 text-xs font-semibold">Channels</p>
+                        <p className="text-2xl font-bold text-emerald-200 mt-1">{queryResults.channelAnalysis.totalChannels}</p>
+                      </div>
+                      <div className="p-3 bg-slate-900/50 rounded-lg border border-orange-600/30">
+                        <p className="text-orange-300 text-xs font-semibold">Avg/Channel</p>
+                        <p className="text-2xl font-bold text-orange-200 mt-1">${queryResults.channelAnalysis.averagePerChannel?.toLocaleString()}</p>
+                      </div>
+                      <div className="p-3 bg-slate-900/50 rounded-lg border border-violet-600/30">
+                        <p className="text-violet-300 text-xs font-semibold">Top Channel</p>
+                        <p className="text-lg font-bold text-violet-200 mt-1">{queryResults.channelAnalysis.topChannels?.[0]?.channel}</p>
+                      </div>
+                    </div>
+
+                    {/* Channel Breakdown Table */}
+                    <div className="p-4 bg-slate-900/50 rounded-lg border border-indigo-600/20">
+                      <p className="text-indigo-300 text-sm font-semibold mb-3">Channel Breakdown</p>
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {queryResults.channelAnalysis.channels?.map((ch, idx) => (
+                          <div key={idx} className="flex items-center justify-between p-2 bg-slate-800/50 rounded">
+                            <div className="flex-1">
+                              <p className="text-slate-100 font-medium">{ch.channel}</p>
+                              <p className="text-slate-400 text-xs">${ch.totalSpend?.toLocaleString()} • {ch.count} records</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-indigo-300 font-bold">{ch.percentOfTotal}%</p>
+                              <div className="w-20 h-1.5 bg-slate-700 rounded-full mt-1 overflow-hidden">
+                                <div 
+                                  className="h-full bg-gradient-to-r from-indigo-500 to-purple-500"
+                                  style={{ width: `${ch.percentOfTotal}%` }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Channel Insights */}
+                    {queryResults.channelAnalysis.insights && queryResults.channelAnalysis.insights.length > 0 && (
+                      <div className="p-4 bg-slate-900/50 rounded-lg border border-indigo-600/20">
+                        <p className="text-indigo-300 text-sm font-semibold mb-2">Key Insights</p>
+                        <ul className="space-y-1">
+                          {queryResults.channelAnalysis.insights.map((insight, i) => (
+                            <li key={i} className="flex items-start gap-2 text-slate-100 text-sm">
+                              <span className="text-indigo-400 mt-0.5">•</span>
+                              <span>{insight}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Regular Query Results */}
                 <div className="space-y-3">
-                  {Array.isArray(queryResults) ? (
-                    queryResults.map((result, idx) => (
+                  {Array.isArray(queryResults.insights) ? (
+                    queryResults.insights.map((result, idx) => (
                       <div key={idx} className="p-3 bg-slate-900/50 rounded-lg border border-indigo-600/20 hover:border-indigo-600/40 transition-all">
-                        <p className="text-slate-100 font-medium">{result}</p>
+                        <p className="text-slate-100 font-medium text-sm">{result}</p>
                       </div>
                     ))
-                  ) : typeof queryResults === 'object' ? (
+                  ) : queryResults.answer ? (
                     <div className="p-4 bg-slate-900/50 rounded-lg border border-indigo-600/20">
                       <div className="text-slate-100">
-                        {queryResults.answer && (
-                          <div className="mb-3">
-                            <p className="text-indigo-300 text-sm font-semibold mb-1">Answer:</p>
-                            <p className="text-slate-100">{queryResults.answer}</p>
-                          </div>
-                        )}
-                        {queryResults.insights && (
-                          <div>
-                            <p className="text-indigo-300 text-sm font-semibold mb-2">Insights:</p>
-                            <ul className="space-y-1">
-                              {Array.isArray(queryResults.insights) ? (
-                                queryResults.insights.map((insight, i) => (
-                                  <li key={i} className="flex items-start gap-2 text-slate-100 text-sm">
-                                    <span className="text-indigo-400 mt-0.5">•</span>
-                                    <span>{insight}</span>
-                                  </li>
-                                ))
-                              ) : (
-                                <li className="text-slate-100 text-sm">{queryResults.insights}</li>
-                              )}
-                            </ul>
-                          </div>
+                        <p className="mb-3">{queryResults.answer}</p>
+                        {queryResults.analysis?.recommendations && (
+                          <p className="text-indigo-300 text-sm font-semibold">💡 {queryResults.analysis.recommendations}</p>
                         )}
                       </div>
                     </div>
