@@ -197,68 +197,59 @@ export default function HomePage() {
         <div className="grid md:grid-cols-3 gap-8 mt-20">
           {/* Card 1 */}
           <div
-            className="premium-card group cursor-pointer transform hover:scale-105 transition-all duration-500 overflow-hidden relative"
+            className="premium-card group cursor-pointer transform hover:scale-105 transition-all duration-500 border border-indigo-500/30 group-hover:border-indigo-500/80 group-hover:shadow-lg group-hover:shadow-indigo-500/20"
             style={{ animationDelay: '0s' }}
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/10 to-purple-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="relative z-10">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-600 to-purple-600 group-hover:h-full transition-all duration-500 rounded-t-xl" />
-              <div className="text-6xl mb-4 animate-bounce group-hover:animate-none transition-all duration-300" style={{ animationDuration: '2s' }}>
-                📤
-              </div>
-              <h3 className="text-2xl font-bold mb-3 bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text text-transparent">
-                Lightning Upload
-              </h3>
-              <p className="text-slate-300 text-lg leading-relaxed mb-4">Upload CSV files instantly and begin your analytical journey within seconds. Support for files up to 50MB with automatic data validation.</p>
-              <div className="mt-4 pt-4 border-t border-slate-700/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                <p className="text-indigo-300 text-sm font-semibold">✨ Features: Drag & drop, batch upload, auto-detection</p>
-              </div>
-              <div className="mt-4 h-1 w-0 bg-gradient-to-r from-indigo-400 to-purple-400 group-hover:w-full transition-all duration-500" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-600 to-purple-600 group-hover:h-full transition-all duration-500 rounded-t-xl" />
+            <div className="text-6xl mb-4 animate-bounce group-hover:animate-none transition-all duration-300" style={{ animationDuration: '2s' }}>
+              📤
             </div>
+            <h3 className="text-2xl font-bold mb-3 bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text text-transparent">
+              Lightning Upload
+            </h3>
+            <p className="text-slate-300 text-lg leading-relaxed mb-4">Upload CSV files instantly and begin your analytical journey within seconds. Support for files up to 50MB with automatic data validation.</p>
+            <div className="mt-4 pt-4 border-t border-slate-700/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+              <p className="text-indigo-300 text-sm font-semibold">✨ Features: Drag & drop, batch upload, auto-detection</p>
+            </div>
+            <div className="mt-4 h-1 w-0 bg-gradient-to-r from-indigo-400 to-purple-400 group-hover:w-full transition-all duration-500" />
           </div>
 
           {/* Card 2 */}
           <div
-            className="premium-card group cursor-pointer transform hover:scale-105 transition-all duration-500 overflow-hidden relative"
+            className="premium-card group cursor-pointer transform hover:scale-105 transition-all duration-500 border border-purple-500/30 group-hover:border-purple-500/80 group-hover:shadow-lg group-hover:shadow-purple-500/20"
             style={{ animationDelay: '0.2s' }}
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 to-pink-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="relative z-10">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-600 to-pink-600 group-hover:h-full transition-all duration-500 rounded-t-xl" />
-              <div className="text-6xl mb-4 animate-bounce group-hover:animate-none transition-all duration-300" style={{ animationDuration: '2s', animationDelay: '0.2s' }}>
-                🤖
-              </div>
-              <h3 className="text-2xl font-bold mb-3 bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
-                AI Intelligence
-              </h3>
-              <p className="text-slate-300 text-lg leading-relaxed mb-4">Ask questions in natural language and receive intelligent insights. Powered by Google Gemini and advanced local analytics engine.</p>
-              <div className="mt-4 pt-4 border-t border-slate-700/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                <p className="text-purple-300 text-sm font-semibold">✨ Features: Multi-model AI, real-time responses, context-aware</p>
-              </div>
-              <div className="mt-4 h-1 w-0 bg-gradient-to-r from-purple-400 to-pink-400 group-hover:w-full transition-all duration-500" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-600 to-pink-600 group-hover:h-full transition-all duration-500 rounded-t-xl" />
+            <div className="text-6xl mb-4 animate-bounce group-hover:animate-none transition-all duration-300" style={{ animationDuration: '2s', animationDelay: '0.2s' }}>
+              🤖
             </div>
+            <h3 className="text-2xl font-bold mb-3 bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
+              AI Intelligence
+            </h3>
+            <p className="text-slate-300 text-lg leading-relaxed mb-4">Ask questions in natural language and receive intelligent insights. Powered by Google Gemini and advanced local analytics engine.</p>
+            <div className="mt-4 pt-4 border-t border-slate-700/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+              <p className="text-purple-300 text-sm font-semibold">✨ Features: Multi-model AI, real-time responses, context-aware</p>
+            </div>
+            <div className="mt-4 h-1 w-0 bg-gradient-to-r from-purple-400 to-pink-400 group-hover:w-full transition-all duration-500" />
           </div>
 
           {/* Card 3 */}
           <div
-            className="premium-card group cursor-pointer transform hover:scale-105 transition-all duration-500 overflow-hidden relative"
+            className="premium-card group cursor-pointer transform hover:scale-105 transition-all duration-500 border border-pink-500/30 group-hover:border-pink-500/80 group-hover:shadow-lg group-hover:shadow-pink-500/20"
             style={{ animationDelay: '0.4s' }}
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-pink-600/10 to-indigo-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="relative z-10">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-600 to-indigo-600 group-hover:h-full transition-all duration-500 rounded-t-xl" />
-              <div className="text-6xl mb-4 animate-bounce group-hover:animate-none transition-all duration-300" style={{ animationDuration: '2s', animationDelay: '0.4s' }}>
-                📊
-              </div>
-              <h3 className="text-2xl font-bold mb-3 bg-gradient-to-r from-pink-300 to-indigo-300 bg-clip-text text-transparent">
-                Premium Charts
-              </h3>
-              <p className="text-slate-300 text-lg leading-relaxed mb-4">Beautiful, animated charts with 9 visualization types. Bar, Line, Pie, Area, Radar, Histogram, Funnel, Bubble & Composed charts.</p>
-              <div className="mt-4 pt-4 border-t border-slate-700/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                <p className="text-pink-300 text-sm font-semibold">✨ Features: Interactive, exportable, real-time updates</p>
-              </div>
-              <div className="mt-4 h-1 w-0 bg-gradient-to-r from-pink-400 to-indigo-400 group-hover:w-full transition-all duration-500" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-600 to-indigo-600 group-hover:h-full transition-all duration-500 rounded-t-xl" />
+            <div className="text-6xl mb-4 animate-bounce group-hover:animate-none transition-all duration-300" style={{ animationDuration: '2s', animationDelay: '0.4s' }}>
+              📊
             </div>
+            <h3 className="text-2xl font-bold mb-3 bg-gradient-to-r from-pink-300 to-indigo-300 bg-clip-text text-transparent">
+              Premium Charts
+            </h3>
+            <p className="text-slate-300 text-lg leading-relaxed mb-4">Beautiful, animated charts with 9 visualization types. Bar, Line, Pie, Area, Radar, Histogram, Funnel, Bubble & Composed charts.</p>
+            <div className="mt-4 pt-4 border-t border-slate-700/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+              <p className="text-pink-300 text-sm font-semibold">✨ Features: Interactive, exportable, real-time updates</p>
+            </div>
+            <div className="mt-4 h-1 w-0 bg-gradient-to-r from-pink-400 to-indigo-400 group-hover:w-full transition-all duration-500" />
           </div>
         </div>
 
