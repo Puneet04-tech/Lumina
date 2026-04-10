@@ -62,59 +62,236 @@ const calculateStats = (data, key) => {
 };
 
 /**
- * Detect query type and extract metrics intelligently
+ * Universal Query Intent Analyzer - Works with ANY data and ANY query
  */
-const detectQueryIntent = (query, columns, numericColumns, textColumns) => {
+const analyzeQueryIntent = (query, columns, numericColumns, textColumns) => {
   const lowerQuery = query.toLowerCase();
   
-  // Channel/Group aggregation detection
-  const isChannelQuery = 
-    lowerQuery.includes('channel') || 
-    lowerQuery.includes('by channel') ||
-    lowerQuery.includes('per channel') ||
-    lowerQuery.includes('group by') ||
-    lowerQuery.includes('segment') ||
-    lowerQuery.includes('category') ||
-    lowerQuery.includes('breakdown');
-
-  // Spend/Cost detection
-  const isSpendQuery = 
-    lowerQuery.includes('spend') ||
-    lowerQuery.includes('cost') ||
-    lowerQuery.includes('budget') ||
-    lowerQuery.includes('revenue') ||
-    lowerQuery.includes('sales') ||
-    lowerQuery.includes('total');
-
-  // Find optimal channel column (dimension)
-  let channelColumn = null;
-  if (isChannelQuery) {
-    const possibleChannelNames = ['channel', 'marketing_channel', 'platform', 'category', 'segment', 'source', 'type', 'campaign_channel'];
-    channelColumn = textColumns.find(col => possibleChannelNames.includes(col.toLowerCase()));
-    
-    if (!channelColumn && textColumns.length > 0) {
-      channelColumn = textColumns[0]; // Fallback to first text column
+  // Extract keywords to understand the request
+  const queries = {
+    // Aggregation keywords
+    aggregation: {
+      sum: lowerQuery.includes('total') || lowerQuery.includes('sum'),
+      average: lowerQuery.includes('average') || lowerQuery.includes('avg') || lowerQuery.includes('mean'),
+      count: lowerQuery.includes('count') || lowerQuery.includes('how many'),
+      groupby: lowerQuery.includes('by ') || lowerQuery.includes('per ') || lowerQuery.includes('breakdown'),
+      distinct: lowerQuery.includes('unique') || lowerQuery.includes('distinct')
+    },
+    // Ranking keywords
+    ranking: {
+      top: lowerQuery.includes('top ') || lowerQuery.includes('highest ') || lowerQuery.includes('best '),
+      bottom: lowerQuery.includes('bottom ') || lowerQuery.includes('lowest ') || lowerQuery.includes('worst '),
+      sorted: lowerQuery.includes('sorted') || lowerQuery.includes('order by')
+    },
+    // Filtering keywords
+    filtering: {
+      specific: lowerQuery.includes('where') || lowerQuery.includes('filter') || lowerQuery.includes('show'),
+      comparison: lowerQuery.includes('>', '<', '=', 'greater', 'less', 'equal')
+    },
+    // Analysis keywords
+    analysis: {
+      trend: lowerQuery.includes('trend') || lowerQuery.includes('growth') || lowerQuery.includes('increase'),
+      correlation: lowerQuery.includes('correlation') || lowerQuery.includes('relationship'),
+      anomaly: lowerQuery.includes('anomaly') || lowerQuery.includes('outlier') || lowerQuery.includes('unusual'),
+      comparison: lowerQuery.includes('compare') || lowerQuery.includes('vs') || lowerQuery.includes('versus')
     }
+  };
+
+  // Find relevant columns using fuzzy matching
+  const findRelevantColumns = (keywords, columnList) => {
+    return columnList.filter(col => {
+      const colLower = col.toLowerCase();
+      return keywords.some(kw => 
+        colLower.includes(kw) || 
+        kw.includes(colLower) ||
+        colLower.includes(kw.substring(0, 3))
+      );
+    });
+  };
+
+  // Extract potential metric keywords from query
+  const potentialMetrics = [];
+  const metricKeywords = ['revenue', 'sales', 'spend', 'cost', 'price', 'amount', 'value', 'count', 'quantity', 'performance', 'rating', 'score', 'total', 'profit', 'margin', 'rate'];
+  
+  metricKeywords.forEach(metric => {
+    if (lowerQuery.includes(metric)) {
+      potentialMetrics.push(metric);
+    }
+  });
+
+  // Extract potential dimension keywords from query
+  const potentialDimensions = [];
+  const dimensionKeywords = ['channel', 'category', 'region', 'product', 'segment', 'type', 'source', 'platform', 'campaign', 'date', 'month', 'year', 'customer', 'client', 'group'];
+  
+  dimensionKeywords.forEach(dim => {
+    if (lowerQuery.includes(dim)) {
+      potentialDimensions.push(dim);
+    }
+  });
+
+  // Extract numeric range from query (e.g., "top 5", "show 10")
+  const numberMatch = query.match(/top\s+(\d+)|show\s+(\d+)|first\s+(\d+)|(\d+)\s+top/i);
+  const limitNumber = numberMatch ? parseInt(numberMatch[1] || numberMatch[2] || numberMatch[3] || numberMatch[4]) : 10;
+
+  // Find best metric column
+  let metricColumn = null;
+  
+  // First try to find column matching extracted metrics
+  if (potentialMetrics.length > 0) {
+    metricColumn = findRelevantColumns(potentialMetrics, numericColumns)[0];
+  }
+  
+  // If not found, find column matching any numeric keyword
+  if (!metricColumn) {
+    const numericKeywords = ['amount', 'sum', 'total', 'value', 'price', 'revenue', 'count', 'score', 'rating'];
+    metricColumn = findRelevantColumns(numericKeywords, numericColumns)[0];
+  }
+  
+  // Fallback to first numeric column
+  if (!metricColumn && numericColumns.length > 0) {
+    metricColumn = numericColumns[0];
   }
 
-  // Find optimal spend column (metric)
-  let spendColumn = null;
-  if (isSpendQuery) {
-    const possibleSpendNames = ['spend', 'cost', 'budget', 'revenue', 'sales', 'amount', 'total', 'value'];
-    spendColumn = numericColumns.find(col => possibleSpendNames.includes(col.toLowerCase()));
-    
-    if (!spendColumn && numericColumns.length > 0) {
-      spendColumn = numericColumns[0]; // Fallback to first numeric column
-    }
+  // Find best dimension column
+  let dimensionColumn = null;
+  
+  // First try to find column matching extracted dimensions
+  if (potentialDimensions.length > 0) {
+    dimensionColumn = findRelevantColumns(potentialDimensions, textColumns)[0];
+  }
+  
+  // If not found, find column matching any grouping keyword
+  if (!dimensionColumn) {
+    const groupKeywords = ['category', 'type', 'segment', 'region', 'source', 'channel', 'group'];
+    dimensionColumn = findRelevantColumns(groupKeywords, textColumns)[0];
+  }
+  
+  // Fallback to first text column
+  if (!dimensionColumn && textColumns.length > 0) {
+    dimensionColumn = textColumns[0];
   }
 
   return {
-    isChannelQuery,
-    isSpendQuery,
-    isAggregation: isChannelQuery,
-    channelColumn,
-    spendColumn,
-    queryType: isChannelQuery ? (isSpendQuery ? 'channel_spend' : 'channel_analysis') : (isSpendQuery ? 'spend_analysis' : 'general')
+    queryType: lowerQuery.includes('group') || queries.aggregation.groupby ? 'aggregation' : 
+               queries.ranking.top ? 'ranking_top' :
+               queries.ranking.bottom ? 'ranking_bottom' :
+               queries.analysis.trend ? 'trend' :
+               'analysis',
+    
+    metricColumn,
+    dimensionColumn,
+    
+    requiresGrouping: queries.aggregation.groupby || queries.analysis.comparison,
+    isAggregation: queries.aggregation.sum || queries.aggregation.average,
+    isRanking: queries.ranking.top || queries.ranking.bottom,
+    isTrend: queries.analysis.trend,
+    isComparison: queries.analysis.comparison,
+    
+    limitNumber,
+    
+    potentialMetrics,
+    potentialDimensions,
+    
+    keywords: { ...queries }
+  };
+};
+
+/**
+ * Universal Analysis Function - Works with ANY data structure
+ */
+const universalAnalysis = (data, columnData, metricColumn, dimensionColumn) => {
+  console.log(`\n🌐 UNIVERSAL ANALYSIS`);
+  console.log(`   Analyzing: ${metricColumn} grouped by ${dimensionColumn}`);
+
+  const result = {};
+  
+  // 1. Group data
+  const grouped = {};
+  data.forEach(row => {
+    const dimValue = String(row[dimensionColumn]).trim();
+    const metricValue = parseFloat(row[metricColumn]) || 0;
+    
+    if (!grouped[dimValue]) {
+      grouped[dimValue] = {
+        name: dimValue,
+        values: [],
+        sum: 0,
+        count: 0,
+        items: []
+      };
+    }
+    
+    grouped[dimValue].values.push(metricValue);
+    grouped[dimValue].sum += metricValue;
+    grouped[dimValue].count += 1;
+    grouped[dimValue].items.push(row);
+  });
+
+  // 2. Calculate statistics for each group
+  const analyzed = Object.values(grouped).map(group => {
+    const sorted = [...group.values].sort((a, b) => a - b);
+    const avg = group.sum / group.count;
+    const median = sorted[Math.floor(sorted.length / 2)];
+    const stdDev = Math.sqrt(group.values.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / group.values.length);
+    
+    return {
+      name: group.name,
+      total: parseFloat(group.sum.toFixed(2)),
+      count: group.count,
+      average: parseFloat(avg.toFixed(2)),
+      median: parseFloat(median.toFixed(2)),
+      min: Math.min(...group.values),
+      max: Math.max(...group.values),
+      stdDev: parseFloat(stdDev.toFixed(2)),
+      items: group.items
+    };
+  });
+
+  // 3. Sort and rank
+  analyzed.sort((a, b) => b.total - a.total);
+  
+  // 4. Calculate global statistics
+  const globalTotal = analyzed.reduce((sum, g) => sum + g.total, 0);
+  const averagePerGroup = globalTotal / analyzed.length;
+  
+  // 5. Calculate percentages
+  analyzed.forEach(group => {
+    group.percentOfTotal = parseFloat(((group.total / globalTotal) * 100).toFixed(2));
+    group.vs_average = parseFloat(((group.total / averagePerGroup) * 100).toFixed(2));
+  });
+
+  // 6. Generate insights
+  const insights = [];
+  
+  if (analyzed.length > 0) {
+    const top = analyzed[0];
+    const bottom = analyzed[analyzed.length - 1];
+    
+    insights.push(`👑 Top Performer: "${top.name}" leads with ${top.total} (${top.percentOfTotal}% of total)`);
+    
+    if (analyzed.length > 1) {
+      const ratio = (top.total / bottom.total).toFixed(2);
+      insights.push(`⚙️ Performance Gap: ${ratio}x difference between top and bottom`);
+    }
+    
+    insights.push(`📊 Distribution: Average per ${dimensionColumn} is ${averagePerGroup.toFixed(2)}`);
+    
+    const aboveAvg = analyzed.filter(g => g.total > averagePerGroup).length;
+    const belowAvg = analyzed.length - aboveAvg;
+    insights.push(`📈 Benchmarking: ${aboveAvg}/${analyzed.length} ${dimensionColumn}s above average, ${belowAvg} below`);
+    
+    const concentration = analyzed.slice(0, 3).reduce((sum, g) => sum + g.percentOfTotal, 0);
+    insights.push(`💡 Concentration: Top 3 account for ${concentration}% of total`);
+  }
+
+  return {
+    data: analyzed,
+    globalTotal: parseFloat(globalTotal.toFixed(2)),
+    globalAverage: parseFloat(averagePerGroup.toFixed(2)),
+    groupCount: analyzed.length,
+    insights,
+    topPerformers: analyzed.slice(0, 5),
+    bottomPerformers: analyzed.slice(-3).reverse()
   };
 };
 
@@ -527,43 +704,45 @@ export const queryAnalysis = async (req, res) => {
     console.log(`   Text: ${textColumns.join(', ')}`);
     console.log(`   First row types:`, file.columns.map(col => `${col}(${typeof file.data[0][col]})`).join(', '));
 
-    // Detect query intent and extract metrics intelligently
-    const queryIntent = detectQueryIntent(query, file.columns, numericColumns, textColumns);
-    console.log(`🎯 Query Intent Detection:`, queryIntent);
+    // UNIVERSAL QUERY INTENT ANALYSIS
+    const queryIntent = analyzeQueryIntent(query, file.columns, numericColumns, textColumns);
+    console.log(`🎯 Query Intent Analysis:`, {
+      queryType: queryIntent.queryType,
+      metricColumn: queryIntent.metricColumn,
+      dimensionColumn: queryIntent.dimensionColumn,
+      requiresGrouping: queryIntent.requiresGrouping,
+      potentialMetrics: queryIntent.potentialMetrics,
+      potentialDimensions: queryIntent.potentialDimensions
+    });
 
-    // Use intelligent metric/dimension selection
-    let metric = queryIntent.spendColumn || numericColumns[0] || file.columns[0];
-    let dimension = queryIntent.channelColumn || textColumns[0] || file.columns.find((c) => !numericColumns.includes(c)) || file.columns[1] || file.columns[0];
+    // Use intelligent selected columns
+    let metric = queryIntent.metricColumn || numericColumns[0] || file.columns[0];
+    let dimension = queryIntent.dimensionColumn || textColumns[0] || file.columns.find((c) => !numericColumns.includes(c)) || file.columns[1] || file.columns[0];
 
-    console.log(`🔍 Selected metric: "${metric}", dimension: "${dimension}"`);
+    console.log(`📊 Final Selection - Metric: "${metric}", Dimension: "${dimension}"`);
 
-    // Generate chart data with intelligent aggregation
+    // Generate chart data with intelligent analysis
     let chartData = [];
-    let channelAnalysis = null;
+    let universalAnalysisResult = null;
 
-    // If channel aggregation is detected, perform specialized analysis
-    if (queryIntent.isChannelQuery && queryIntent.channelColumn && queryIntent.spendColumn) {
-      console.log('💼 Performing channel-level aggregation...');
-      channelAnalysis = analyzeChannelAggregate(file.data, queryIntent.channelColumn, queryIntent.spendColumn);
+    if (metric && dimension && numericColumns.length > 0 && textColumns.length > 0) {
+      console.log('🔄 Performing universal aggregation analysis...');
+      universalAnalysisResult = universalAnalysis(file.data, file.columns, metric, dimension);
       
-      // Transform channel analysis into chart data
-      chartData = channelAnalysis.channelData.map(ch => ({
-        name: ch.channel,
-        value: ch.totalSpend
-      }));
-    } else {
-      // Standard grouping
-      const groupedData = {};
-      file.data.forEach((row) => {
-        const key = String(row[dimension]);
-        if (!groupedData[key]) groupedData[key] = 0;
-        groupedData[key] += parseFloat(row[metric]) || 0;
-      });
+      // Transform to chart data
+      chartData = universalAnalysisResult.data.map(item => ({
+        name: item.name,
+        value: item.total
+      })).slice(0, 20);
 
-      chartData = Object.entries(groupedData)
-        .map(([name, value]) => ({ name, value }))
-        .sort((a, b) => b.value - a.value)
-        .slice(0, 20);
+      console.log(`✅ Analysis complete: ${universalAnalysisResult.groupCount} groups, ${universalAnalysisResult.globalTotal} total`);
+    } else {
+      console.log(`⚠️ Could not perform aggregation:`, {
+        hasMetric: !!metric,
+        hasDimension: !!dimension,
+        numericColsCount: numericColumns.length,
+        textColsCount: textColumns.length
+      });
     }
 
     // Prepare enhanced data for Groq analysis
@@ -571,12 +750,12 @@ export const queryAnalysis = async (req, res) => {
     let analysisMetric = metric;
     let analysisDimension = dimension;
 
-    // If channel analysis is available, use it in Groq
-    if (channelAnalysis) {
-      enhancedData = channelAnalysis.channelData;
-      analysisMetric = 'totalSpend';
-      analysisDimension = 'channel';
-      console.log('📡 Using channel analysis data for Groq...');
+    // If universal analysis is available, use its results
+    if (universalAnalysisResult) {
+      enhancedData = universalAnalysisResult.data;
+      analysisMetric = 'total';
+      analysisDimension = 'name';
+      console.log('📡 Using universal analysis data for Groq...');
     }
 
     // Try Groq API first
@@ -586,10 +765,10 @@ export const queryAnalysis = async (req, res) => {
     // Always perform local analysis for full analytics
     const localResult = localAnalysis(enhancedData, file.columns, analysisMetric, analysisDimension);
 
-    // Inject channel-specific insights if available
-    if (channelAnalysis) {
+    // Inject universal analysis insights if available
+    if (universalAnalysisResult) {
       localResult.insights = [
-        ...channelAnalysis.insights,
+        ...universalAnalysisResult.insights,
         ...localResult.insights
       ];
     }
@@ -677,16 +856,18 @@ export const queryAnalysis = async (req, res) => {
       totalRows: file.data.length,
       numericColumns: numericColumns.length,
       source: source,
-      // Include channel analysis if available
-      ...(channelAnalysis && {
-        channelAnalysis: {
-          channels: channelAnalysis.channelData,
-          totalSpend: channelAnalysis.totalSpend,
-          topChannels: channelAnalysis.topChannels,
-          bottomChannels: channelAnalysis.bottomChannels,
-          totalChannels: channelAnalysis.totalChannels,
-          averagePerChannel: channelAnalysis.averageSpendPerChannel,
-          insights: channelAnalysis.insights
+      // Include universal analysis results if available
+      ...(universalAnalysisResult && {
+        aggregation: {
+          dimension: dimension,
+          metric: metric,
+          groups: universalAnalysisResult.data,
+          totalValue: universalAnalysisResult.globalTotal,
+          averagePerGroup: universalAnalysisResult.globalAverage,
+          groupCount: universalAnalysisResult.groupCount,
+          topPerformers: universalAnalysisResult.topPerformers,
+          bottomPerformers: universalAnalysisResult.bottomPerformers,
+          insights: universalAnalysisResult.insights
         }
       })
     };
