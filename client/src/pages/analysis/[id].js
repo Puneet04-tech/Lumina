@@ -264,6 +264,36 @@ export default function AnalysisPage() {
                 >
                   📉 Area Chart
                 </button>
+                <button
+                  onClick={() => handleGenerateChart('radar')}
+                  className="px-4 py-2 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-white font-medium rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/30 hover:scale-105"
+                >
+                  🎯 Radar Chart
+                </button>
+                <button
+                  onClick={() => handleGenerateChart('histogram')}
+                  className="px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-400 text-white font-medium rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/30 hover:scale-105"
+                >
+                  📊 Histogram
+                </button>
+                <button
+                  onClick={() => handleGenerateChart('funnel')}
+                  className="px-4 py-2 bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white font-medium rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-rose-500/30 hover:scale-105"
+                >
+                  🔻 Funnel Chart
+                </button>
+                <button
+                  onClick={() => handleGenerateChart('bubble')}
+                  className="px-4 py-2 bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-white font-medium rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-violet-500/30 hover:scale-105"
+                >
+                  ⭕ Bubble Chart
+                </button>
+                <button
+                  onClick={() => handleGenerateChart('composed')}
+                  className="px-4 py-2 bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-500 hover:to-teal-400 text-white font-medium rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-teal-500/30 hover:scale-105"
+                >
+                  📈 Composed Chart
+                </button>
               </div>
             </div>
           </div>
@@ -277,6 +307,27 @@ export default function AnalysisPage() {
           {analysisResults && (
             <div className="space-y-8 mb-8">
 
+              {/* Chart Display - Show when chartDisplayType is set */}
+              {chartDisplayType && (
+                <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-xl border border-slate-700/50 backdrop-blur-md p-6 animate-slideInUp">
+                  <div className="mb-4">
+                    <h2 className="text-2xl font-bold text-transparent bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text">
+                      {chartDisplayType.charAt(0).toUpperCase() + chartDisplayType.slice(1)} Chart Analysis
+                    </h2>
+                  </div>
+                  <div ref={chartRef} className="bg-slate-900/40 rounded-lg p-4 h-96">
+                    {chartDisplayType === 'bar' && <BarChartComponent data={analysisResults.data} xKey="name" yKey="value" title={analysisResults.yAxis} />}
+                    {chartDisplayType === 'line' && <LineChartComponent data={analysisResults.data} xKey="name" yKey="value" title={analysisResults.yAxis} />}
+                    {chartDisplayType === 'pie' && <PieChartComponent data={analysisResults.data} nameKey="name" valueKey="value" title={analysisResults.yAxis} />}
+                    {chartDisplayType === 'area' && <AreaChartComponent data={analysisResults.data} xKey="name" yKey="value" title={analysisResults.yAxis} />}
+                    {chartDisplayType === 'radar' && <RadarChartComponent data={analysisResults.data} xKey="name" yKey="value" title="Pattern Analysis" />}
+                    {chartDisplayType === 'histogram' && <HistogramComponent data={analysisResults.data} xKey="name" yKey="value" title="Distribution" />}
+                    {chartDisplayType === 'funnel' && <FunnelComponent data={analysisResults.data} xKey="name" yKey="value" title="Composition Flow" />}
+                    {chartDisplayType === 'bubble' && <BubbleChartComponent data={analysisResults.data} xKey="name" yKey="value" title="Correlation Analysis" />}
+                    {chartDisplayType === 'composed' && <ComposedChartComponent data={analysisResults.data} xKey="name" yKey="value" title="Multi-Dimensional View" />}
+                  </div>
+                </div>
+              )}
 
               {/* Action Buttons - Show specific sections on click */}
               <div className="p-4 bg-gradient-to-r from-slate-800/50 to-slate-900/50 rounded-xl border border-slate-700/50 backdrop-blur-md animate-slideInUp flex flex-wrap gap-3 justify-center" style={{animationDelay: '0.35s'}}>
