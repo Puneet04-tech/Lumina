@@ -298,6 +298,93 @@ export default function AnalysisPage() {
             </div>
           </div>
 
+              </div>
+            </div>
+
+          {/* ===== PREMIUM FEATURES SHOWCASE (ALWAYS VISIBLE) ===== */}
+          <div className="mb-8 animate-slideInUp" style={{animationDelay: '0.08s'}}>
+            <div className="bg-gradient-to-r from-slate-900 via-purple-900/20 to-slate-900 rounded-xl border border-purple-700/50 backdrop-blur-md p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <span className="text-3xl">👑</span>
+                <div>
+                  <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-300 via-pink-300 to-indigo-300 bg-clip-text text-transparent">Premium AI Features</h3>
+                  <p className="text-sm text-slate-400">Advanced Intelligence Engine - Run a query to see these in action</p>
+                </div>
+              </div>
+
+              {/* Features Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-5 gap-4">
+                
+                {/* Feature 1 Card */}
+                <div className="bg-gradient-to-br from-purple-950/60 to-slate-900/40 rounded-lg border border-purple-700/30 p-4 hover:border-purple-600/60 transition-all duration-300 hover:shadow-lg hover:shadow-purple-600/20">
+                  <div className="text-3xl mb-2">🔮</div>
+                  <h4 className="font-bold text-purple-300 mb-1">Predictive Forecast</h4>
+                  <p className="text-xs text-slate-400 mb-3">AI predicts future trends using historical patterns</p>
+                  <div className="text-xs text-slate-500 bg-purple-950/50 rounded p-2">
+                    <div>📈 Trend analysis</div>
+                    <div>📊 5-period forecast</div>
+                    <div>📉 Confidence scoring</div>
+                  </div>
+                </div>
+
+                {/* Feature 2 Card */}
+                <div className="bg-gradient-to-br from-amber-950/60 to-slate-900/40 rounded-lg border border-amber-700/30 p-4 hover:border-amber-600/60 transition-all duration-300 hover:shadow-lg hover:shadow-amber-600/20">
+                  <div className="text-3xl mb-2">🎯</div>
+                  <h4 className="font-bold text-amber-300 mb-1">Insight Prioritization</h4>
+                  <p className="text-xs text-slate-400 mb-3">Smart ranking of insights by importance</p>
+                  <div className="text-xs text-slate-500 bg-amber-950/50 rounded p-2">
+                    <div>🔴 Critical insights first</div>
+                    <div>⭐ Impact scoring (0-100)</div>
+                    <div>📌 Top 3 highlighted</div>
+                  </div>
+                </div>
+
+                {/* Feature 3 Card */}
+                <div className="bg-gradient-to-br from-cyan-950/60 to-slate-900/40 rounded-lg border border-cyan-700/30 p-4 hover:border-cyan-600/60 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-600/20">
+                  <div className="text-3xl mb-2">📊</div>
+                  <h4 className="font-bold text-cyan-300 mb-1">Data Quality Score</h4>
+                  <p className="text-xs text-slate-400 mb-3">Automatic data governance</p>
+                  <div className="text-xs text-slate-500 bg-cyan-950/50 rounded p-2">
+                    <div>✅ Completeness Check</div>
+                    <div>🔄 Consistency Analysis</div>
+                    <div>⚠️ Issue Detection</div>
+                  </div>
+                </div>
+
+                {/* Feature 4 Card */}
+                <div className="bg-gradient-to-br from-green-950/60 to-slate-900/40 rounded-lg border border-green-700/30 p-4 hover:border-green-600/60 transition-all duration-300 hover:shadow-lg hover:shadow-green-600/20">
+                  <div className="text-3xl mb-2">💡</div>
+                  <h4 className="font-bold text-green-300 mb-1">Query Recommendations</h4>
+                  <p className="text-xs text-slate-400 mb-3">Conversational AI suggests follow-ups</p>
+                  <div className="text-xs text-slate-500 bg-green-950/50 rounded p-2">
+                    <div>🤖 Smart suggestions</div>
+                    <div>🎓 Difficulty levels</div>
+                    <div>📚 5 follow-up ideas</div>
+                  </div>
+                </div>
+
+                {/* Feature 5 Card */}
+                <div className="bg-gradient-to-br from-rose-950/60 to-slate-900/40 rounded-lg border border-rose-700/30 p-4 hover:border-rose-600/60 transition-all duration-300 hover:shadow-lg hover:shadow-rose-600/20">
+                  <div className="text-3xl mb-2">📈</div>
+                  <h4 className="font-bold text-rose-300 mb-1">Benchmarking</h4>
+                  <p className="text-xs text-slate-400 mb-3">Compare to performance tiers</p>
+                  <div className="text-xs text-slate-500 bg-rose-950/50 rounded p-2">
+                    <div>🏆 Performance tiers</div>
+                    <div>📊 Distribution analysis</div>
+                    <div>💹 Percentile ranking</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Pro Features Badge */}
+              <div className="mt-4 p-3 bg-gradient-to-r from-purple-900/30 to-indigo-900/30 rounded-lg border border-purple-600/30 flex items-center gap-2">
+                <span className="text-sm text-slate-300">
+                  <strong className="text-purple-300">⭐ NOT in Tableau:</strong> These enterprise features are unique to Lumina. Execute a query below to see them in action!
+                </span>
+              </div>
+            </div>
+          </div>
+
           {/* AI Query */}
           <div className="mb-8 animate-slideInUp" style={{animationDelay: '0.1s'}}>
             <QueryInput fileId={fileId} onQueryResult={setQueryResults} />
@@ -449,49 +536,46 @@ export default function AnalysisPage() {
 
           {/* ===== UNIQUE FEATURES SECTION ===== */}
           {queryResults && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 animate-slideInUp" style={{animationDelay: '0.2s'}}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-5 gap-4 mb-8 animate-slideInUp" style={{animationDelay: '0.2s'}}>
               
               {/* FEATURE 1: 🔮 Predictive Forecasting */}
-              {queryResults.predictiveAnalysis && (
-                <div className="bg-gradient-to-br from-purple-950/60 to-slate-900/40 rounded-xl border border-purple-700/30 backdrop-blur-md p-5">
+              {queryResults.predictiveAnalysis?.forecast && (
+                <div className="bg-gradient-to-br from-purple-950/80 to-slate-900/60 rounded-xl border-2 border-purple-600/60 backdrop-blur-md p-5 hover:shadow-lg hover:shadow-purple-600/30 transition-all duration-300">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-2xl">🔮</span>
-                    <h4 className="text-lg font-bold text-purple-300">Predictive Forecast</h4>
+                    <h4 className="font-bold text-purple-300 text-sm">Predictive Forecast</h4>
                   </div>
                   <div className="space-y-2">
-                    <p className="text-sm text-slate-300">{queryResults.predictiveAnalysis.trend}</p>
-                    <p className="text-xs text-slate-400">Trend Strength: {queryResults.predictiveAnalysis.trendStrength?.toFixed(1)}%</p>
-                    <div className="space-y-1 mt-3">
-                      {queryResults.predictiveAnalysis.forecast?.slice(0, 3).map((f, i) => (
-                        <div key={i} className="flex items-center justify-between p-2 bg-slate-800/50 rounded">
-                          <span className="text-xs text-slate-300">Period {f.period}</span>
-                          <span className="text-indigo-300 font-bold">{f.value.toLocaleString()}</span>
-                          <span className="text-xs text-slate-500">({(f.confidence * 100).toFixed(0)}% conf)</span>
-                        </div>
-                      ))}
+                    <div className="p-2 bg-slate-800/60 rounded border border-purple-600/30">
+                      <p className="text-xs text-slate-300 font-semibold">{queryResults.predictiveAnalysis.trend}</p>
+                      <p className="text-xs text-slate-400">Strength: {queryResults.predictiveAnalysis.trendStrength?.toFixed(1)}%</p>
                     </div>
+                    {queryResults.predictiveAnalysis.forecast?.slice(0, 2).map((f, i) => (
+                      <div key={i} className="flex items-center justify-between p-2 bg-slate-800/40 rounded text-xs">
+                        <span className="text-slate-400">P{f.period}</span>
+                        <span className="text-purple-300 font-bold">{f.value?.toLocaleString()}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
 
               {/* FEATURE 2: 🎯 Insight Prioritization */}
               {queryResults.insightPrioritization?.topInsights && (
-                <div className="bg-gradient-to-br from-amber-950/60 to-slate-900/40 rounded-xl border border-amber-700/30 backdrop-blur-md p-5">
+                <div className="bg-gradient-to-br from-amber-950/80 to-slate-900/60 rounded-xl border-2 border-amber-600/60 backdrop-blur-md p-5 hover:shadow-lg hover:shadow-amber-600/30 transition-all duration-300">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-2xl">🎯</span>
-                    <h4 className="text-lg font-bold text-amber-300">Top Insights (Prioritized)</h4>
+                    <h4 className="font-bold text-amber-300 text-sm">Top Insights</h4>
                   </div>
                   <div className="space-y-2">
-                    {queryResults.insightPrioritization.topInsights.map((item, i) => (
-                      <div key={i} className="p-2 bg-slate-800/50 rounded border-l-2 border-amber-500">
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="text-xs text-slate-200 flex-1">{item.insight.substring(0, 80)}...</p>
-                          <span className={`text-xs px-2 py-1 rounded font-bold ${
-                            item.priority === 'Critical' ? 'bg-red-600 text-white' :
-                            item.priority === 'High' ? 'bg-amber-600 text-white' :
-                            'bg-slate-600 text-slate-200'
-                          }`}>{item.priority}</span>
-                        </div>
+                    {queryResults.insightPrioritization.topInsights?.slice(0, 2).map((item, i) => (
+                      <div key={i} className="p-2 bg-slate-800/60 rounded border-l-2 border-amber-500">
+                        <p className="text-xs text-slate-200">{item.insight?.substring(0, 60)}...</p>
+                        <span className={`inline-block text-xs font-bold mt-1 px-2 py-0.5 rounded ${
+                          item.priority === 'Critical' ? 'bg-red-700 text-white' :
+                          item.priority === 'High' ? 'bg-amber-700 text-white' :
+                          'bg-slate-700 text-slate-200'
+                        }`}>{item.priority}</span>
                       </div>
                     ))}
                   </div>
@@ -499,57 +583,40 @@ export default function AnalysisPage() {
               )}
 
               {/* FEATURE 3: 📊 Data Quality Intelligence */}
-              {queryResults.intelligentDataQuality && (
-                <div className="bg-gradient-to-br from-cyan-950/60 to-slate-900/40 rounded-xl border border-cyan-700/30 backdrop-blur-md p-5">
+              {queryResults.intelligentDataQuality?.qualityScore && (
+                <div className="bg-gradient-to-br from-cyan-950/80 to-slate-900/60 rounded-xl border-2 border-cyan-600/60 backdrop-blur-md p-5 hover:shadow-lg hover:shadow-cyan-600/30 transition-all duration-300">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-2xl">📊</span>
-                    <h4 className="text-lg font-bold text-cyan-300">Data Quality Score</h4>
+                    <h4 className="font-bold text-cyan-300 text-sm">Data Quality</h4>
                   </div>
-                  <div className="flex items-end gap-4">
-                    <div className="flex-1">
-                      <div className="text-4xl font-bold text-cyan-300">{queryResults.intelligentDataQuality.qualityScore}%</div>
-                      <p className="text-xs text-slate-400 mt-1">Overall Quality</p>
+                  <div className="text-center mb-3">
+                    <div className="text-3xl font-bold text-cyan-300">{queryResults.intelligentDataQuality.qualityScore}%</div>
+                    <p className="text-xs text-slate-400">Quality Score</p>
+                  </div>
+                  <div className="space-y-1 text-xs">
+                    <div className="flex justify-between text-slate-400">
+                      <span>Completeness:</span>
+                      <span className="text-cyan-300 font-bold">{queryResults.intelligentDataQuality.completenessScore}%</span>
                     </div>
-                    <div className="flex-1 space-y-1 text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Completeness:</span>
-                        <span className="text-cyan-300 font-bold">{queryResults.intelligentDataQuality.completenessScore}%</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Consistency:</span>
-                        <span className="text-cyan-300 font-bold">{queryResults.intelligentDataQuality.consistencyScore}%</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Accuracy:</span>
-                        <span className="text-cyan-300 font-bold">{queryResults.intelligentDataQuality.accuracyScore}%</span>
-                      </div>
+                    <div className="flex justify-between text-slate-400">
+                      <span>Consistency:</span>
+                      <span className="text-cyan-300 font-bold">{queryResults.intelligentDataQuality.consistencyScore}%</span>
                     </div>
                   </div>
-                  {queryResults.intelligentDataQuality.issues?.length > 0 && (
-                    <div className="mt-3 space-y-1">
-                      {queryResults.intelligentDataQuality.issues.slice(0, 2).map((issue, i) => (
-                        <p key={i} className="text-xs text-slate-400 border-l pl-2 border-red-500">{issue}</p>
-                      ))}
-                    </div>
-                  )}
                 </div>
               )}
 
               {/* FEATURE 4: 💡 Query Recommendations */}
               {queryResults.suggestedQueries && (
-                <div className="bg-gradient-to-br from-green-950/60 to-slate-900/40 rounded-xl border border-green-700/30 backdrop-blur-md p-5">
+                <div className="bg-gradient-to-br from-green-950/80 to-slate-900/60 rounded-xl border-2 border-green-600/60 backdrop-blur-md p-5 hover:shadow-lg hover:shadow-green-600/30 transition-all duration-300">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-2xl">💡</span>
-                    <h4 className="text-lg font-bold text-green-300">Suggested Follow-ups</h4>
+                    <h4 className="font-bold text-green-300 text-sm">Next Steps</h4>
                   </div>
                   <div className="space-y-2">
-                    {queryResults.suggestedQueries.slice(0, 3).map((rec, i) => (
-                      <div 
-                        key={i} 
-                        className="p-2 bg-slate-800/50 rounded hover:bg-slate-800/80 cursor-pointer transition-all group"
-                      >
-                        <p className="text-xs text-slate-300 group-hover:text-green-300 transition-colors">{rec.icon} {rec.query}</p>
-                        <p className="text-xs text-slate-500 mt-1">{rec.difficulty}</p>
+                    {queryResults.suggestedQueries.slice(0, 2).map((rec, i) => (
+                      <div key={i} className="p-2 bg-slate-800/60 rounded hover:bg-slate-800/80 transition-all cursor-pointer border border-green-600/30">
+                        <p className="text-xs text-slate-300">{rec.icon} {rec.query?.substring(0, 50)}</p>
                       </div>
                     ))}
                   </div>
@@ -557,25 +624,21 @@ export default function AnalysisPage() {
               )}
 
               {/* FEATURE 5: 📈 Benchmarking Performance */}
-              {queryResults.benchmarking && (
-                <div className="bg-gradient-to-br from-rose-950/60 to-slate-900/40 rounded-xl border border-rose-700/30 backdrop-blur-md p-5">
+              {queryResults.benchmarking?.performanceDistribution && (
+                <div className="bg-gradient-to-br from-rose-950/80 to-slate-900/60 rounded-xl border-2 border-rose-600/60 backdrop-blur-md p-5 hover:shadow-lg hover:shadow-rose-600/30 transition-all duration-300">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-2xl">📈</span>
-                    <h4 className="text-lg font-bold text-rose-300">Performance Distribution</h4>
+                    <h4 className="font-bold text-rose-300 text-sm">Benchmarking</h4>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1 text-xs">
                     {[
-                      { label: '🏆 Exceptional', count: queryResults.benchmarking.performanceDistribution.exceptional, color: 'bg-yellow-600' },
-                      { label: '⭐ Strong', count: queryResults.benchmarking.performanceDistribution.strong, color: 'bg-green-600' },
-                      { label: '✅ Average', count: queryResults.benchmarking.performanceDistribution.average, color: 'bg-blue-600' },
-                      { label: '⚠️ Below Avg', count: queryResults.benchmarking.performanceDistribution.belowAverage, color: 'bg-red-600' }
+                      { label: '🏆 Exceptional', count: queryResults.benchmarking.performanceDistribution.exceptional, color: 'text-yellow-400' },
+                      { label: '⭐ Strong', count: queryResults.benchmarking.performanceDistribution.strong, color: 'text-green-400' },
+                      { label: '✅ Average', count: queryResults.benchmarking.performanceDistribution.average, color: 'text-blue-400' }
                     ].map((perf, i) => (
-                      <div key={i} className="flex items-center justify-between text-xs">
-                        <span className="text-slate-300">{perf.label}</span>
-                        <div className="flex items-center gap-2">
-                          <div className={`h-2 w-16 bg-slate-700 rounded ${perf.color} ${perf.color}`} style={{width: `${perf.count * 12}px`}}></div>
-                          <span className="text-slate-300 font-bold w-8">{perf.count}</span>
-                        </div>
+                      <div key={i} className="flex items-center justify-between">
+                        <span className="text-slate-400">{perf.label}</span>
+                        <span className={`font-bold ${perf.color}`}>{perf.count}</span>
                       </div>
                     ))}
                   </div>
