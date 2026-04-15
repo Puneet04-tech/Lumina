@@ -67,7 +67,7 @@ export function ExportButton({ fileName, data, columns, chartImage = null, analy
       <button
         onClick={handleExportPDF}
         disabled={isLoading}
-        className="btn btn-secondary flex items-center gap-2"
+        className="px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:scale-105 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white hover:shadow-lg hover:shadow-purple-500/50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
       >
         <Download className="w-4 h-4" />
         {isLoading ? 'Exporting...' : 'PDF'}
@@ -75,7 +75,7 @@ export function ExportButton({ fileName, data, columns, chartImage = null, analy
       <button
         onClick={handleExportExcel}
         disabled={isLoading}
-        className="btn btn-secondary flex items-center gap-2"
+        className="px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:scale-105 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white hover:shadow-lg hover:shadow-green-500/50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
       >
         <FileIcon className="w-4 h-4" />
         {isLoading ? 'Exporting...' : 'Excel'}
@@ -83,7 +83,7 @@ export function ExportButton({ fileName, data, columns, chartImage = null, analy
       <button
         onClick={handleExportJSON}
         disabled={isLoading}
-        className="btn btn-secondary flex items-center gap-2"
+        className="px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:scale-105 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white hover:shadow-lg hover:shadow-blue-500/50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
       >
         <FileJson className="w-4 h-4" />
         JSON

@@ -223,6 +223,178 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
       }
     }
 
+    // ===== PREMIUM AI FEATURES SECTION =====
+    if (analysisData && (analysisData.predictiveForecast || analysisData.prioritizedInsights || analysisData.dataQualityScore || analysisData.queryRecommendations || analysisData.comparativeBenchmarking)) {
+      if (yPosition > pageHeight - 60) {
+        doc.addPage();
+        yPosition = 15;
+      }
+
+      doc.setFontSize(16);
+      doc.setTextColor(147, 51, 234);
+      doc.text('👑 PREMIUM AI FEATURES', 10, yPosition);
+      yPosition += 10;
+
+      // 1. Predictive Forecast
+      if (analysisData.predictiveForecast) {
+        if (yPosition > pageHeight - 60) {
+          doc.addPage();
+          yPosition = 15;
+        }
+
+        doc.setFontSize(12);
+        doc.setTextColor(99, 102, 241);
+        doc.text('🔮 Predictive Forecast', 10, yPosition);
+        yPosition += 7;
+
+        const forecast = analysisData.predictiveForecast;
+        const forecastData = [
+          ['Period', 'Predicted Value', 'Confidence'],
+          ...forecast.forecast.map((f, i) => [
+            `Period ${i + 1}`,
+            String(Math.round(f.value * 100) / 100),
+            `${(f.confidence * 100).toFixed(0)}%`
+          ])
+        ];
+
+        if (typeof doc.autoTable === 'function') {
+          doc.autoTable({
+            head: [forecastData[0]],
+            body: forecastData.slice(1),
+            startY: yPosition,
+            margin: 10,
+            theme: 'grid',
+            headerStyles: { fillColor: [99, 102, 241], textColor: [255, 255, 255], fontStyle: 'bold' },
+          });
+          yPosition = doc.lastAutoTable.finalY + 6;
+        }
+
+        doc.setFontSize(9);
+        doc.setTextColor(128, 128, 128);
+        doc.text(`Trend: ${forecast.trend} | Model Accuracy: ${(forecast.modelAccuracy * 100).toFixed(1)}%`, 10, yPosition);
+        yPosition += 8;
+      }
+
+      // 2. Prioritized Insights
+      if (analysisData.prioritizedInsights && Array.isArray(analysisData.prioritizedInsights)) {
+        if (yPosition > pageHeight - 60) {
+          doc.addPage();
+          yPosition = 15;
+        }
+
+        doc.setFontSize(12);
+        doc.setTextColor(217, 119, 6);
+        doc.text('🎯 Prioritized Insights', 10, yPosition);
+        yPosition += 7;
+
+        const insightData = [
+          ['Priority', 'Score', 'Insight'],
+          ...analysisData.prioritizedInsights.slice(0, 5).map(insight => [
+            insight.priority,
+            String(insight.score),
+            String(insight.text).substring(0, 40)
+          ])
+        ];
+
+        if (typeof doc.autoTable === 'function') {
+          doc.autoTable({
+            head: [insightData[0]],
+            body: insightData.slice(1),
+            startY: yPosition,
+            margin: 10,
+            theme: 'grid',
+            headerStyles: { fillColor: [217, 119, 6], textColor: [255, 255, 255], fontStyle: 'bold' },
+          });
+          yPosition = doc.lastAutoTable.finalY + 6;
+        }
+      }
+
+      // 3. Data Quality Score
+      if (analysisData.dataQualityScore) {
+        if (yPosition > pageHeight - 40) {
+          doc.addPage();
+          yPosition = 15;
+        }
+
+        const dqs = analysisData.dataQualityScore;
+        doc.setFontSize(12);
+        doc.setTextColor(6, 182, 212);
+        doc.text('📊 Data Quality Score', 10, yPosition);
+        yPosition += 7;
+
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Overall Score: ${dqs.overallScore.toFixed(1)}/100`, 10, yPosition);
+        yPosition += 5;
+        doc.text(`Completeness: ${dqs.completeness.toFixed(1)}% | Consistency: ${dqs.consistency.toFixed(1)}% | Accuracy: ${dqs.accuracy.toFixed(1)}%`, 10, yPosition);
+        yPosition += 5;
+        doc.text(`Issues Found: ${dqs.issuesFound}`, 10, yPosition);
+        yPosition += 8;
+      }
+
+      // 4. Query Recommendations
+      if (analysisData.queryRecommendations && Array.isArray(analysisData.queryRecommendations)) {
+        if (yPosition > pageHeight - 60) {
+          doc.addPage();
+          yPosition = 15;
+        }
+
+        doc.setFontSize(12);
+        doc.setTextColor(34, 197, 94);
+        doc.text('💡 Query Recommendations', 10, yPosition);
+        yPosition += 7;
+
+        analysisData.queryRecommendations.slice(0, 5).forEach((rec, idx) => {
+          if (yPosition > pageHeight - 20) {
+            doc.addPage();
+            yPosition = 15;
+          }
+
+          doc.setFontSize(10);
+          doc.setTextColor(0, 0, 0);
+          doc.text(`${idx + 1}. ${rec.question}`, 15, yPosition);
+          yPosition += 6;
+        });
+        yPosition += 4;
+      }
+
+      // 5. Comparative Benchmarking
+      if (analysisData.comparativeBenchmarking) {
+        if (yPosition > pageHeight - 60) {
+          doc.addPage();
+          yPosition = 15;
+        }
+
+        const bench = analysisData.comparativeBenchmarking;
+        doc.setFontSize(12);
+        doc.setTextColor(239, 68, 68);
+        doc.text('📈 Comparative Benchmarking', 10, yPosition);
+        yPosition += 7;
+
+        const benchData = [
+          ['Tier', 'Count', 'Avg Value', '% of Total'],
+          ...Object.entries(bench.tiers).map(([tier, data]) => [
+            tier,
+            String(data.count),
+            String(Math.round(data.avgValue * 100) / 100),
+            `${(data.percentage * 100).toFixed(1)}%`
+          ])
+        ];
+
+        if (typeof doc.autoTable === 'function') {
+          doc.autoTable({
+            head: [benchData[0]],
+            body: benchData.slice(1),
+            startY: yPosition,
+            margin: 10,
+            theme: 'grid',
+            headerStyles: { fillColor: [239, 68, 68], textColor: [255, 255, 255], fontStyle: 'bold' },
+          });
+          yPosition = doc.lastAutoTable.finalY + 6;
+        }
+      }
+    }
+
     // Data Preview Section
     if (data && data.length > 0) {
       if (yPosition > pageHeight - 60) {
@@ -412,6 +584,127 @@ export const exportToExcel = async (fileName, data, columns, chartImage = null, 
           analysisSheet.addRow({ metric: 'Outliers Detected', value: analysis.outlierCount });
         }
       }
+    }
+
+    // ===== PREMIUM AI FEATURES SHEETS =====
+    
+    // 1. Predictive Forecast Sheet
+    if (analysisData && analysisData.predictiveForecast) {
+      const forecast = analysisData.predictiveForecast;
+      const forecastSheet = workbook.addWorksheet('Predictive Forecast');
+      forecastSheet.columns = [
+        { header: 'Period', key: 'period', width: 12 },
+        { header: 'Predicted Value', key: 'value', width: 15 },
+        { header: 'Confidence %', key: 'confidence', width: 15 },
+      ];
+
+      const headerRow = forecastSheet.getRow(1);
+      headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF6366F1' } };
+
+      forecast.forecast.forEach((f, idx) => {
+        forecastSheet.addRow({
+          period: `Period ${idx + 1}`,
+          value: Math.round(f.value * 100) / 100,
+          confidence: `${(f.confidence * 100).toFixed(0)}%`,
+        });
+      });
+
+      // Add trend info
+      forecastSheet.addRow({ period: '', value: '', confidence: '' });
+      forecastSheet.addRow({ period: 'Trend', value: forecast.trend, confidence: '' });
+      forecastSheet.addRow({ period: 'Model Accuracy', value: `${(forecast.modelAccuracy * 100).toFixed(1)}%`, confidence: '' });
+    }
+
+    // 2. Prioritized Insights Sheet
+    if (analysisData && analysisData.prioritizedInsights && Array.isArray(analysisData.prioritizedInsights)) {
+      const insightsSheet = workbook.addWorksheet('Prioritized Insights');
+      insightsSheet.columns = [
+        { header: 'Priority', key: 'priority', width: 15 },
+        { header: 'Score', key: 'score', width: 10 },
+        { header: 'Insight', key: 'text', width: 50 },
+      ];
+
+      const headerRow = insightsSheet.getRow(1);
+      headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD97706' } };
+
+      analysisData.prioritizedInsights.slice(0, 20).forEach((insight) => {
+        insightsSheet.addRow({
+          priority: insight.priority,
+          score: insight.score,
+          text: insight.text,
+        });
+        insightsSheet.lastRow.alignment = { wrapText: true };
+      });
+    }
+
+    // 3. Data Quality Score Sheet
+    if (analysisData && analysisData.dataQualityScore) {
+      const dqs = analysisData.dataQualityScore;
+      const qualitySheet = workbook.addWorksheet('Data Quality');
+      qualitySheet.columns = [
+        { header: 'Metric', key: 'metric', width: 25 },
+        { header: 'Value', key: 'value', width: 20 },
+      ];
+
+      const headerRow = qualitySheet.getRow(1);
+      headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF06B6D4' } };
+
+      qualitySheet.addRow({ metric: 'Overall Score', value: `${dqs.overallScore.toFixed(1)}/100` });
+      qualitySheet.addRow({ metric: 'Completeness', value: `${dqs.completeness.toFixed(1)}%` });
+      qualitySheet.addRow({ metric: 'Consistency', value: `${dqs.consistency.toFixed(1)}%` });
+      qualitySheet.addRow({ metric: 'Accuracy', value: `${dqs.accuracy.toFixed(1)}%` });
+      qualitySheet.addRow({ metric: 'Issues Found', value: dqs.issuesFound });
+    }
+
+    // 4. Query Recommendations Sheet
+    if (analysisData && analysisData.queryRecommendations && Array.isArray(analysisData.queryRecommendations)) {
+      const recSheet = workbook.addWorksheet('Query Recommendations');
+      recSheet.columns = [
+        { header: 'Rank', key: 'rank', width: 8 },
+        { header: 'Question', key: 'question', width: 50 },
+        { header: 'Difficulty', key: 'difficulty', width: 12 },
+      ];
+
+      const headerRow = recSheet.getRow(1);
+      headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF22C55E' } };
+
+      analysisData.queryRecommendations.slice(0, 10).forEach((rec, idx) => {
+        recSheet.addRow({
+          rank: idx + 1,
+          question: rec.question,
+          difficulty: rec.difficulty,
+        });
+        recSheet.lastRow.alignment = { wrapText: true };
+      });
+    }
+
+    // 5. Comparative Benchmarking Sheet
+    if (analysisData && analysisData.comparativeBenchmarking) {
+      const bench = analysisData.comparativeBenchmarking;
+      const benchSheet = workbook.addWorksheet('Benchmarking');
+      benchSheet.columns = [
+        { header: 'Tier', key: 'tier', width: 20 },
+        { header: 'Count', key: 'count', width: 10 },
+        { header: 'Avg Value', key: 'avgValue', width: 15 },
+        { header: '% of Total', key: 'percentage', width: 12 },
+      ];
+
+      const headerRow = benchSheet.getRow(1);
+      headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEF4444' } };
+
+      Object.entries(bench.tiers).forEach(([tier, data]) => {
+        benchSheet.addRow({
+          tier: tier,
+          count: data.count,
+          avgValue: Math.round(data.avgValue * 100) / 100,
+          percentage: `${(data.percentage * 100).toFixed(1)}%`,
+        });
+      });
     }
 
     // Data Sheet

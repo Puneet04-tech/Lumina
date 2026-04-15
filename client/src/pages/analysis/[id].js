@@ -1175,20 +1175,42 @@ export default function AnalysisPage() {
           {/* Data Preview - Toggle between Chart and Table */}
           <div className="mb-8 animate-slideInUp" style={{animationDelay: '0.7s'}}>
             <div className="bg-gradient-to-br from-indigo-900/40 to-slate-900/40 rounded-xl p-6 border border-indigo-700/30 backdrop-blur-sm">
-              <div className="flex justify-between items-center mb-6">
+              <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
                 <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
-                  Data Preview
+                  Data Preview & Export
                 </h2>
-                <button
-                  onClick={() => setTableView(!tableView)}
-                  className={`px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:scale-105 ${
-                    tableView 
-                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white hover:shadow-lg hover:shadow-purple-500/50'
-                      : 'bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600 text-slate-200 hover:shadow-lg hover:shadow-slate-500/50'
-                  }`}
-                >
-                  {tableView ? '📊 Switch to Visualization' : '📋 Switch to Table'}
-                </button>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Export Button */}
+                  {file && file.data && (
+                    <ExportButton 
+                      fileName={file.name} 
+                      data={file.data}
+                      columns={file.columns}
+                      analysisData={{
+                        stats: analysisResults?.stats,
+                        insights: analysisResults?.insights,
+                        analysis: analysisResults?.analysis,
+                        predictiveForecast: analysisResults?.predictiveForecast,
+                        prioritizedInsights: analysisResults?.prioritizedInsights,
+                        dataQualityScore: analysisResults?.dataQualityScore,
+                        queryRecommendations: analysisResults?.queryRecommendations,
+                        comparativeBenchmarking: analysisResults?.comparativeBenchmarking
+                      }}
+                    />
+                  )}
+                  
+                  {/* View Toggle Button */}
+                  <button
+                    onClick={() => setTableView(!tableView)}
+                    className={`px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:scale-105 ${
+                      tableView 
+                        ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white hover:shadow-lg hover:shadow-purple-500/50'
+                        : 'bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600 text-slate-200 hover:shadow-lg hover:shadow-slate-500/50'
+                    }`}
+                  >
+                    {tableView ? '📊 Switch to Visualization' : '📋 Switch to Table'}
+                  </button>
+                </div>
               </div>
 
               {/* Table View */}
