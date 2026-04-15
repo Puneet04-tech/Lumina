@@ -67,132 +67,176 @@ const calculateStats = (data, key) => {
 const analyzeQueryIntent = (query, columns, numericColumns, textColumns) => {
   const lowerQuery = query.toLowerCase();
   
-  // Extract keywords to understand the request
-  const queries = {
-    // Aggregation keywords
-    aggregation: {
-      sum: lowerQuery.includes('total') || lowerQuery.includes('sum'),
-      average: lowerQuery.includes('average') || lowerQuery.includes('avg') || lowerQuery.includes('mean'),
-      count: lowerQuery.includes('count') || lowerQuery.includes('how many'),
-      groupby: lowerQuery.includes('by ') || lowerQuery.includes('per ') || lowerQuery.includes('breakdown'),
-      distinct: lowerQuery.includes('unique') || lowerQuery.includes('distinct')
-    },
-    // Ranking keywords
-    ranking: {
-      top: lowerQuery.includes('top ') || lowerQuery.includes('highest ') || lowerQuery.includes('best '),
-      bottom: lowerQuery.includes('bottom ') || lowerQuery.includes('lowest ') || lowerQuery.includes('worst '),
-      sorted: lowerQuery.includes('sorted') || lowerQuery.includes('order by')
-    },
-    // Filtering keywords
-    filtering: {
-      specific: lowerQuery.includes('where') || lowerQuery.includes('filter') || lowerQuery.includes('show'),
-      comparison: lowerQuery.includes('>', '<', '=', 'greater', 'less', 'equal')
-    },
-    // Analysis keywords
-    analysis: {
-      trend: lowerQuery.includes('trend') || lowerQuery.includes('growth') || lowerQuery.includes('increase'),
-      correlation: lowerQuery.includes('correlation') || lowerQuery.includes('relationship'),
-      anomaly: lowerQuery.includes('anomaly') || lowerQuery.includes('outlier') || lowerQuery.includes('unusual'),
-      comparison: lowerQuery.includes('compare') || lowerQuery.includes('vs') || lowerQuery.includes('versus')
-    }
+  console.log(`\n🔍 QUERY INTENT ANALYZER:`);
+  console.log(`   Query: "${query}"`);
+  console.log(`   Available numeric columns: ${numericColumns.join(', ')}`);
+  console.log(`   Available text columns: ${textColumns.join(', ')}`);
+
+  // Synonym mappings for metrics (expanded)
+  const metricSynonyms = {
+    'price': ['unit_price', 'price', 'unit price', 'product_price', 'cost', 'value'],
+    'revenue': ['revenue', 'sales_revenue', 'sales revenue', 'sales', 'total_revenue', 'income'],
+    'cost': ['cost', 'cost_per', 'expense', 'expenses'],
+    'profit': ['profit', 'margin', 'net_profit', 'earnings'],
+    'quantity': ['quantity', 'qty', 'units', 'units_sold', 'count', 'amount'],
+    'rating': ['rating', 'score', 'rank', 'performance_score'],
+    'rate': ['rate', 'conversion_rate', 'roi', 'ctr', 'impression_rate'],
+    'spend': ['spend', 'budget', 'investment', 'total_spend'],
+    'impressions': ['impressions', 'views', 'reach'],
+    'clicks': ['clicks', 'interactions', 'engagements']
   };
 
-  // Find relevant columns using fuzzy matching
-  const findRelevantColumns = (keywords, columnList) => {
-    return columnList.filter(col => {
-      const colLower = col.toLowerCase();
-      return keywords.some(kw => 
-        colLower.includes(kw) || 
-        kw.includes(colLower) ||
-        colLower.includes(kw.substring(0, 3))
-      );
-    });
+  // Synonym mappings for dimensions (expanded)
+  const dimensionSynonyms = {
+    'category': ['category', 'product_category', 'product category', 'type', 'product_type', 'product type'],
+    'channel': ['channel', 'marketing_channel', 'platform', 'source', 'traffic_source'],
+    'region': ['region', 'area', 'location', 'geography', 'country', 'state'],
+    'product': ['product', 'product_name', 'item', 'product_id'],
+    'segment': ['segment', 'segment_name', 'group', 'bucket'],
+    'date': ['date', 'month', 'year', 'day', 'period', 'time'],
+    'customer': ['customer', 'customer_type', 'client', 'user', 'account'],
+    'campaign': ['campaign', 'campaign_name', 'campaign_id']
   };
 
-  // Extract potential metric keywords from query
+  // Extract keywords from query
   const potentialMetrics = [];
-  const metricKeywords = ['revenue', 'sales', 'spend', 'cost', 'price', 'amount', 'value', 'count', 'quantity', 'performance', 'rating', 'score', 'total', 'profit', 'margin', 'rate'];
-  
-  metricKeywords.forEach(metric => {
-    if (lowerQuery.includes(metric)) {
-      potentialMetrics.push(metric);
+  const potentialDimensions = [];
+
+  // Check metric keywords in query
+  Object.entries(metricSynonyms).forEach(([metricKey, synonyms]) => {
+    if (synonyms.some(syn => lowerQuery.includes(syn))) {
+      potentialMetrics.push(metricKey);
+      console.log(`   ✓ Detected metric keyword: "${metricKey}" (synonyms: ${synonyms.join(', ')})`);
     }
   });
 
-  // Extract potential dimension keywords from query
-  const potentialDimensions = [];
-  const dimensionKeywords = ['channel', 'category', 'region', 'product', 'segment', 'type', 'source', 'platform', 'campaign', 'date', 'month', 'year', 'customer', 'client', 'group'];
-  
-  dimensionKeywords.forEach(dim => {
-    if (lowerQuery.includes(dim)) {
-      potentialDimensions.push(dim);
+  // Check dimension keywords in query
+  Object.entries(dimensionSynonyms).forEach(([dimensionKey, synonyms]) => {
+    if (synonyms.some(syn => lowerQuery.includes(syn))) {
+      potentialDimensions.push(dimensionKey);
+      console.log(`   ✓ Detected dimension keyword: "${dimensionKey}" (synonyms: ${synonyms.join(', ')})`);
     }
   });
+
+  // Better column matching function
+  const findColumnForKeyword = (keyword, columnList, type = 'metric') => {
+    const synonymList = type === 'metric' ? metricSynonyms[keyword] : dimensionSynonyms[keyword];
+    
+    if (!synonymList) return null;
+
+    // Exact match first
+    for (const synonym of synonymList) {
+      const exactMatch = columnList.find(col => col.toLowerCase() === synonym.toLowerCase());
+      if (exactMatch) {
+        console.log(`     ✓ Exact match found: "${keyword}" → "${exactMatch}"`);
+        return exactMatch;
+      }
+    }
+
+    // Partial match
+    for (const synonym of synonymList) {
+      const partialMatch = columnList.find(col => 
+        col.toLowerCase().includes(synonym.toLowerCase().replace(/_/g, '')) ||
+        synonym.toLowerCase().includes(col.toLowerCase())
+      );
+      if (partialMatch) {
+        console.log(`     ✓ Partial match found: "${keyword}" → "${partialMatch}"`);
+        return partialMatch;
+      }
+    }
+
+    return null;
+  };
+
+  // Find best metric column
+  let metricColumn = null;
+
+  // Try each detected metric keyword
+  for (const metric of potentialMetrics) {
+    const found = findColumnForKeyword(metric, numericColumns, 'metric');
+    if (found) {
+      metricColumn = found;
+      break;
+    }
+  }
+
+  // If not found by keyword, try generic metric keywords against all numeric columns
+  if (!metricColumn) {
+    const genericMetrics = ['total', 'revenue', 'sales', 'cost', 'price', 'amount', 'value'];
+    for (const genericMetric of genericMetrics) {
+      if (lowerQuery.includes(genericMetric)) {
+        const found = findColumnForKeyword(genericMetric, numericColumns, 'metric');
+        if (found) {
+          metricColumn = found;
+          break;
+        }
+      }
+    }
+  }
+
+  // Fallback to first numeric column
+  if (!metricColumn && numericColumns.length > 0) {
+    metricColumn = numericColumns[0];
+    console.log(`   ⚠️ No metric matched, using first numeric column: "${metricColumn}"`);
+  }
+
+  // Find best dimension column
+  let dimensionColumn = null;
+
+  // Try each detected dimension keyword
+  for (const dimension of potentialDimensions) {
+    const found = findColumnForKeyword(dimension, textColumns, 'dimension');
+    if (found) {
+      dimensionColumn = found;
+      break;
+    }
+  }
+
+  // If not found by keyword, try generic dimension keywords against all text columns
+  if (!dimensionColumn) {
+    const genericDimensions = ['category', 'channel', 'type', 'segment', 'region'];
+    for (const genericDimension of genericDimensions) {
+      if (lowerQuery.includes(genericDimension)) {
+        const found = findColumnForKeyword(genericDimension, textColumns, 'dimension');
+        if (found) {
+          dimensionColumn = found;
+          break;
+        }
+      }
+    }
+  }
+
+  // Fallback to first text column
+  if (!dimensionColumn && textColumns.length > 0) {
+    dimensionColumn = textColumns[0];
+    console.log(`   ⚠️ No dimension matched, using first text column: "${dimensionColumn}"`);
+  }
+
+  console.log(`\n   📊 FINAL SELECTION:`);
+  console.log(`   Metric: "${metricColumn}"`);
+  console.log(`   Dimension: "${dimensionColumn}"`);
 
   // Extract numeric range from query (e.g., "top 5", "show 10")
   const numberMatch = query.match(/top\s+(\d+)|show\s+(\d+)|first\s+(\d+)|(\d+)\s+top/i);
   const limitNumber = numberMatch ? parseInt(numberMatch[1] || numberMatch[2] || numberMatch[3] || numberMatch[4]) : 10;
 
-  // Find best metric column
-  let metricColumn = null;
-  
-  // First try to find column matching extracted metrics
-  if (potentialMetrics.length > 0) {
-    metricColumn = findRelevantColumns(potentialMetrics, numericColumns)[0];
-  }
-  
-  // If not found, find column matching any numeric keyword
-  if (!metricColumn) {
-    const numericKeywords = ['amount', 'sum', 'total', 'value', 'price', 'revenue', 'count', 'score', 'rating'];
-    metricColumn = findRelevantColumns(numericKeywords, numericColumns)[0];
-  }
-  
-  // Fallback to first numeric column
-  if (!metricColumn && numericColumns.length > 0) {
-    metricColumn = numericColumns[0];
-  }
-
-  // Find best dimension column
-  let dimensionColumn = null;
-  
-  // First try to find column matching extracted dimensions
-  if (potentialDimensions.length > 0) {
-    dimensionColumn = findRelevantColumns(potentialDimensions, textColumns)[0];
-  }
-  
-  // If not found, find column matching any grouping keyword
-  if (!dimensionColumn) {
-    const groupKeywords = ['category', 'type', 'segment', 'region', 'source', 'channel', 'group'];
-    dimensionColumn = findRelevantColumns(groupKeywords, textColumns)[0];
-  }
-  
-  // Fallback to first text column
-  if (!dimensionColumn && textColumns.length > 0) {
-    dimensionColumn = textColumns[0];
-  }
-
   return {
-    queryType: lowerQuery.includes('group') || queries.aggregation.groupby ? 'aggregation' : 
-               queries.ranking.top ? 'ranking_top' :
-               queries.ranking.bottom ? 'ranking_bottom' :
-               queries.analysis.trend ? 'trend' :
+    queryType: lowerQuery.includes('group') || lowerQuery.includes('by ') || lowerQuery.includes('per ') ? 'aggregation' : 
+               lowerQuery.includes('top ') ? 'ranking_top' :
+               lowerQuery.includes('bottom ') ? 'ranking_bottom' :
+               lowerQuery.includes('trend') ? 'trend' :
                'analysis',
     
     metricColumn,
     dimensionColumn,
     
-    requiresGrouping: queries.aggregation.groupby || queries.analysis.comparison,
-    isAggregation: queries.aggregation.sum || queries.aggregation.average,
-    isRanking: queries.ranking.top || queries.ranking.bottom,
-    isTrend: queries.analysis.trend,
-    isComparison: queries.analysis.comparison,
+    requiresGrouping: true,
+    isAggregation: true,
     
     limitNumber,
     
     potentialMetrics,
-    potentialDimensions,
-    
-    keywords: { ...queries }
+    potentialDimensions
   };
 };
 
