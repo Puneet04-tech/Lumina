@@ -1235,8 +1235,6 @@ export default function AnalysisPage() {
               )}
             </div>
           </div>
-        </div>
-      </div>
 
       <SaveDashboardModal
         fileId={fileId}
