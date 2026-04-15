@@ -661,7 +661,7 @@ export default function AnalysisPage() {
                     {/* Export Button for Analysis */}
                     {file && file.data && analysisResults && (
                       <ExportButton 
-                        fileName={file.name} 
+                        fileName={file.name || file.originalName} 
                         data={file.data}
                         columns={file.columns}
                         onCaptureChart={captureChartAsImage}
@@ -669,11 +669,14 @@ export default function AnalysisPage() {
                           stats: analysisResults?.stats,
                           insights: analysisResults?.insights,
                           analysis: analysisResults?.analysis,
-                          predictiveForecast: analysisResults?.predictiveForecast,
-                          prioritizedInsights: analysisResults?.prioritizedInsights,
-                          dataQualityScore: analysisResults?.dataQualityScore,
-                          queryRecommendations: analysisResults?.queryRecommendations,
-                          comparativeBenchmarking: analysisResults?.comparativeBenchmarking,
+                          predictiveForecast: analysisResults?.predictiveAnalysis,
+                          prioritizedInsights: analysisResults?.insightPrioritization,
+                          dataQualityScore: analysisResults?.intelligentDataQuality,
+                          queryRecommendations: analysisResults?.suggestedQueries,
+                          comparativeBenchmarking: analysisResults?.benchmarking,
+                          topPerformers: analysisResults?.topPerformers,
+                          bottomPerformers: analysisResults?.bottomPerformers,
+                          trend: analysisResults?.trend,
                           yAxis: analysisResults?.yAxis
                         }}
                       />
