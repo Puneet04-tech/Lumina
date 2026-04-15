@@ -9,46 +9,63 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
     const pageHeight = doc.internal.pageSize.getHeight();
     let yPosition = 15;
 
+    // Helper function to safely add text
+    const addText = (text, x, y, fontSize = 10, color = [0, 0, 0]) => {
+      if (!text) return 0;
+      doc.setFontSize(fontSize);
+      doc.setTextColor(...color);
+      try {
+        // Remove emojis for safer text rendering
+        const cleanText = String(text).replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{27BF}]|[\u{1F600}-\u{1F64F}]/gu, '');
+        if (Array.isArray(cleanText)) {
+          doc.text(cleanText, x, y);
+          return cleanText.length * 4;
+        } else {
+          doc.text(cleanText || '', x, y);
+          return 5;
+        }
+      } catch (e) {
+        console.warn('Error adding text:', e);
+        return 0;
+      }
+    };
+
     // Title
-    doc.setFontSize(20);
-    doc.setTextColor(99, 102, 241);
-    doc.text('📊 Analysis Report', 10, yPosition);
+    addText('Analysis Report', 10, yPosition, 20, [99, 102, 241]);
     yPosition += 12;
 
     // File name
-    doc.setFontSize(14);
-    doc.setTextColor(0, 0, 0);
-    doc.text(fileName, 10, yPosition);
+    addText(fileName, 10, yPosition, 14, [0, 0, 0]);
     yPosition += 8;
 
     // Timestamp
-    doc.setFontSize(10);
-    doc.setTextColor(128, 128, 128);
-    doc.text(`Generated: ${new Date().toLocaleString()}`, 10, yPosition);
+    addText(`Generated: ${new Date().toLocaleString()}`, 10, yPosition, 10, [128, 128, 128]);
     yPosition += 12;
 
-    // Chart Image if provided - POSITIONED AT TOP
+    // Chart Image if provided
     if (chartImage) {
       try {
-        const chartHeight = 100;
+        if (yPosition > pageHeight - 120) {
+          doc.addPage();
+          yPosition = 15;
+        }
+        const chartHeight = 80;
         const chartWidth = pageWidth - 20;
         doc.addImage(chartImage, 'PNG', 10, yPosition, chartWidth, chartHeight);
-        yPosition += chartHeight + 12;
+        yPosition += chartHeight + 10;
       } catch (error) {
         console.error('Error adding chart to PDF:', error);
       }
     }
 
-    // Statistics Section if analysis data provided
-    if (analysisData && analysisData.stats) {
+    // Statistics Section
+    if (analysisData?.stats) {
       if (yPosition > pageHeight - 60) {
         doc.addPage();
         yPosition = 15;
       }
 
-      doc.setFontSize(14);
-      doc.setTextColor(99, 102, 241);
-      doc.text('📈 Statistics', 10, yPosition);
+      addText('Statistics', 10, yPosition, 14, [99, 102, 241]);
       yPosition += 8;
 
       const stats = analysisData.stats;
@@ -68,83 +85,70 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
           startY: yPosition,
           margin: 10,
           theme: 'grid',
-          headerStyles: {
-            fillColor: [99, 102, 241],
-            textColor: [255, 255, 255],
-            fontStyle: 'bold',
-          },
-          alternateRowStyles: {
-            fillColor: [245, 245, 250],
-          },
+          headerStyles: { fillColor: [99, 102, 241], textColor: [255, 255, 255], fontStyle: 'bold' },
+          alternateRowStyles: { fillColor: [245, 245, 250] },
         });
         yPosition = doc.lastAutoTable.finalY + 8;
       }
     }
 
     // Insights Section
-    if (analysisData && analysisData.insights) {
+    if (analysisData?.insights) {
       if (yPosition > pageHeight - 60) {
         doc.addPage();
         yPosition = 15;
       }
 
-      doc.setFontSize(14);
-      doc.setTextColor(99, 102, 241);
-      doc.text('💡 AI Insights', 10, yPosition);
+      addText('AI Insights', 10, yPosition, 14, [99, 102, 241]);
       yPosition += 8;
 
       const insights = analysisData.insights;
 
       // Key Insight
-      doc.setFontSize(11);
-      doc.setTextColor(79, 70, 229);
-      doc.text('Key Insight:', 10, yPosition);
+      addText('Key Insight:', 10, yPosition, 11, [79, 70, 229]);
       yPosition += 5;
+      const insightText = insights.insight || 'N/A';
+      const insightLines = doc.splitTextToSize(insightText, pageWidth - 20);
       doc.setFontSize(10);
       doc.setTextColor(0, 0, 0);
-      const insightLines = doc.splitTextToSize(insights.insight || 'N/A', pageWidth - 20);
       doc.text(insightLines, 10, yPosition);
-      yPosition += insightLines.length * 5 + 5;
+      yPosition += insightLines.length * 4 + 5;
 
       // Summary
       if (yPosition > pageHeight - 40) {
         doc.addPage();
         yPosition = 15;
       }
-      doc.setFontSize(11);
-      doc.setTextColor(79, 70, 229);
-      doc.text('Summary:', 10, yPosition);
+      addText('Summary:', 10, yPosition, 11, [79, 70, 229]);
       yPosition += 5;
+      const summaryText = insights.summary || 'N/A';
+      const summaryLines = doc.splitTextToSize(summaryText, pageWidth - 20);
       doc.setFontSize(10);
       doc.setTextColor(0, 0, 0);
-      const summaryLines = doc.splitTextToSize(insights.summary || 'N/A', pageWidth - 20);
       doc.text(summaryLines, 10, yPosition);
-      yPosition += summaryLines.length * 5 + 5;
+      yPosition += summaryLines.length * 4 + 5;
 
       // Recommendation
       if (yPosition > pageHeight - 40) {
         doc.addPage();
         yPosition = 15;
       }
-      doc.setFontSize(11);
-      doc.setTextColor(79, 70, 229);
-      doc.text('Recommendation:', 10, yPosition);
+      addText('Recommendation:', 10, yPosition, 11, [79, 70, 229]);
       yPosition += 5;
+      const recText = insights.recommendation || 'N/A';
+      const recLines = doc.splitTextToSize(recText, pageWidth - 20);
       doc.setFontSize(10);
       doc.setTextColor(0, 0, 0);
-      const recLines = doc.splitTextToSize(insights.recommendation || 'N/A', pageWidth - 20);
       doc.text(recLines, 10, yPosition);
-      yPosition += recLines.length * 5 + 5;
+      yPosition += recLines.length * 4 + 5;
 
       // Confidence
-      doc.setFontSize(10);
-      doc.setTextColor(128, 128, 128);
-      doc.text(`Confidence: ${Math.round(insights.confidence * 100)}%`, 10, yPosition);
+      addText(`Confidence: ${Math.round(insights.confidence * 100)}%`, 10, yPosition, 10, [128, 128, 128]);
       yPosition += 10;
     }
 
-    // Advanced Analysis Section (if available)
-    if (analysisData && analysisData.analysis) {
+    // Advanced Analysis
+    if (analysisData?.analysis) {
       const analysis = analysisData.analysis;
       
       if (yPosition > pageHeight - 80) {
@@ -152,16 +156,12 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
         yPosition = 15;
       }
 
-      doc.setFontSize(14);
-      doc.setTextColor(99, 102, 241);
-      doc.text('🔍 Advanced Analysis', 10, yPosition);
+      addText('Advanced Analysis', 10, yPosition, 14, [99, 102, 241]);
       yPosition += 10;
 
       // Top Performers
-      if (analysis.topPerformers && analysis.topPerformers.length > 0) {
-        doc.setFontSize(11);
-        doc.setTextColor(79, 70, 229);
-        doc.text('Top Performers:', 10, yPosition);
+      if (analysis.topPerformers?.length > 0) {
+        addText('Top Performers:', 10, yPosition, 11, [79, 70, 229]);
         yPosition += 6;
 
         const topData = [
@@ -187,27 +187,23 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
       }
 
       // Trend Analysis
-      if (analysis.trend && analysis.trend.direction) {
+      if (analysis.trend?.direction) {
         if (yPosition > pageHeight - 40) {
           doc.addPage();
           yPosition = 15;
         }
 
-        doc.setFontSize(11);
-        doc.setTextColor(79, 70, 229);
-        doc.text('📈 Trend Analysis:', 10, yPosition);
+        addText('Trend Analysis:', 10, yPosition, 11, [79, 70, 229]);
         yPosition += 5;
-        doc.setFontSize(10);
-        doc.setTextColor(0, 0, 0);
-        doc.text(`Direction: ${analysis.trend.direction.toUpperCase()} | Change: ${analysis.trend.percentChange}% | Strength: ${(analysis.trend.strength * 100).toFixed(0)}%`, 10, yPosition);
+        addText(`Direction: ${analysis.trend.direction.toUpperCase()} | Change: ${analysis.trend.percentChange}% | Strength: ${(analysis.trend.strength * 100).toFixed(0)}%`, 10, yPosition, 10, [0, 0, 0]);
         yPosition += 8;
       }
 
       // Data Quality
       if (analysis.dataQuality) {
         const dq = analysis.dataQuality;
-        const qualityInfo = `Completeness: ${dq.completeness}% | Uniqueness: ${dq.uniquenessScore}% | Total Rows: ${dq.totalRows}`;
-        const qualityLines = doc.splitTextToSize(`Data Quality: ${qualityInfo}`, pageWidth - 20);
+        const qualityInfo = `Completeness: ${dq.completeness}% | Uniqueness: ${dq.uniquenessScore}% | Rows: ${dq.totalRows}`;
+        const qualityLines = doc.splitTextToSize(qualityInfo, pageWidth - 20);
         doc.setFontSize(10);
         doc.setTextColor(0, 0, 0);
         doc.text(qualityLines, 10, yPosition);
@@ -216,35 +212,29 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
 
       // Outliers
       if (analysis.outlierCount > 0) {
-        doc.setFontSize(10);
-        doc.setTextColor(200, 80, 80);
-        doc.text(`⚠️ Outliers Detected: ${analysis.outlierCount}`, 10, yPosition);
+        addText(`Outliers Detected: ${analysis.outlierCount}`, 10, yPosition, 10, [200, 80, 80]);
         yPosition += 8;
       }
     }
 
-    // ===== PREMIUM AI FEATURES SECTION =====
-    if (analysisData && (analysisData.predictiveForecast || analysisData.prioritizedInsights || analysisData.dataQualityScore || analysisData.queryRecommendations || analysisData.comparativeBenchmarking)) {
+    // PREMIUM AI FEATURES
+    if (analysisData?.predictiveForecast || analysisData?.prioritizedInsights || analysisData?.dataQualityScore || analysisData?.queryRecommendations || analysisData?.comparativeBenchmarking) {
       if (yPosition > pageHeight - 60) {
         doc.addPage();
         yPosition = 15;
       }
 
-      doc.setFontSize(16);
-      doc.setTextColor(147, 51, 234);
-      doc.text('👑 PREMIUM AI FEATURES', 10, yPosition);
+      addText('PREMIUM AI FEATURES', 10, yPosition, 14, [147, 51, 234]);
       yPosition += 10;
 
-      // 1. Predictive Forecast
-      if (analysisData.predictiveForecast) {
+      // Predictive Forecast
+      if (analysisData?.predictiveForecast) {
         if (yPosition > pageHeight - 60) {
           doc.addPage();
           yPosition = 15;
         }
 
-        doc.setFontSize(12);
-        doc.setTextColor(99, 102, 241);
-        doc.text('🔮 Predictive Forecast', 10, yPosition);
+        addText('Predictive Forecast', 10, yPosition, 12, [99, 102, 241]);
         yPosition += 7;
 
         const forecast = analysisData.predictiveForecast;
@@ -269,22 +259,18 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
           yPosition = doc.lastAutoTable.finalY + 6;
         }
 
-        doc.setFontSize(9);
-        doc.setTextColor(128, 128, 128);
-        doc.text(`Trend: ${forecast.trend} | Model Accuracy: ${(forecast.modelAccuracy * 100).toFixed(1)}%`, 10, yPosition);
+        addText(`Trend: ${forecast.trend} | Model Accuracy: ${(forecast.modelAccuracy * 100).toFixed(1)}%`, 10, yPosition, 9, [128, 128, 128]);
         yPosition += 8;
       }
 
-      // 2. Prioritized Insights
-      if (analysisData.prioritizedInsights && Array.isArray(analysisData.prioritizedInsights)) {
+      // Prioritized Insights
+      if (analysisData?.prioritizedInsights?.length > 0) {
         if (yPosition > pageHeight - 60) {
           doc.addPage();
           yPosition = 15;
         }
 
-        doc.setFontSize(12);
-        doc.setTextColor(217, 119, 6);
-        doc.text('🎯 Prioritized Insights', 10, yPosition);
+        addText('Prioritized Insights', 10, yPosition, 12, [217, 119, 6]);
         yPosition += 7;
 
         const insightData = [
@@ -310,38 +296,32 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
       }
 
       // 3. Data Quality Score
-      if (analysisData.dataQualityScore) {
+      if (analysisData?.dataQualityScore) {
         if (yPosition > pageHeight - 40) {
           doc.addPage();
           yPosition = 15;
         }
 
         const dqs = analysisData.dataQualityScore;
-        doc.setFontSize(12);
-        doc.setTextColor(6, 182, 212);
-        doc.text('📊 Data Quality Score', 10, yPosition);
+        addText('Data Quality Score', 10, yPosition, 12, [6, 182, 212]);
         yPosition += 7;
 
-        doc.setFontSize(10);
-        doc.setTextColor(0, 0, 0);
-        doc.text(`Overall Score: ${dqs.overallScore.toFixed(1)}/100`, 10, yPosition);
+        addText(`Overall Score: ${dqs.overallScore.toFixed(1)}/100`, 10, yPosition, 10, [0, 0, 0]);
         yPosition += 5;
-        doc.text(`Completeness: ${dqs.completeness.toFixed(1)}% | Consistency: ${dqs.consistency.toFixed(1)}% | Accuracy: ${dqs.accuracy.toFixed(1)}%`, 10, yPosition);
+        addText(`Completeness: ${dqs.completeness.toFixed(1)}% | Consistency: ${dqs.consistency.toFixed(1)}% | Accuracy: ${dqs.accuracy.toFixed(1)}%`, 10, yPosition, 10, [0, 0, 0]);
         yPosition += 5;
-        doc.text(`Issues Found: ${dqs.issuesFound}`, 10, yPosition);
+        addText(`Issues Found: ${dqs.issuesFound}`, 10, yPosition, 10, [0, 0, 0]);
         yPosition += 8;
       }
 
       // 4. Query Recommendations
-      if (analysisData.queryRecommendations && Array.isArray(analysisData.queryRecommendations)) {
+      if (analysisData?.queryRecommendations?.length > 0) {
         if (yPosition > pageHeight - 60) {
           doc.addPage();
           yPosition = 15;
         }
 
-        doc.setFontSize(12);
-        doc.setTextColor(34, 197, 94);
-        doc.text('💡 Query Recommendations', 10, yPosition);
+        addText('Query Recommendations', 10, yPosition, 12, [34, 197, 94]);
         yPosition += 7;
 
         analysisData.queryRecommendations.slice(0, 5).forEach((rec, idx) => {
@@ -350,25 +330,21 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
             yPosition = 15;
           }
 
-          doc.setFontSize(10);
-          doc.setTextColor(0, 0, 0);
-          doc.text(`${idx + 1}. ${rec.question}`, 15, yPosition);
+          addText(`${idx + 1}. ${rec.question}`, 15, yPosition, 10, [0, 0, 0]);
           yPosition += 6;
         });
         yPosition += 4;
       }
 
       // 5. Comparative Benchmarking
-      if (analysisData.comparativeBenchmarking) {
+      if (analysisData?.comparativeBenchmarking) {
         if (yPosition > pageHeight - 60) {
           doc.addPage();
           yPosition = 15;
         }
 
         const bench = analysisData.comparativeBenchmarking;
-        doc.setFontSize(12);
-        doc.setTextColor(239, 68, 68);
-        doc.text('📈 Comparative Benchmarking', 10, yPosition);
+        addText('Comparative Benchmarking', 10, yPosition, 12, [239, 68, 68]);
         yPosition += 7;
 
         const benchData = [
@@ -396,15 +372,13 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
     }
 
     // Data Preview Section
-    if (data && data.length > 0) {
+    if (data?.length > 0) {
       if (yPosition > pageHeight - 60) {
         doc.addPage();
         yPosition = 15;
       }
 
-      doc.setFontSize(14);
-      doc.setTextColor(99, 102, 241);
-      doc.text('📋 Data Preview (First 20 rows)', 10, yPosition);
+      addText('Data Preview (First 20 rows)', 10, yPosition, 14, [99, 102, 241]);
       yPosition += 8;
 
       const previewData = data.slice(0, 20).map((row) =>
