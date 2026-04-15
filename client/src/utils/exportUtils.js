@@ -68,7 +68,7 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
       addText('Statistics', 10, yPosition, 14, [99, 102, 241]);
       yPosition += 8;
 
-      const stats = analysisData.stats;
+      const stats = analysisData.stats || {};
       const statsData = [
         ['Metric', 'Value'],
         ['Count', String(stats.count !== undefined ? stats.count : 0)],
@@ -102,7 +102,7 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
       addText('AI Insights', 10, yPosition, 14, [99, 102, 241]);
       yPosition += 8;
 
-      const insights = analysisData.insights;
+      const insights = analysisData.insights || {};
 
       // Key Insight
       if (insights && typeof insights === 'object') {
@@ -160,7 +160,7 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
 
     // Advanced Analysis
     if (analysisData?.analysis) {
-      const analysis = analysisData.analysis;
+      const analysis = analysisData.analysis || {};
       
       if (yPosition > pageHeight - 80) {
         doc.addPage();
@@ -217,8 +217,11 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
 
       // Data Quality
       if (analysis.dataQuality) {
-        const dq = analysis.dataQuality;
-        const qualityInfo = `Completeness: ${dq.completeness}% | Uniqueness: ${dq.uniquenessScore}% | Rows: ${dq.totalRows}`;
+        const dq = analysis.dataQuality || {};
+        const completeness = dq.completeness !== undefined ? dq.completeness : 'N/A';
+        const uniqueness = dq.uniquenessScore !== undefined ? dq.uniquenessScore : 'N/A';
+        const rows = dq.totalRows !== undefined ? dq.totalRows : 'N/A';
+        const qualityInfo = `Completeness: ${completeness}% | Uniqueness: ${uniqueness}% | Rows: ${rows}`;
         const qualityLines = doc.splitTextToSize(qualityInfo, pageWidth - 20);
         doc.setFontSize(10);
         doc.setTextColor(0, 0, 0);
@@ -227,7 +230,7 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
       }
 
       // Outliers
-      if (analysis.outlierCount > 0) {
+      if (analysis.outlierCount !== undefined && analysis.outlierCount > 0) {
         addText(`Outliers Detected: ${analysis.outlierCount}`, 10, yPosition, 10, [200, 80, 80]);
         yPosition += 8;
       }
@@ -253,7 +256,7 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
         addText('Predictive Forecast', 10, yPosition, 12, [99, 102, 241]);
         yPosition += 7;
 
-        const forecast = analysisData.predictiveForecast;
+        const forecast = analysisData.predictiveForecast || {};
         if (forecast?.forecast && Array.isArray(forecast.forecast) && forecast.forecast.length > 0) {
           const forecastData = [
             ['Period', 'Predicted Value', 'Confidence'],
@@ -325,7 +328,7 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
           yPosition = 15;
         }
 
-        const dqs = analysisData.dataQualityScore;
+        const dqs = analysisData.dataQualityScore || {};
         addText('Data Quality Score', 10, yPosition, 12, [6, 182, 212]);
         yPosition += 7;
 
@@ -373,7 +376,7 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
           yPosition = 15;
         }
 
-        const bench = analysisData.comparativeBenchmarking;
+        const bench = analysisData.comparativeBenchmarking || {};
         addText('Comparative Benchmarking', 10, yPosition, 12, [239, 68, 68]);
         yPosition += 7;
 
@@ -482,7 +485,7 @@ export const exportToExcel = async (fileName, data, columns, chartImage = null, 
     // Statistics Sheet
     if (analysisData && analysisData.stats) {
       const statsSheet = workbook.addWorksheet('Statistics');
-      const stats = analysisData.stats;
+      const stats = analysisData.stats || {};
 
       statsSheet.columns = [{ header: 'Metric', key: 'metric', width: 20 }, { header: 'Value', key: 'value', width: 30 }];
       
@@ -491,11 +494,11 @@ export const exportToExcel = async (fileName, data, columns, chartImage = null, 
       headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
       headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF6366F1' } };
 
-      statsSheet.addRow({ metric: 'Count', value: stats.count });
-      statsSheet.addRow({ metric: 'Sum', value: Math.round(stats.sum * 100) / 100 });
-      statsSheet.addRow({ metric: 'Average', value: Math.round(stats.average * 100) / 100 });
-      statsSheet.addRow({ metric: 'Maximum', value: Math.round(stats.max * 100) / 100 });
-      statsSheet.addRow({ metric: 'Minimum', value: Math.round(stats.min * 100) / 100 });
+      statsSheet.addRow({ metric: 'Count', value: stats.count !== undefined ? stats.count : 'N/A' });
+      statsSheet.addRow({ metric: 'Sum', value: stats.sum !== undefined ? Math.round(stats.sum * 100) / 100 : 'N/A' });
+      statsSheet.addRow({ metric: 'Average', value: stats.average !== undefined ? Math.round(stats.average * 100) / 100 : 'N/A' });
+      statsSheet.addRow({ metric: 'Maximum', value: stats.max !== undefined ? Math.round(stats.max * 100) / 100 : 'N/A' });
+      statsSheet.addRow({ metric: 'Minimum', value: stats.min !== undefined ? Math.round(stats.min * 100) / 100 : 'N/A' });
     }
 
     // Chart Image Sheet
@@ -516,7 +519,7 @@ export const exportToExcel = async (fileName, data, columns, chartImage = null, 
 
     // Advanced Analysis Sheet
     if (analysisData && analysisData.analysis) {
-      const analysis = analysisData.analysis;
+      const analysis = analysisData.analysis || {};
 
       // Top Performers Sheet
       if (analysis.topPerformers && analysis.topPerformers.length > 0) {
@@ -534,8 +537,8 @@ export const exportToExcel = async (fileName, data, columns, chartImage = null, 
         analysis.topPerformers.forEach((p, idx) => {
           topSheet.addRow({
             rank: idx + 1,
-            name: p.name,
-            value: Math.round(p.value * 100) / 100,
+            name: p.name || 'N/A',
+            value: p.value !== undefined ? Math.round(p.value * 100) / 100 : 'N/A',
           });
         });
       }
@@ -556,8 +559,8 @@ export const exportToExcel = async (fileName, data, columns, chartImage = null, 
         analysis.bottomPerformers.forEach((p, idx) => {
           bottomSheet.addRow({
             rank: idx + 1,
-            name: p.name,
-            value: Math.round(p.value * 100) / 100,
+            name: p.name || 'N/A',
+            value: p.value !== undefined ? Math.round(p.value * 100) / 100 : 'N/A',
           });
         });
       }
@@ -575,18 +578,24 @@ export const exportToExcel = async (fileName, data, columns, chartImage = null, 
         headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF6366F1' } };
 
         if (analysis.trend) {
-          analysisSheet.addRow({ metric: 'Trend Direction', value: analysis.trend.direction });
-          analysisSheet.addRow({ metric: 'Percent Change', value: `${analysis.trend.percentChange}%` });
-          analysisSheet.addRow({ metric: 'Trend Strength', value: `${(analysis.trend.strength * 100).toFixed(0)}%` });
+          const trend = analysis.trend || {};
+          analysisSheet.addRow({ metric: 'Trend Direction', value: trend.direction || 'N/A' });
+          const percentChange = trend.percentChange !== undefined ? trend.percentChange : 'N/A';
+          analysisSheet.addRow({ metric: 'Percent Change', value: `${percentChange}%` });
+          const strength = trend.strength !== undefined ? (trend.strength * 100).toFixed(0) : 'N/A';
+          analysisSheet.addRow({ metric: 'Trend Strength', value: `${strength}%` });
         }
 
         if (analysis.dataQuality) {
-          analysisSheet.addRow({ metric: 'Data Completeness', value: `${analysis.dataQuality.completeness}%` });
-          analysisSheet.addRow({ metric: 'Uniqueness Score', value: `${analysis.dataQuality.uniquenessScore}%` });
-          analysisSheet.addRow({ metric: 'Total Rows', value: analysis.dataQuality.totalRows });
+          const dq = analysis.dataQuality || {};
+          const completeness = dq.completeness !== undefined ? dq.completeness : 'N/A';
+          analysisSheet.addRow({ metric: 'Data Completeness', value: `${completeness}%` });
+          const uniqueness = dq.uniquenessScore !== undefined ? dq.uniquenessScore : 'N/A';
+          analysisSheet.addRow({ metric: 'Uniqueness Score', value: `${uniqueness}%` });
+          analysisSheet.addRow({ metric: 'Total Rows', value: dq.totalRows || 'N/A' });
         }
 
-        if (analysis.outlierCount > 0) {
+        if (analysis.outlierCount !== undefined && analysis.outlierCount > 0) {
           analysisSheet.addRow({ metric: 'Outliers Detected', value: analysis.outlierCount });
         }
       }
