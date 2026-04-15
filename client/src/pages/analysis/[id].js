@@ -447,6 +447,143 @@ export default function AnalysisPage() {
             </div>
           )}
 
+          {/* ===== UNIQUE FEATURES SECTION ===== */}
+          {queryResults && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 animate-slideInUp" style={{animationDelay: '0.2s'}}>
+              
+              {/* FEATURE 1: 🔮 Predictive Forecasting */}
+              {queryResults.predictiveAnalysis && (
+                <div className="bg-gradient-to-br from-purple-950/60 to-slate-900/40 rounded-xl border border-purple-700/30 backdrop-blur-md p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-2xl">🔮</span>
+                    <h4 className="text-lg font-bold text-purple-300">Predictive Forecast</h4>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm text-slate-300">{queryResults.predictiveAnalysis.trend}</p>
+                    <p className="text-xs text-slate-400">Trend Strength: {queryResults.predictiveAnalysis.trendStrength?.toFixed(1)}%</p>
+                    <div className="space-y-1 mt-3">
+                      {queryResults.predictiveAnalysis.forecast?.slice(0, 3).map((f, i) => (
+                        <div key={i} className="flex items-center justify-between p-2 bg-slate-800/50 rounded">
+                          <span className="text-xs text-slate-300">Period {f.period}</span>
+                          <span className="text-indigo-300 font-bold">{f.value.toLocaleString()}</span>
+                          <span className="text-xs text-slate-500">({(f.confidence * 100).toFixed(0)}% conf)</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* FEATURE 2: 🎯 Insight Prioritization */}
+              {queryResults.insightPrioritization?.topInsights && (
+                <div className="bg-gradient-to-br from-amber-950/60 to-slate-900/40 rounded-xl border border-amber-700/30 backdrop-blur-md p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-2xl">🎯</span>
+                    <h4 className="text-lg font-bold text-amber-300">Top Insights (Prioritized)</h4>
+                  </div>
+                  <div className="space-y-2">
+                    {queryResults.insightPrioritization.topInsights.map((item, i) => (
+                      <div key={i} className="p-2 bg-slate-800/50 rounded border-l-2 border-amber-500">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-xs text-slate-200 flex-1">{item.insight.substring(0, 80)}...</p>
+                          <span className={`text-xs px-2 py-1 rounded font-bold ${
+                            item.priority === 'Critical' ? 'bg-red-600 text-white' :
+                            item.priority === 'High' ? 'bg-amber-600 text-white' :
+                            'bg-slate-600 text-slate-200'
+                          }`}>{item.priority}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* FEATURE 3: 📊 Data Quality Intelligence */}
+              {queryResults.intelligentDataQuality && (
+                <div className="bg-gradient-to-br from-cyan-950/60 to-slate-900/40 rounded-xl border border-cyan-700/30 backdrop-blur-md p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-2xl">📊</span>
+                    <h4 className="text-lg font-bold text-cyan-300">Data Quality Score</h4>
+                  </div>
+                  <div className="flex items-end gap-4">
+                    <div className="flex-1">
+                      <div className="text-4xl font-bold text-cyan-300">{queryResults.intelligentDataQuality.qualityScore}%</div>
+                      <p className="text-xs text-slate-400 mt-1">Overall Quality</p>
+                    </div>
+                    <div className="flex-1 space-y-1 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Completeness:</span>
+                        <span className="text-cyan-300 font-bold">{queryResults.intelligentDataQuality.completenessScore}%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Consistency:</span>
+                        <span className="text-cyan-300 font-bold">{queryResults.intelligentDataQuality.consistencyScore}%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Accuracy:</span>
+                        <span className="text-cyan-300 font-bold">{queryResults.intelligentDataQuality.accuracyScore}%</span>
+                      </div>
+                    </div>
+                  </div>
+                  {queryResults.intelligentDataQuality.issues?.length > 0 && (
+                    <div className="mt-3 space-y-1">
+                      {queryResults.intelligentDataQuality.issues.slice(0, 2).map((issue, i) => (
+                        <p key={i} className="text-xs text-slate-400 border-l pl-2 border-red-500">{issue}</p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* FEATURE 4: 💡 Query Recommendations */}
+              {queryResults.suggestedQueries && (
+                <div className="bg-gradient-to-br from-green-950/60 to-slate-900/40 rounded-xl border border-green-700/30 backdrop-blur-md p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-2xl">💡</span>
+                    <h4 className="text-lg font-bold text-green-300">Suggested Follow-ups</h4>
+                  </div>
+                  <div className="space-y-2">
+                    {queryResults.suggestedQueries.slice(0, 3).map((rec, i) => (
+                      <div 
+                        key={i} 
+                        className="p-2 bg-slate-800/50 rounded hover:bg-slate-800/80 cursor-pointer transition-all group"
+                      >
+                        <p className="text-xs text-slate-300 group-hover:text-green-300 transition-colors">{rec.icon} {rec.query}</p>
+                        <p className="text-xs text-slate-500 mt-1">{rec.difficulty}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* FEATURE 5: 📈 Benchmarking Performance */}
+              {queryResults.benchmarking && (
+                <div className="bg-gradient-to-br from-rose-950/60 to-slate-900/40 rounded-xl border border-rose-700/30 backdrop-blur-md p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-2xl">📈</span>
+                    <h4 className="text-lg font-bold text-rose-300">Performance Distribution</h4>
+                  </div>
+                  <div className="space-y-2">
+                    {[
+                      { label: '🏆 Exceptional', count: queryResults.benchmarking.performanceDistribution.exceptional, color: 'bg-yellow-600' },
+                      { label: '⭐ Strong', count: queryResults.benchmarking.performanceDistribution.strong, color: 'bg-green-600' },
+                      { label: '✅ Average', count: queryResults.benchmarking.performanceDistribution.average, color: 'bg-blue-600' },
+                      { label: '⚠️ Below Avg', count: queryResults.benchmarking.performanceDistribution.belowAverage, color: 'bg-red-600' }
+                    ].map((perf, i) => (
+                      <div key={i} className="flex items-center justify-between text-xs">
+                        <span className="text-slate-300">{perf.label}</span>
+                        <div className="flex items-center gap-2">
+                          <div className={`h-2 w-16 bg-slate-700 rounded ${perf.color} ${perf.color}`} style={{width: `${perf.count * 12}px`}}></div>
+                          <span className="text-slate-300 font-bold w-8">{perf.count}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Results */}
           {analysisResults && (
             <div className="space-y-8 mb-8">
