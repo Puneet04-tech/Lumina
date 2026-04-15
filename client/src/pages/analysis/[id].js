@@ -307,11 +307,27 @@ export default function AnalysisPage() {
           {queryResults && (
             <div className="mb-8 animate-slideInUp" style={{animationDelay: '0.15s'}}>
               <div className="bg-gradient-to-br from-indigo-950/60 to-slate-900/40 rounded-xl border border-indigo-700/30 backdrop-blur-md p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center">
-                    <span>📊</span>
+                <div className="flex items-center justify-between gap-2 mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center">
+                      <span>📊</span>
+                    </div>
+                    <h3 className="text-xl font-bold text-indigo-300">Query Results</h3>
                   </div>
-                  <h3 className="text-xl font-bold text-indigo-300">Query Results</h3>
+                  
+                  {/* Intelligence Source Badge */}
+                  {queryResults.source && (
+                    <div className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 ${
+                      queryResults.source.includes('Hybrid') 
+                        ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white' 
+                        : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'
+                    }`}>
+                      {queryResults.source.includes('Hybrid') ? '🤖' : '📊'} 
+                      <span>
+                        {queryResults.source.includes('Hybrid') ? 'Groq AI + Local' : 'Local Intelligence'}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 
                 {/* Universal Aggregation Display */}
@@ -406,6 +422,27 @@ export default function AnalysisPage() {
                     )}
                   </div>
                 )}
+
+                {/* Intelligence Engine Info */}
+                <div className="mt-4 pt-4 border-t border-slate-700/50">
+                  <div className="text-xs text-slate-400 flex items-center gap-2">
+                    {queryResults.source && queryResults.source.includes('Hybrid') ? (
+                      <>
+                        <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        <span>
+                          <strong className="text-green-400">Powered by Groq AI + Local Intelligence:</strong> Advanced analysis with statistical insights
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="inline-block w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                        <span>
+                          <strong className="text-blue-400">Powered by Local Intelligence:</strong> Statistical analysis engine
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           )}
