@@ -72,13 +72,13 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
       const statsData = [
         ['Metric', 'Value'],
         ['Count', String(stats.count !== undefined ? stats.count : 0)],
-        ['Sum', stats.sum !== undefined ? String(Math.round(stats.sum * 100) / 100) : 'N/A'],
-        ['Average', stats.average !== undefined ? String(Math.round(stats.average * 100) / 100) : 'N/A'],
-        ['Maximum', stats.max !== undefined ? String(Math.round(stats.max * 100) / 100) : 'N/A'],
-        ['Minimum', stats.min !== undefined ? String(Math.round(stats.min * 100) / 100) : 'N/A'],
+        ['Sum', String(stats.sum !== undefined ? Math.round(stats.sum * 100) / 100 : 'N/A')],
+        ['Average', String(stats.average !== undefined ? Math.round(stats.average * 100) / 100 : 'N/A')],
+        ['Maximum', String(stats.max !== undefined ? Math.round(stats.max * 100) / 100 : 'N/A')],
+        ['Minimum', String(stats.min !== undefined ? Math.round(stats.min * 100) / 100 : 'N/A')],
       ];
 
-      if (typeof doc.autoTable === 'function') {
+      if (statsData.slice(1).length > 0 && typeof doc.autoTable === 'function') {
         doc.autoTable({
           head: [statsData[0]],
           body: statsData.slice(1),
@@ -180,11 +180,11 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
           ...analysis.topPerformers.slice(0, 5).map((p, i) => [
             String(i + 1),
             String(p.name || 'N/A').substring(0, 30),
-            p.value !== undefined ? String(Math.round(p.value * 100) / 100) : 'N/A',
+            String(p.value !== undefined ? Math.round(p.value * 100) / 100 : 'N/A'),
           ]),
         ];
 
-        if (typeof doc.autoTable === 'function') {
+        if (topData.slice(1).length > 0 && typeof doc.autoTable === 'function') {
           doc.autoTable({
             head: [topData[0]],
             body: topData.slice(1),
@@ -262,12 +262,12 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
             ['Period', 'Predicted Value', 'Confidence'],
             ...forecast.forecast.map((f, i) => [
               `Period ${i + 1}`,
-              f.value !== undefined ? String(Math.round(f.value * 100) / 100) : 'N/A',
-              f.confidence !== undefined ? `${(f.confidence * 100).toFixed(0)}%` : 'N/A'
+              String(f.value !== undefined ? Math.round(f.value * 100) / 100 : 'N/A'),
+              String(f.confidence !== undefined ? `${(f.confidence * 100).toFixed(0)}%` : 'N/A')
             ])
           ];
 
-          if (typeof doc.autoTable === 'function') {
+          if (forecastData.slice(1).length > 0 && typeof doc.autoTable === 'function') {
             doc.autoTable({
               head: [forecastData[0]],
               body: forecastData.slice(1),
@@ -302,13 +302,13 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
         const insightData = [
           ['Priority', 'Score', 'Insight'],
           ...analysisData.prioritizedInsights.slice(0, 5).map(insight => [
-            insight.priority || 'N/A',
-            insight.score !== undefined ? String(Math.round(insight.score * 100) / 100) : 'N/A',
-            String(insight.text || 'N/A').substring(0, 40)
+            String(insight.priority || 'N/A'),
+            String(insight.score !== undefined ? Math.round(insight.score * 100) / 100 : 'N/A'),
+            String((insight.text || 'N/A')).substring(0, 40)
           ])
         ];
 
-        if (typeof doc.autoTable === 'function') {
+        if (insightData.slice(1).length > 0 && typeof doc.autoTable === 'function') {
           doc.autoTable({
             head: [insightData[0]],
             body: insightData.slice(1),
@@ -383,14 +383,14 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
         const benchData = [
           ['Tier', 'Count', 'Avg Value', '% of Total'],
           ...Object.entries(bench.tiers || {}).map(([tier, data]) => [
-            tier,
+            String(tier),
             String(data.count || 0),
-            data.avgValue !== undefined ? String(Math.round(data.avgValue * 100) / 100) : 'N/A',
-            data.percentage !== undefined ? `${(data.percentage * 100).toFixed(1)}%` : 'N/A'
+            String(data.avgValue !== undefined ? Math.round(data.avgValue * 100) / 100 : 'N/A'),
+            String(data.percentage !== undefined ? `${(data.percentage * 100).toFixed(1)}%` : 'N/A')
           ])
         ];
 
-        if (typeof doc.autoTable === 'function') {
+        if (benchData.slice(1).length > 0 && typeof doc.autoTable === 'function') {
           doc.autoTable({
             head: [benchData[0]],
             body: benchData.slice(1),
@@ -417,13 +417,13 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
       const previewData = data.slice(0, 20).map((row) =>
         columns.map((col) => {
           const val = row[col];
-          return val !== null && val !== undefined ? String(val).substring(0, 20) : '';
+          return String(val !== null && val !== undefined ? String(val).substring(0, 20) : '');
         })
       );
 
-      if (typeof doc.autoTable === 'function') {
+      if (previewData.length > 0 && typeof doc.autoTable === 'function') {
         doc.autoTable({
-          head: [columns.map((col) => col.substring(0, 15))],
+          head: [columns.map((col) => String(col).substring(0, 15))],
           body: previewData,
           startY: yPosition,
           margin: 10,
