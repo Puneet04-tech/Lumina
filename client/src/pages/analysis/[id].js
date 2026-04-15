@@ -659,11 +659,12 @@ export default function AnalysisPage() {
                       {chartDisplayType.charAt(0).toUpperCase() + chartDisplayType.slice(1)} Chart Analysis
                     </h2>
                     {/* Export Button for Analysis */}
-                    {file && file.data && (
+                    {file && file.data && analysisResults && (
                       <ExportButton 
                         fileName={file.name} 
                         data={file.data}
                         columns={file.columns}
+                        onCaptureChart={captureChartAsImage}
                         analysisData={{
                           stats: analysisResults?.stats,
                           insights: analysisResults?.insights,
@@ -672,7 +673,8 @@ export default function AnalysisPage() {
                           prioritizedInsights: analysisResults?.prioritizedInsights,
                           dataQualityScore: analysisResults?.dataQualityScore,
                           queryRecommendations: analysisResults?.queryRecommendations,
-                          comparativeBenchmarking: analysisResults?.comparativeBenchmarking
+                          comparativeBenchmarking: analysisResults?.comparativeBenchmarking,
+                          yAxis: analysisResults?.yAxis
                         }}
                       />
                     )}

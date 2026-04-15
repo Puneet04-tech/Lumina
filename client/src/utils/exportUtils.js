@@ -71,11 +71,11 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
       const stats = analysisData.stats;
       const statsData = [
         ['Metric', 'Value'],
-        ['Count', String(stats.count)],
-        ['Sum', String(Math.round(stats.sum * 100) / 100)],
-        ['Average', String(Math.round(stats.average * 100) / 100)],
-        ['Maximum', String(Math.round(stats.max * 100) / 100)],
-        ['Minimum', String(Math.round(stats.min * 100) / 100)],
+        ['Count', String(stats.count !== undefined ? stats.count : 0)],
+        ['Sum', stats.sum !== undefined ? String(Math.round(stats.sum * 100) / 100) : 'N/A'],
+        ['Average', stats.average !== undefined ? String(Math.round(stats.average * 100) / 100) : 'N/A'],
+        ['Maximum', stats.max !== undefined ? String(Math.round(stats.max * 100) / 100) : 'N/A'],
+        ['Minimum', stats.min !== undefined ? String(Math.round(stats.min * 100) / 100) : 'N/A'],
       ];
 
       if (typeof doc.autoTable === 'function') {
@@ -105,46 +105,57 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
       const insights = analysisData.insights;
 
       // Key Insight
-      addText('Key Insight:', 10, yPosition, 11, [79, 70, 229]);
-      yPosition += 5;
-      const insightText = insights.insight || 'N/A';
-      const insightLines = doc.splitTextToSize(insightText, pageWidth - 20);
-      doc.setFontSize(10);
-      doc.setTextColor(0, 0, 0);
-      doc.text(insightLines, 10, yPosition);
-      yPosition += insightLines.length * 4 + 5;
+      if (insights && typeof insights === 'object') {
+        const insightText = insights.insight || insights.text || 'N/A';
+        if (insightText && insightText !== 'N/A') {
+          addText('Key Insight:', 10, yPosition, 11, [79, 70, 229]);
+          yPosition += 5;
+          const insightLines = doc.splitTextToSize(String(insightText), pageWidth - 20);
+          doc.setFontSize(10);
+          doc.setTextColor(0, 0, 0);
+          doc.text(insightLines, 10, yPosition);
+          yPosition += insightLines.length * 4 + 5;
+        }
 
-      // Summary
-      if (yPosition > pageHeight - 40) {
-        doc.addPage();
-        yPosition = 15;
+        // Summary
+        if (yPosition > pageHeight - 40) {
+          doc.addPage();
+          yPosition = 15;
+        }
+        const summaryText = insights.summary || 'N/A';
+        if (summaryText && summaryText !== 'N/A') {
+          addText('Summary:', 10, yPosition, 11, [79, 70, 229]);
+          yPosition += 5;
+          const summaryLines = doc.splitTextToSize(String(summaryText), pageWidth - 20);
+          doc.setFontSize(10);
+          doc.setTextColor(0, 0, 0);
+          doc.text(summaryLines, 10, yPosition);
+          yPosition += summaryLines.length * 4 + 5;
+        }
+
+        // Recommendation
+        if (yPosition > pageHeight - 40) {
+          doc.addPage();
+          yPosition = 15;
+        }
+        const recText = insights.recommendation || 'N/A';
+        if (recText && recText !== 'N/A') {
+          addText('Recommendation:', 10, yPosition, 11, [79, 70, 229]);
+          yPosition += 5;
+          const recLines = doc.splitTextToSize(String(recText), pageWidth - 20);
+          doc.setFontSize(10);
+          doc.setTextColor(0, 0, 0);
+          doc.text(recLines, 10, yPosition);
+          yPosition += recLines.length * 4 + 5;
+        }
+
+        // Confidence
+        const confidence = insights.confidence;
+        if (confidence !== undefined && confidence !== null && !isNaN(confidence)) {
+          addText(`Confidence: ${Math.round(Number(confidence) * 100)}%`, 10, yPosition, 10, [128, 128, 128]);
+          yPosition += 10;
+        }
       }
-      addText('Summary:', 10, yPosition, 11, [79, 70, 229]);
-      yPosition += 5;
-      const summaryText = insights.summary || 'N/A';
-      const summaryLines = doc.splitTextToSize(summaryText, pageWidth - 20);
-      doc.setFontSize(10);
-      doc.setTextColor(0, 0, 0);
-      doc.text(summaryLines, 10, yPosition);
-      yPosition += summaryLines.length * 4 + 5;
-
-      // Recommendation
-      if (yPosition > pageHeight - 40) {
-        doc.addPage();
-        yPosition = 15;
-      }
-      addText('Recommendation:', 10, yPosition, 11, [79, 70, 229]);
-      yPosition += 5;
-      const recText = insights.recommendation || 'N/A';
-      const recLines = doc.splitTextToSize(recText, pageWidth - 20);
-      doc.setFontSize(10);
-      doc.setTextColor(0, 0, 0);
-      doc.text(recLines, 10, yPosition);
-      yPosition += recLines.length * 4 + 5;
-
-      // Confidence
-      addText(`Confidence: ${Math.round(insights.confidence * 100)}%`, 10, yPosition, 10, [128, 128, 128]);
-      yPosition += 10;
     }
 
     // Advanced Analysis
@@ -168,8 +179,8 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
           ['Rank', 'Name', 'Value'],
           ...analysis.topPerformers.slice(0, 5).map((p, i) => [
             String(i + 1),
-            String(p.name).substring(0, 30),
-            String(Math.round(p.value * 100) / 100),
+            String(p.name || 'N/A').substring(0, 30),
+            p.value !== undefined ? String(Math.round(p.value * 100) / 100) : 'N/A',
           ]),
         ];
 
@@ -195,7 +206,12 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
 
         addText('Trend Analysis:', 10, yPosition, 11, [79, 70, 229]);
         yPosition += 5;
-        addText(`Direction: ${analysis.trend.direction.toUpperCase()} | Change: ${analysis.trend.percentChange}% | Strength: ${(analysis.trend.strength * 100).toFixed(0)}%`, 10, yPosition, 10, [0, 0, 0]);
+        
+        const direction = analysis.trend.direction.toUpperCase();
+        const percentChange = analysis.trend.percentChange !== undefined ? analysis.trend.percentChange : 'N/A';
+        const strength = analysis.trend.strength !== undefined ? (analysis.trend.strength * 100).toFixed(0) : 'N/A';
+        
+        addText(`Direction: ${direction} | Change: ${percentChange}% | Strength: ${strength}%`, 10, yPosition, 10, [0, 0, 0]);
         yPosition += 8;
       }
 
@@ -238,29 +254,36 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
         yPosition += 7;
 
         const forecast = analysisData.predictiveForecast;
-        const forecastData = [
-          ['Period', 'Predicted Value', 'Confidence'],
-          ...forecast.forecast.map((f, i) => [
-            `Period ${i + 1}`,
-            String(Math.round(f.value * 100) / 100),
-            `${(f.confidence * 100).toFixed(0)}%`
-          ])
-        ];
+        if (forecast?.forecast && Array.isArray(forecast.forecast) && forecast.forecast.length > 0) {
+          const forecastData = [
+            ['Period', 'Predicted Value', 'Confidence'],
+            ...forecast.forecast.map((f, i) => [
+              `Period ${i + 1}`,
+              f.value !== undefined ? String(Math.round(f.value * 100) / 100) : 'N/A',
+              f.confidence !== undefined ? `${(f.confidence * 100).toFixed(0)}%` : 'N/A'
+            ])
+          ];
 
-        if (typeof doc.autoTable === 'function') {
-          doc.autoTable({
-            head: [forecastData[0]],
-            body: forecastData.slice(1),
-            startY: yPosition,
-            margin: 10,
-            theme: 'grid',
-            headerStyles: { fillColor: [99, 102, 241], textColor: [255, 255, 255], fontStyle: 'bold' },
-          });
-          yPosition = doc.lastAutoTable.finalY + 6;
+          if (typeof doc.autoTable === 'function') {
+            doc.autoTable({
+              head: [forecastData[0]],
+              body: forecastData.slice(1),
+              startY: yPosition,
+              margin: 10,
+              theme: 'grid',
+              headerStyles: { fillColor: [99, 102, 241], textColor: [255, 255, 255], fontStyle: 'bold' },
+            });
+            yPosition = doc.lastAutoTable.finalY + 6;
+          }
+
+          if (forecast.trend && forecast.modelAccuracy !== undefined) {
+            addText(`Trend: ${forecast.trend} | Model Accuracy: ${(forecast.modelAccuracy * 100).toFixed(1)}%`, 10, yPosition, 9, [128, 128, 128]);
+            yPosition += 8;
+          }
+        } else {
+          addText('No forecast data available', 10, yPosition, 10, [128, 128, 128]);
+          yPosition += 8;
         }
-
-        addText(`Trend: ${forecast.trend} | Model Accuracy: ${(forecast.modelAccuracy * 100).toFixed(1)}%`, 10, yPosition, 9, [128, 128, 128]);
-        yPosition += 8;
       }
 
       // Prioritized Insights
@@ -276,9 +299,9 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
         const insightData = [
           ['Priority', 'Score', 'Insight'],
           ...analysisData.prioritizedInsights.slice(0, 5).map(insight => [
-            insight.priority,
-            String(insight.score),
-            String(insight.text).substring(0, 40)
+            insight.priority || 'N/A',
+            insight.score !== undefined ? String(Math.round(insight.score * 100) / 100) : 'N/A',
+            String(insight.text || 'N/A').substring(0, 40)
           ])
         ];
 
@@ -306,11 +329,18 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
         addText('Data Quality Score', 10, yPosition, 12, [6, 182, 212]);
         yPosition += 7;
 
-        addText(`Overall Score: ${dqs.overallScore.toFixed(1)}/100`, 10, yPosition, 10, [0, 0, 0]);
+        const overallScore = dqs.overallScore !== undefined ? dqs.overallScore.toFixed(1) : 'N/A';
+        addText(`Overall Score: ${overallScore}/100`, 10, yPosition, 10, [0, 0, 0]);
         yPosition += 5;
-        addText(`Completeness: ${dqs.completeness.toFixed(1)}% | Consistency: ${dqs.consistency.toFixed(1)}% | Accuracy: ${dqs.accuracy.toFixed(1)}%`, 10, yPosition, 10, [0, 0, 0]);
+
+        const completeness = dqs.completeness !== undefined ? dqs.completeness.toFixed(1) : 'N/A';
+        const consistency = dqs.consistency !== undefined ? dqs.consistency.toFixed(1) : 'N/A';
+        const accuracy = dqs.accuracy !== undefined ? dqs.accuracy.toFixed(1) : 'N/A';
+        addText(`Completeness: ${completeness}% | Consistency: ${consistency}% | Accuracy: ${accuracy}%`, 10, yPosition, 10, [0, 0, 0]);
         yPosition += 5;
-        addText(`Issues Found: ${dqs.issuesFound}`, 10, yPosition, 10, [0, 0, 0]);
+
+        const issuesFound = dqs.issuesFound !== undefined ? dqs.issuesFound : 0;
+        addText(`Issues Found: ${issuesFound}`, 10, yPosition, 10, [0, 0, 0]);
         yPosition += 8;
       }
 
@@ -349,11 +379,11 @@ export const exportToPDF = async (fileName, data, columns, chartImage = null, an
 
         const benchData = [
           ['Tier', 'Count', 'Avg Value', '% of Total'],
-          ...Object.entries(bench.tiers).map(([tier, data]) => [
+          ...Object.entries(bench.tiers || {}).map(([tier, data]) => [
             tier,
-            String(data.count),
-            String(Math.round(data.avgValue * 100) / 100),
-            `${(data.percentage * 100).toFixed(1)}%`
+            String(data.count || 0),
+            data.avgValue !== undefined ? String(Math.round(data.avgValue * 100) / 100) : 'N/A',
+            data.percentage !== undefined ? `${(data.percentage * 100).toFixed(1)}%` : 'N/A'
           ])
         ];
 
@@ -441,7 +471,9 @@ export const exportToExcel = async (fileName, data, columns, chartImage = null, 
       summarySheet.addRow({ metric: 'Key Insight', value: insights.insight || 'N/A' });
       summarySheet.addRow({ metric: 'Summary', value: insights.summary || 'N/A' });
       summarySheet.addRow({ metric: 'Recommendation', value: insights.recommendation || 'N/A' });
-      summarySheet.addRow({ metric: 'Confidence', value: `${Math.round(insights.confidence * 100)}%` });
+      
+      const confidenceValue = insights.confidence !== undefined ? `${Math.round(insights.confidence * 100)}%` : 'N/A';
+      summarySheet.addRow({ metric: 'Confidence', value: confidenceValue });
 
       // Wrap text for better readability
       summarySheet.getColumn('value').alignment = { wrapText: true };
