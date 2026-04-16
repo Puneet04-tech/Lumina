@@ -29,22 +29,37 @@ const AnimatedCounter = ({ value }) => {
 
 const PremiumStatCard = ({ title, value, icon: Icon, gradient, delay }) => (
   <div
-    className="stat-card"
+    className="group relative h-32 rounded-xl overflow-hidden cursor-pointer"
     style={{ animationDelay: `${delay}s` }}
   >
-    <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-    <div className="flex items-center justify-between">
+    {/* Gradient background */}
+    <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 opacity-90" />
+    
+    {/* Glowing border */}
+    <div className="absolute inset-0 rounded-xl border border-indigo-500/30 group-hover:border-indigo-400/60 transition-all duration-300" />
+    
+    {/* Hover glow effect */}
+    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+      style={{ 
+        background: `radial-gradient(circle at center, rgba(99, 102, 241, 0.15) 0%, transparent 70%)`,
+        animation: 'pulse 2s ease-in-out infinite'
+      }} />
+    
+    {/* Content */}
+    <div className="relative z-10 h-full flex items-center justify-between p-6">
       <div>
         <p className="text-slate-400 text-sm font-medium mb-2">{title}</p>
-        <p className={`text-5xl font-black bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>
+        <p className={`text-4xl font-black bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>
           <AnimatedCounter value={value} />
         </p>
       </div>
-      <div className={`p-4 rounded-xl bg-gradient-to-br ${gradient} opacity-20`}>
-        <Icon className="w-8 h-8 text-slate-300" />
+      <div className={`p-4 rounded-xl bg-gradient-to-br ${gradient} opacity-20 group-hover:opacity-30 transition-opacity duration-300`}>
+        <Icon className="w-8 h-8 text-slate-300 group-hover:text-slate-200 transition-colors" />
       </div>
     </div>
-    <div className="mt-4 h-1 w-full bg-gradient-to-r from-slate-700 to-transparent rounded-full" />
+
+    {/* Bottom accent line */}
+    <div className="absolute bottom-0 left-0 w-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500 group-hover:w-full transition-all duration-500" />
   </div>
 );
 
@@ -117,32 +132,41 @@ export default function DashboardPage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
-        {/* Background Effects */}
-        <div className="absolute top-20 -left-40 w-80 h-80 bg-indigo-600/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 -right-40 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl" />
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950 relative overflow-hidden">
+        {/* Animated Background Effects */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-0 -left-1/4 w-1/2 h-1/2 bg-indigo-600/5 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '8s' }} />
+          <div className="absolute top-1/4 -right-1/4 w-1/2 h-1/2 bg-purple-600/5 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '10s' }} />
+          <div className="absolute -bottom-1/4 left-1/4 w-1/2 h-1/2 bg-pink-600/5 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '12s' }} />
+        </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
           {/* Header */}
-          <div className="mb-16 flex flex-col md:flex-row items-center justify-between">
-            <div className="mb-6 md:mb-0" style={{ animation: 'slideInUp 0.8s ease-out' }}>
-              <h1 className="text-5xl md:text-6xl font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
+          <div className="mb-16 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+            <div style={{ animation: 'slideInUp 0.8s ease-out' }}>
+              <h1 className="text-5xl md:text-6xl font-black bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent mb-3">
                 Dashboard
               </h1>
-              <p className="text-slate-400 text-lg">Upload and analyze your data with enterprise-grade AI</p>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="accent-line" />
+                <p className="text-slate-400 text-lg">Upload and analyze your data with AI-powered insights</p>
+              </div>
             </div>
             <button
               onClick={loadData}
-              className="btn btn-primary flex items-center gap-2 px-6 py-3 shadow-2xl hover:shadow-3xl transform hover:scale-110 transition-all duration-300"
+              className="group relative overflow-hidden px-6 py-3 font-bold text-white rounded-lg transition-all duration-300 whitespace-nowrap"
               style={{ animation: 'slideInDown 0.8s ease-out' }}
             >
-              <RefreshCw className="w-5 h-5" />
-              Refresh Stats
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative flex items-center gap-2">
+                <RefreshCw className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
+                Refresh Stats
+              </div>
             </button>
           </div>
 
           {/* Stats - Premium Animated */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16" style={{ animation: 'slideInUp 0.8s ease-out 0.1s both' }}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16" style={{ animation: 'slideInUp 0.8s ease-out 0.1s both' }}>
             <PremiumStatCard
               title="Files Uploaded"
               value={files.length}
@@ -168,7 +192,7 @@ export default function DashboardPage() {
 
           {/* Upload Section */}
           <div className="mb-16" style={{ animation: 'slideInUp 0.8s ease-out 0.2s both' }}>
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text text-transparent mb-6">
+            <h2 className="section-heading">
               Upload New File
             </h2>
             <FileUploadCard onUploadSuccess={() => loadFiles()} />
@@ -176,29 +200,30 @@ export default function DashboardPage() {
 
           {/* Files List */}
           <div style={{ animation: 'slideInUp 0.8s ease-out 0.3s both' }}>
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent mb-6">
+            <h2 className="section-heading">
               Your Files
             </h2>
             {isLoading ? (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-500 mx-auto mb-4"></div>
-                <p className="text-slate-400">Loading files...</p>
+              <div className="text-center py-20">
+                <div className="spinner-premium mx-auto mb-4"></div>
+                <p className="text-slate-400 font-medium">Loading files...</p>
               </div>
             ) : files.length === 0 ? (
-              <div className="premium-card text-center py-16">
+              <div className="premium-card text-center py-20 border-2 border-dashed border-indigo-400/50">
                 <Upload className="w-16 h-16 text-slate-500 mx-auto mb-4 opacity-50" />
-                <p className="text-slate-400 text-lg">No files uploaded yet. Start by uploading a CSV file above.</p>
+                <p className="text-slate-400 text-lg font-medium">No files uploaded yet</p>
+                <p className="text-slate-500 text-sm">Upload a CSV file above to get started with AI analysis</p>
               </div>
             ) : (
               <div className="grid gap-4">
                 {files.map((file, idx) => (
                   <div
                     key={file._id}
-                    className="premium-card flex items-center justify-between group hover:shadow-2xl transition-all duration-300 cursor-pointer"
+                    className="file-card flex items-center justify-between"
                     style={{ animation: `slideInUp 0.6s ease-out ${0.4 + idx * 0.05}s both` }}
                   >
                     <div className="flex items-center gap-4 flex-1">
-                      <div className="p-3 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg group-hover:scale-110 transition-transform">
+                      <div className="file-card-icon">
                         <File className="w-6 h-6 text-white" />
                       </div>
                       <div>
@@ -212,18 +237,22 @@ export default function DashboardPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 flex-shrink-0">
                       <Link
                         href={`/analysis/${file._id}`}
-                        className="btn btn-primary px-6 py-2 font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+                        className="group relative overflow-hidden px-6 py-2 font-bold text-white rounded-lg transition-all duration-300"
                       >
-                        Analyze
+                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="relative">Analyze</div>
                       </Link>
                       <button
                         onClick={() => handleDeleteFile(file._id)}
-                        className="btn btn-danger px-4 py-2 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+                        className="group relative overflow-hidden px-4 py-2 font-bold text-white rounded-lg transition-all duration-300"
                       >
-                        <Trash2 className="w-5 h-5" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-rose-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="relative">
+                          <Trash2 className="w-5 h-5" />
+                        </div>
                       </button>
                     </div>
                   </div>
